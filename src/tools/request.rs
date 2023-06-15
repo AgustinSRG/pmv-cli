@@ -8,15 +8,19 @@ use hyper::{
     Body, Client, Method,
 };
 use hyper_multipart_rfc7578::client::{multipart};
+use tokio::{fs::File, io::AsyncWriteExt};
+use hyper::{body::HttpBody};
 
 const SESSION_HEADER_NAME: &str = "x-session-token";
 
+#[derive(Debug)]
 pub struct RequestAPIError {
     pub status: hyper::StatusCode,
     pub code: String,
     pub message: String,
 }
 
+#[derive(Debug)]
 pub enum RequestError {
     StatusCodeError(hyper::StatusCode),
     ApiError(RequestAPIError),
@@ -272,3 +276,69 @@ pub async fn do_multipart_upload_request(
 
     return Ok(res_body);
 }
+
+pub enum RequestDownloadError {
+    StatusCodeError(hyper::StatusCode),
+    ApiError(RequestAPIError),
+    HyperError(hyper::Error),
+    FileSystemError(String),
+}
+
+pub async fn do_get_download_request(uri: VaultURI, path: String, file_path: String) -> Result<(), RequestDownloadError> {
+    let mut request_builder = Request::builder()
+        .method(Method::GET)
+        .uri(resolve_vault_api_uri(uri.clone(), path));
+
+    let session = get_session_from_uri(uri.clone());
+
+    if session.is_some() {
+        request_builder = request_builder.header(SESSION_HEADER_NAME, session.unwrap());
+    }
+
+    let request = request_builder.body(Body::empty()).unwrap();
+
+    let client = Client::new();
+
+    let result = client.request(request).await;
+
+    if result.is_err() {
+        // Network error
+        return Err(RequestDownloadError::HyperError(result.err().unwrap()));
+    }
+
+    // Response received
+
+    let response = result.unwrap();
+
+    let res_status = response.status();
+
+    if res_status != 200 {
+        return Err(RequestDownloadError::StatusCodeError(res_status));
+    }
+
+    // Write body into a file
+
+    let file_open_res = File::create(file_path).await;
+
+    if file_open_res.is_err() {
+        return Err(RequestDownloadError::FileSystemError(file_open_res.err().unwrap().to_string()));
+    }
+
+    let mut file = file_open_res.unwrap();
+    let mut body = response.into_body();
+
+    while let Some(buf) = body.data().await {
+        if buf.is_err() {
+            return Err(RequestDownloadError::HyperError(buf.err().unwrap()));
+        }
+
+        let write_res = file.write_all_buf(&mut buf.unwrap()).await;
+
+        if write_res.is_err() {
+            return Err(RequestDownloadError::FileSystemError(write_res.err().unwrap().to_string()));
+        }
+    }
+
+    return Ok(());
+}
+

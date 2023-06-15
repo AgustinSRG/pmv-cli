@@ -17,5 +17,5 @@ pub struct LoginResult {
   pub session_id: String,
 
   #[serde(rename = "vault_fingerprint")]
-  pub vault_fingerprint: String,
+  pub vault_fingerprint: Option<String>,
 }

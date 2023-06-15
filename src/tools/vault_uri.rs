@@ -36,7 +36,6 @@ pub enum VaultURI {
 // Error parsing a Vault URL
 pub enum VaultURIParseError {
     InvalidProtocol,
-    NoCredentialsSpecified,
     URLError(ParseError),
 }
 
@@ -60,11 +59,7 @@ pub fn parse_vault_uri(uri: String) -> Result<VaultURI, VaultURIParseError> {
             u.set_username("").unwrap();
             u.set_password(None).unwrap();
 
-            if pass.chars().count() == 0 {
-                return Err(VaultURIParseError::NoCredentialsSpecified);
-            }
-
-            if username.chars().count() == 0 {
+            if username.is_empty() && !pass.is_empty() {
                 return Ok(VaultURI::SessionURI(VaultSessionURI{
                     base_url: u,
                     session: pass,

@@ -10,9 +10,13 @@ mod tools;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// Turn debugging information on
+    /// Turn verbose messages on
     #[arg(short, long)]
-    debug: bool,
+    verbose: bool,
+
+    /// Auto confirm actions
+    #[arg(short, long)]
+    yes: bool,
 
     #[command(subcommand)]
     command: Option<Commands>,
@@ -42,10 +46,6 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
-
-    if cli.debug {
-        println!("Debug mode is on");
-    }
 
     println!("Hello world");
 
