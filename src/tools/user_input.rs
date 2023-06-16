@@ -1,7 +1,6 @@
 // User input functions
 
 use tokio::io::AsyncBufReadExt;
-use tokio::io::AsyncWriteExt;
 use tokio::io::{self, BufReader};
 use std::future::Future;
 use std::pin::Pin;
@@ -12,12 +11,11 @@ use std::thread;
 
 pub async fn ask_user(prompt: String) -> Result<String, ()> {
     let stdin = io::stdin();
-    let mut stderr = io::stderr();
     let reader = BufReader::new(stdin);
 
     let mut lines = reader.lines();
 
-    stderr.write(prompt.as_bytes());
+    eprint!("{prompt}");
 
     let line_res = lines.next_line().await;
 

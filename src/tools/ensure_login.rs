@@ -4,7 +4,7 @@ use crate::{tools::{ask_user, ask_user_password}, models::Credentials, api::api_
 
 use super::VaultURI;
 
-pub async fn ensure_login(url: VaultURI, given_username: Option<String>) -> Result<VaultURI, ()> {
+pub async fn ensure_login(url: VaultURI, given_username: Option<String>, verbose: bool) -> Result<VaultURI, ()> {
     match url.clone() {
         VaultURI::LoginURI(u) => {
             let base_url = u.base_url.to_string();
@@ -14,7 +14,9 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>) -> Resu
                 username = given_username.unwrap();
             } else if username.is_empty() {
                 // Ask username
-                eprintln!("Input username for vault: {base_url}");
+                if verbose {
+                    eprintln!("Input username for vault: {base_url}");
+                }
                 username = ask_user("Username: ".to_string()).await.unwrap_or("".to_string());
             }
 
@@ -22,11 +24,17 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>) -> Resu
 
             if password.is_empty() {
                 // Ask password
-                eprintln!("Input password for vault: {base_url}");
+                if verbose {
+                    eprintln!("Input password for vault: {base_url}");
+                }
                 password = ask_user_password("Password: ".to_string()).await.unwrap_or("".to_string());
             }
 
             // Login
+
+            if verbose {
+                eprintln!("Logging into vault: {base_url}");
+            }
 
             let login_res = api_call_login(url.clone(), Credentials{
                 username: username,
@@ -52,7 +60,6 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>) -> Resu
                     },
                     super::RequestError::HyperError(e) => {
                         let e_str = e.to_string();
-
                         eprintln!("Error: {e_str}");
                     },
                 }
@@ -62,13 +69,21 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>) -> Resu
 
             let session_id = login_res.unwrap().session_id;
             
+            if verbose {
+                eprintln!("Login successful!");
+            }
+            
             return Ok(VaultURI::SessionURI(super::VaultSessionURI{
                 base_url: u.base_url.clone(),
                 session: session_id,
             }));
         },
-        VaultURI::SessionURI(_) => {
+        VaultURI::SessionURI(u) => {
             // Session URI is already logged in
+            let base_url = u.base_url.to_string();
+            if verbose {
+                eprintln!("Provided session URL for vault: {base_url}");
+            }
             return Ok(url);
         }
     }

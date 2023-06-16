@@ -34,6 +34,7 @@ pub enum VaultURI {
 }
 
 // Error parsing a Vault URL
+#[derive(Debug)]
 pub enum VaultURIParseError {
     InvalidProtocol,
     URLError(ParseError),
@@ -79,7 +80,7 @@ pub fn parse_vault_uri(uri: String) -> Result<VaultURI, VaultURIParseError> {
 }
 
 impl VaultURI {
-    fn to_string(&self) -> String {
+    pub fn to_string(&self) -> String {
         match self {
             VaultURI::LoginURI(u) => {
                 let mut base_url = u.base_url.clone();
