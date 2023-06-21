@@ -95,4 +95,15 @@ impl VaultURI {
             },
         }
     }
+
+    pub fn to_base_url(&self) -> String {
+        match self {
+            VaultURI::LoginURI(u) => {
+                return u.base_url.to_string();
+            },
+            VaultURI::SessionURI(u) => {
+                return u.base_url.to_string();
+            },
+        }
+    }
 }

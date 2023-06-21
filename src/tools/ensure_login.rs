@@ -14,9 +14,7 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>, verbose
                 username = given_username.unwrap();
             } else if username.is_empty() {
                 // Ask username
-                if verbose {
-                    eprintln!("Input username for vault: {base_url}");
-                }
+                eprintln!("Input username for vault: {base_url}");
                 username = ask_user("Username: ".to_string()).await.unwrap_or("".to_string());
             }
 
@@ -24,9 +22,7 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>, verbose
 
             if password.is_empty() {
                 // Ask password
-                if verbose {
-                    eprintln!("Input password for vault: {base_url}");
-                }
+                eprintln!("Input password for vault: {base_url}");
                 password = ask_user_password("Password: ".to_string()).await.unwrap_or("".to_string());
             }
 

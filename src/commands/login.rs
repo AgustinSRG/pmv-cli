@@ -2,12 +2,12 @@
 
 use std::process;
 
-use crate::tools::{parse_vault_uri, ensure_login};
+use crate::{tools::{parse_vault_uri, ensure_login}, commands::get_vault_url};
 
 use super::CommandGlobalOptions;
 
-pub async fn run_cmd_login(global_opts: CommandGlobalOptions, url: String, username: Option<String>) -> () {
-    let url_parse_res = parse_vault_uri(url);
+pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<String>) -> () {
+    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {

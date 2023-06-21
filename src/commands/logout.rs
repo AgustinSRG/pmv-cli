@@ -1,16 +1,16 @@
 // Logout command
 
-use std::process;
+use std::{process};
 
 use crate::{
     api::api_call_logout,
     tools::{parse_vault_uri, VaultURI},
 };
 
-use super::CommandGlobalOptions;
+use super::{CommandGlobalOptions, get_vault_url, print_request_error};
 
-pub async fn run_cmd_logout(global_opts: CommandGlobalOptions, url: String) -> () {
-    let url_parse_res = parse_vault_uri(url);
+pub async fn run_cmd_logout(global_opts: CommandGlobalOptions) -> () {
+    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -28,10 +28,21 @@ pub async fn run_cmd_logout(global_opts: CommandGlobalOptions, url: String) -> (
 
     let vault_url = url_parse_res.unwrap();
 
+    let logout_res = do_logout(global_opts, vault_url).await;
+
+    match logout_res {
+        Ok(_) => {}
+        Err(_) => {
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn do_logout(global_opts: CommandGlobalOptions, vault_url: VaultURI) -> Result<(), ()> {
     match vault_url {
         crate::tools::VaultURI::LoginURI(_) => {
             eprintln!("You must provide a session URL in order to log out.");
-            process::exit(1);
+            return Err(());
         }
         crate::tools::VaultURI::SessionURI(u) => {
             if global_opts.verbose {
@@ -45,30 +56,11 @@ pub async fn run_cmd_logout(global_opts: CommandGlobalOptions, url: String) -> (
                     if global_opts.verbose {
                         eprintln!("Done");
                     }
+                    return Ok(());
                 }
                 Err(e) => {
-                    match e {
-                        crate::tools::RequestError::StatusCodeError(s) => {
-                            if s == 401 {
-                                eprintln!(
-                                    "Error: The session URL you provided was invalid or expired."
-                                );
-                            } else {
-                                eprintln!("Error: API ended with unexpected status code: {s}");
-                            }
-                        }
-                        crate::tools::RequestError::ApiError(e) => {
-                            let s = e.status;
-                            let code = e.code;
-                            let msg = e.message;
-                            eprintln!("API Error | Status: {s} | Code: {code} | Message: {msg}");
-                        }
-                        crate::tools::RequestError::HyperError(e) => {
-                            let e_str = e.to_string();
-                            eprintln!("Error: {e_str}");
-                        }
-                    }
-                    process::exit(1);
+                    print_request_error(e);
+                    return Err(());
                 },
             }
         }
