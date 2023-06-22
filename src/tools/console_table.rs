@@ -6,14 +6,17 @@ use unicode_width::UnicodeWidthStr;
 
 const MIN_ALLOWED_COL_LENGTH: usize = 8;
 
+pub fn to_csv_string(s: &str) -> String {
+    return serde_json::to_string(s).unwrap();
+}
+
 pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>) -> () {
     let len = head.len();
 
     // Get term size
 
-    let term_cols = termsize::get()
-        .unwrap_or(termsize::Size { rows: 0, cols: 0 })
-        .cols as usize;
+    let (term_cols, _) = term_size::dimensions()
+        .unwrap_or((0, 0));
 
     // Check the max sizes
     let mut head_sizes: Vec<usize> = vec![0; len];
