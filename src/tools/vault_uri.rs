@@ -1,36 +1,30 @@
 // Vault URI
 
-use url::{Url, ParseError};
-
-// URL to connect and login with username and password
-#[derive(Clone)]
-pub struct VaultLoginURI {
-    // Base connection URL
-    pub base_url: Url,
-
-    // Vault username
-    pub username: String,
-
-    // Vault password
-    pub password: String,
-}
-
-
-// URL to connect to a vault with an active session
-#[derive(Clone)]
-pub struct VaultSessionURI {
-    // Base connection URL
-    pub base_url: Url,
-
-    // Vault active session
-    pub session: String,
-}
+use url::{ParseError, Url};
 
 // URL to connect to a vault
 #[derive(Clone)]
 pub enum VaultURI {
-    LoginURI(VaultLoginURI),
-    SessionURI(VaultSessionURI),
+    // URL to connect and login with username and password
+    LoginURI {
+        // Base connection URL
+        base_url: Url,
+
+        // Vault username
+        username: String,
+
+        // Vault password
+        password: String,
+    },
+
+    // URL to connect to a vault with an active session
+    SessionURI {
+        // Base connection URL
+        base_url: Url,
+
+        // Vault active session
+        session: String,
+    },
 }
 
 // Error parsing a Vault URL
@@ -61,49 +55,72 @@ pub fn parse_vault_uri(uri: String) -> Result<VaultURI, VaultURIParseError> {
             u.set_password(None).unwrap();
 
             if username.is_empty() && !pass.is_empty() {
-                return Ok(VaultURI::SessionURI(VaultSessionURI{
+                return Ok(VaultURI::SessionURI {
                     base_url: u,
                     session: pass,
-                }))
+                });
             }
 
-            return Ok(VaultURI::LoginURI(VaultLoginURI{
+            return Ok(VaultURI::LoginURI {
                 base_url: u,
                 password: pass,
                 username,
-            }))
-        },
-        Err(e) =>  {
+            });
+        }
+        Err(e) => {
             return Err(VaultURIParseError::URLError(e));
-        },
+        }
     }
 }
 
 impl VaultURI {
     pub fn to_string(&self) -> String {
         match self {
-            VaultURI::LoginURI(u) => {
-                let mut base_url = u.base_url.clone();
-                base_url.set_username(&u.username).unwrap();
-                base_url.set_password(Some(&u.password)).unwrap();
-                return base_url.to_string();
-            },
-            VaultURI::SessionURI(u) => {
-                let mut base_url = u.base_url.clone();
-                base_url.set_password(Some(&u.session)).unwrap();
-                return base_url.to_string();
-            },
+            VaultURI::LoginURI {
+                base_url,
+                username,
+                password,
+            } => {
+                let mut base_url_c = base_url.clone();
+                base_url_c.set_username(&username).unwrap();
+                base_url_c.set_password(Some(&password)).unwrap();
+                return base_url_c.to_string();
+            }
+            VaultURI::SessionURI { base_url, session } => {
+                let mut base_url_c = base_url.clone();
+                base_url_c.set_password(Some(&session)).unwrap();
+                return base_url_c.to_string();
+            }
         }
     }
 
     pub fn to_base_url(&self) -> String {
         match self {
-            VaultURI::LoginURI(u) => {
-                return u.base_url.to_string();
-            },
-            VaultURI::SessionURI(u) => {
-                return u.base_url.to_string();
-            },
+            VaultURI::LoginURI {
+                base_url,
+                username: _,
+                password: _,
+            } => {
+                return base_url.to_string();
+            }
+            VaultURI::SessionURI { base_url, session: _ } => {
+                return base_url.to_string();
+            }
+        }
+    }
+
+    pub fn is_login(&self) -> bool {
+        match self {
+            VaultURI::LoginURI {
+                base_url: _,
+                username: _,
+                password: _,
+            } => {
+                return true;
+            }
+            VaultURI::SessionURI { base_url: _, session: _ } => {
+                return false;
+            }
         }
     }
 }

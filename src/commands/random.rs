@@ -4,14 +4,14 @@ use std::{process, iter, time::Duration};
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::tools::render_media_duration;
+use crate::tools::{render_media_duration, to_csv_string};
 use crate::{tools::{ensure_login, parse_vault_uri, print_table, is_identifier, parse_identifier, identifier_to_string}, api::{api_call_random, api_call_get_tags}, models::{tags_map_from_list, tags_names_from_ids}};
 
 use super::{CommandGlobalOptions, logout::do_logout, get_vault_url, print_request_error};
 
 const DEFAULT_PAGE_SIZE: u32 = 10;
 
-pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>, page_size: Option<u32>, tag: Option<String>, extended: bool) -> () {
+pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>, page_size: Option<u32>, tag: Option<String>, extended: bool, csv: bool) -> () {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -30,7 +30,7 @@ pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>
 
     let mut vault_url = url_parse_res.unwrap();
 
-    let logout_after_operation = matches!(vault_url, crate::tools::VaultURI::LoginURI(_));
+    let logout_after_operation = vault_url.is_login();
     let login_result = ensure_login(vault_url, None, global_opts.verbose).await;
 
     if login_result.is_err() {
@@ -110,33 +110,61 @@ pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>
             println!("seed: {seed}");
             println!("items retrieved: {page_items}");
 
-            if !extended {
-                let table_head: Vec<String> = vec!["Id".to_string(), "Type".to_string(), "Title".to_string()];
-                let mut table_body: Vec<Vec<String>> = iter::repeat_with(|| iter::repeat_with(|| "".to_string()).take(table_head.len()).collect()).take(page_items).collect();
+            if csv {
+                println!("");
+                if !extended {
+                    println!("\"Id\",\"Type\",\"Title\"");
 
-                for (i, item) in random_result.page_items.iter().enumerate() {
-                    table_body[i][0] = identifier_to_string(item.id).clone();
-                    table_body[i][1] = item.media_type.to_string();
-                    table_body[i][2] = item.title.clone();
+                    for item in random_result.page_items {
+                        let row_id = item.id.to_string();
+                        let row_type = to_csv_string(&item.media_type.to_string());
+                        let row_title = to_csv_string(&item.title);
+                        println!("{row_id},{row_type},{row_title}");
+                    }
+
+                } else {
+                    println!("\"Id\",\"Type\",\"Title\",\"Description\",\"Tags\",\"Duration\"");
+
+                    for item in random_result.page_items {
+                        let row_id = item.id.to_string();
+                        let row_type = to_csv_string(&item.media_type.to_string());
+                        let row_title = to_csv_string(&item.title);
+                        let row_description = to_csv_string(&item.description);
+                        let row_tags = to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(", "));
+                        let row_duration = render_media_duration(item.media_type, item.duration);
+
+                        println!("{row_id},{row_type},{row_title},{row_description},{row_tags},{row_duration}");
+                    }
                 }
-
-                print_table(&table_head, &table_body);
             } else {
-                let table_head: Vec<String> = vec!["Id".to_string(), "Type".to_string(), "Title".to_string(), "Description".to_string(), "Tags".to_string(), "Duration".to_string()];
-                let mut table_body: Vec<Vec<String>> = iter::repeat_with(|| iter::repeat_with(|| "".to_string()).take(table_head.len()).collect()).take(page_items).collect();
-
-                for (i, item) in random_result.page_items.iter().enumerate() {
-                    table_body[i][0] = identifier_to_string(item.id).clone();
-                    table_body[i][1] = item.media_type.to_string();
-                    table_body[i][2] = item.title.clone();
-                    table_body[i][3] = item.description.clone();
-
-                    table_body[i][4] = tags_names_from_ids(&item.tags, &tags).join(", ");
-
-                    table_body[i][5] = render_media_duration(item.media_type, item.duration);
+                if !extended {
+                    let table_head: Vec<String> = vec!["Id".to_string(), "Type".to_string(), "Title".to_string()];
+                    let mut table_body: Vec<Vec<String>> = iter::repeat_with(|| iter::repeat_with(|| "".to_string()).take(table_head.len()).collect()).take(page_items).collect();
+    
+                    for (i, item) in random_result.page_items.iter().enumerate() {
+                        table_body[i][0] = identifier_to_string(item.id).clone();
+                        table_body[i][1] = item.media_type.to_string();
+                        table_body[i][2] = to_csv_string(&item.title);
+                    }
+    
+                    print_table(&table_head, &table_body);
+                } else {
+                    let table_head: Vec<String> = vec!["Id".to_string(), "Type".to_string(), "Title".to_string(), "Description".to_string(), "Tags".to_string(), "Duration".to_string()];
+                    let mut table_body: Vec<Vec<String>> = iter::repeat_with(|| iter::repeat_with(|| "".to_string()).take(table_head.len()).collect()).take(page_items).collect();
+    
+                    for (i, item) in random_result.page_items.iter().enumerate() {
+                        table_body[i][0] = identifier_to_string(item.id).clone();
+                        table_body[i][1] = item.media_type.to_string();
+                        table_body[i][2] = to_csv_string(&item.title);
+                        table_body[i][3] = to_csv_string(&item.description);
+    
+                        table_body[i][4] = to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(", "));
+    
+                        table_body[i][5] = render_media_duration(item.media_type, item.duration);
+                    }
+    
+                    print_table(&table_head, &table_body);
                 }
-
-                print_table(&table_head, &table_body);
             }
         },
         Err(e) => {

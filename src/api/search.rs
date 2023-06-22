@@ -1,8 +1,6 @@
 // Search API
 
-use hyper::StatusCode;
-
-use crate::{tools::{VaultURI, do_get_request, RequestError, RequestAPIError}, models::{SearchMediaResult, RandomMediaResult}};
+use crate::{tools::{VaultURI, do_get_request, RequestError}, models::{SearchMediaResult, RandomMediaResult}};
 
 pub async fn api_call_search(url: VaultURI, tag: Option<String>, reverse_order: bool, page: u32, page_size: u32) -> Result<SearchMediaResult, RequestError> {
     let mut url_path = "/api/search?".to_string();
@@ -28,11 +26,10 @@ pub async fn api_call_search(url: VaultURI, tag: Option<String>, reverse_order: 
             let parsed_body: Result<SearchMediaResult, _> = serde_json::from_str(&body_str);
 
             if parsed_body.is_err() {
-                return Err(RequestError::ApiError(RequestAPIError{
-                    status: StatusCode::OK,
-                    code: "INVALID_JSON".to_string(),
-                    message: "Invalid JSON body received: ".to_string() + &parsed_body.err().unwrap().to_string(),
-                }));
+                return Err(RequestError::JSONError{
+                    message: parsed_body.err().unwrap().to_string(),
+                    body: body_str.clone(),
+                });
             }
 
             return Ok(parsed_body.unwrap());
@@ -63,14 +60,11 @@ pub async fn api_call_random(url: VaultURI, tag: Option<String>, seed: i64, page
         Ok(body_str) => {
             let parsed_body: Result<RandomMediaResult, _> = serde_json::from_str(&body_str);
 
-            eprintln!("{body_str}");
-
             if parsed_body.is_err() {
-                return Err(RequestError::ApiError(RequestAPIError{
-                    status: StatusCode::OK,
-                    code: "INVALID_JSON".to_string(),
-                    message: "Invalid JSON body received: ".to_string() + &parsed_body.err().unwrap().to_string(),
-                }));
+                return Err(RequestError::JSONError{
+                    message: parsed_body.err().unwrap().to_string(),
+                    body: body_str.clone(),
+                });
             }
 
             return Ok(parsed_body.unwrap());

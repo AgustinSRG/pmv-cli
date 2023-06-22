@@ -1,8 +1,6 @@
 // Authentication API
 
-use hyper::StatusCode;
-
-use crate::{tools::{VaultURI, RequestError, do_post_request, RequestAPIError}, models::{Credentials, LoginResult}};
+use crate::{tools::{VaultURI, RequestError, do_post_request}, models::{Credentials, LoginResult}};
 
 pub async fn api_call_login(url: VaultURI, credentials: Credentials) -> Result<LoginResult, RequestError> {
     let res = do_post_request(url, "/api/auth/login".to_string(), serde_json::to_string(&credentials).unwrap()).await;
@@ -12,11 +10,10 @@ pub async fn api_call_login(url: VaultURI, credentials: Credentials) -> Result<L
             let parsed_body: Result<LoginResult, _> = serde_json::from_str(&body_str);
 
             if parsed_body.is_err() {
-                return Err(RequestError::ApiError(RequestAPIError{
-                    status: StatusCode::OK,
-                    code: "INVALID_JSON".to_string(),
-                    message: "Invalid JSON body received: ".to_string() + &parsed_body.err().unwrap().to_string(),
-                }));
+                return Err(RequestError::JSONError{
+                    message: parsed_body.err().unwrap().to_string(),
+                    body: body_str.clone(),
+                });
             }
 
             return Ok(parsed_body.unwrap());

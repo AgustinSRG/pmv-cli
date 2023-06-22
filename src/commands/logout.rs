@@ -40,16 +40,16 @@ pub async fn run_cmd_logout(global_opts: CommandGlobalOptions) -> () {
 
 pub async fn do_logout(global_opts: CommandGlobalOptions, vault_url: VaultURI) -> Result<(), ()> {
     match vault_url {
-        crate::tools::VaultURI::LoginURI(_) => {
+        crate::tools::VaultURI::LoginURI{base_url: _, username: _, password: _} => {
             eprintln!("You must provide a session URL in order to log out.");
             return Err(());
         }
-        crate::tools::VaultURI::SessionURI(u) => {
+        crate::tools::VaultURI::SessionURI{base_url, session} => {
             if global_opts.verbose {
                 eprintln!("Logging out...");
             }
 
-            let logout_res = api_call_logout(VaultURI::SessionURI(u.clone())).await;
+            let logout_res = api_call_logout(VaultURI::SessionURI{base_url, session}).await;
 
             match logout_res {
                 Ok(_) => {

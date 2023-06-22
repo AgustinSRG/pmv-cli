@@ -1,8 +1,6 @@
 // Tags API
 
-use hyper::StatusCode;
-
-use crate::{tools::{VaultURI, do_get_request, RequestError, RequestAPIError, do_post_request}, models::{MediaTag, AddTagBody, RemoveTagBody}};
+use crate::{tools::{VaultURI, do_get_request, RequestError, do_post_request}, models::{MediaTag, AddTagBody, RemoveTagBody}};
 
 pub async fn api_call_get_tags(url: VaultURI) -> Result<Vec<MediaTag>, RequestError> {
     let res = do_get_request(url, "/api/tags".to_string()).await;
@@ -12,11 +10,10 @@ pub async fn api_call_get_tags(url: VaultURI) -> Result<Vec<MediaTag>, RequestEr
             let parsed_body: Result<Vec<MediaTag>, _> = serde_json::from_str(&body_str);
 
             if parsed_body.is_err() {
-                return Err(RequestError::ApiError(RequestAPIError{
-                    status: StatusCode::OK,
-                    code: "INVALID_JSON".to_string(),
-                    message: "Invalid JSON body received: ".to_string() + &parsed_body.err().unwrap().to_string(),
-                }));
+                return Err(RequestError::JSONError{
+                    message: parsed_body.err().unwrap().to_string(),
+                    body: body_str.clone(),
+                });
             }
 
             return Ok(parsed_body.unwrap());
@@ -35,11 +32,10 @@ pub async fn api_call_tag_add(url: VaultURI, req_body: AddTagBody) -> Result<Med
             let parsed_body: Result<MediaTag, _> = serde_json::from_str(&body_str);
 
             if parsed_body.is_err() {
-                return Err(RequestError::ApiError(RequestAPIError{
-                    status: StatusCode::OK,
-                    code: "INVALID_JSON".to_string(),
-                    message: "Invalid JSON body received: ".to_string() + &parsed_body.err().unwrap().to_string(),
-                }));
+                return Err(RequestError::JSONError{
+                    message: parsed_body.err().unwrap().to_string(),
+                    body: body_str.clone(),
+                });
             }
 
             return Ok(parsed_body.unwrap());

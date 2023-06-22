@@ -14,37 +14,38 @@ use hyper::{body::HttpBody};
 const SESSION_HEADER_NAME: &str = "x-session-token";
 
 #[derive(Debug)]
-pub struct RequestAPIError {
-    pub status: hyper::StatusCode,
-    pub code: String,
-    pub message: String,
-}
-
-#[derive(Debug)]
 pub enum RequestError {
     StatusCodeError(hyper::StatusCode),
-    ApiError(RequestAPIError),
+    ApiError {
+        status: hyper::StatusCode,
+        code: String,
+        message: String,
+    },
     HyperError(hyper::Error),
+    JSONError {
+        message: String,
+        body: String,
+    },
 }
 
 fn resolve_vault_api_uri(uri: VaultURI, path: String) -> String {
     match uri {
-        VaultURI::LoginURI(u) => {
-            return u.base_url.join(&path).unwrap().to_string();
+        VaultURI::LoginURI{base_url, username: _, password: _} => {
+            return base_url.join(&path).unwrap().to_string();
         }
-        VaultURI::SessionURI(u) => {
-            return u.base_url.join(&path).unwrap().to_string();
+        VaultURI::SessionURI{base_url, session: _} => {
+            return base_url.join(&path).unwrap().to_string();
         }
     }
 }
 
 fn get_session_from_uri(uri: VaultURI) -> Option<String> {
     match uri {
-        VaultURI::LoginURI(_) => {
+        VaultURI::LoginURI{base_url: _, username: _, password: _} => {
             return None;
         }
-        VaultURI::SessionURI(u) => {
-            return Some(u.session.clone());
+        VaultURI::SessionURI{base_url: _, session} => {
+            return Some(session.clone());
         }
     }
 }
@@ -94,11 +95,11 @@ pub async fn do_get_request(uri: VaultURI, path: String) -> Result<String, Reque
 
             match parsed_body {
                 Ok(r) => {
-                    return Err(RequestError::ApiError(RequestAPIError {
+                    return Err(RequestError::ApiError {
                         status: res_status,
                         code: r.code,
                         message: r.message,
-                    }));
+                    });
                 }
                 Err(_) => {
                     return Err(RequestError::StatusCodeError(res_status));
@@ -162,11 +163,11 @@ pub async fn do_post_request(
 
             match parsed_body {
                 Ok(r) => {
-                    return Err(RequestError::ApiError(RequestAPIError {
+                    return Err(RequestError::ApiError {
                         status: res_status,
                         code: r.code,
                         message: r.message,
-                    }));
+                    });
                 }
                 Err(_) => {
                     return Err(RequestError::StatusCodeError(res_status));
@@ -183,8 +184,16 @@ pub async fn do_post_request(
 pub enum MultipartRequestError {
     FileOpenError(String),
     StatusCodeError(hyper::StatusCode),
-    ApiError(RequestAPIError),
+    ApiError {
+        status: hyper::StatusCode,
+        code: String,
+        message: String,
+    },
     HyperError(hyper::Error),
+    JSONError {
+        message: String,
+        body: String,
+    },
 }
 
 pub async fn do_multipart_upload_request(
@@ -259,11 +268,11 @@ pub async fn do_multipart_upload_request(
 
             match parsed_body {
                 Ok(r) => {
-                    return Err(MultipartRequestError::ApiError(RequestAPIError {
+                    return Err(MultipartRequestError::ApiError {
                         status: res_status,
                         code: r.code,
                         message: r.message,
-                    }));
+                    });
                 }
                 Err(_) => {
                     return Err(MultipartRequestError::StatusCodeError(res_status));
@@ -279,7 +288,11 @@ pub async fn do_multipart_upload_request(
 
 pub enum RequestDownloadError {
     StatusCodeError(hyper::StatusCode),
-    ApiError(RequestAPIError),
+    ApiError {
+        status: hyper::StatusCode,
+        code: String,
+        message: String,
+    },
     HyperError(hyper::Error),
     FileSystemError(String),
 }

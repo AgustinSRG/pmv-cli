@@ -9,7 +9,7 @@ use std::sync::Mutex;
 use std::task::{Context, Poll};
 use std::thread;
 
-pub async fn ask_user(prompt: String) -> Result<String, ()> {
+pub async fn ask_user(prompt: &str) -> Result<String, ()> {
     let stdin = io::stdin();
     let reader = BufReader::new(stdin);
 
@@ -71,9 +71,9 @@ impl Future for PasswordPrompt {
     }
 }
 
-pub async fn ask_user_password(prompt: String) -> Result<String, ()> {
+pub async fn ask_user_password(prompt: &str) -> Result<String, ()> {
     let pp = PasswordPrompt{
-        prompt,
+        prompt: prompt.to_string(),
         status: Arc::new(Mutex::new(PasswordPromptStatus { done: false, password: "".to_string() })),
     };
 

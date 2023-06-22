@@ -58,6 +58,10 @@ pub enum Commands {
         /// Extended version of the results table
         #[arg(short, long)]
         extended: bool,
+
+        /// CSV format
+        #[arg(short, long)]
+        csv: bool,
     },
 }
 
@@ -72,8 +76,8 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
         Commands::Account { account_cmd } => {
             run_account_cmd(global_opts, account_cmd).await;
         },
-        Commands::Random { seed, page_size, tag, extended } => {
-            run_cmd_random(global_opts, seed, page_size, tag, extended).await;
+        Commands::Random { seed, page_size, tag, extended, csv } => {
+            run_cmd_random(global_opts, seed, page_size, tag, extended, csv).await;
         },
     }
 }
@@ -100,7 +104,7 @@ pub fn get_vault_url(global_opts_url: Option<String>) -> String {
 
 pub fn print_request_error(e: RequestError) -> () {
     match e {
-        crate::tools::RequestError::StatusCodeError(s) => {
+        RequestError::StatusCodeError(s) => {
             if s == 401 {
                 eprintln!(
                     "Error: The session URL you provided was invalid or expired."
@@ -109,15 +113,19 @@ pub fn print_request_error(e: RequestError) -> () {
                 eprintln!("Error: API ended with unexpected status code: {s}");
             }
         }
-        crate::tools::RequestError::ApiError(e) => {
-            let s = e.status;
-            let code = e.code;
-            let msg = e.message;
-            eprintln!("API Error | Status: {s} | Code: {code} | Message: {msg}");
+        RequestError::ApiError {status, code, message} => {
+            eprintln!("API Error | Status: {status} | Code: {code} | Message: {message}");
         }
-        crate::tools::RequestError::HyperError(e) => {
+        RequestError::HyperError(e) => {
             let e_str = e.to_string();
             eprintln!("Error: {e_str}");
         }
+        RequestError::JSONError { message, body } => {
+            eprintln!("Body received: {body}");
+            eprintln!("Error parsing the body: {message}");
+            eprintln!("This may be caused due to incompatibilities between the PersonalMediaVault backend and this tool.");
+            eprintln!("If you are using the latest version, you should report this a a bug:");
+            eprintln!("https://github.com/AgustinSRG/pmv-cli/issues");
+        },
     }
 }

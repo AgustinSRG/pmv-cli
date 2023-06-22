@@ -15,7 +15,7 @@ impl MediaType {
     pub fn to_string(&self) -> String {
         match self {
             MediaType::Deleted => {
-                return "-".to_string();
+                return "N/A".to_string();
             },
             MediaType::Image => {
                 return "Image".to_string();

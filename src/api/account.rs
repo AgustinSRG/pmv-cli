@@ -1,8 +1,6 @@
 // Account API
 
-use hyper::StatusCode;
-
-use crate::{tools::{do_get_request, VaultURI, RequestError, RequestAPIError, do_post_request}, models::{AccountContext, Credentials, ChangePasswordBody, AccountListItem, AccountDeleteBody, AccountCreateBody}};
+use crate::{tools::{do_get_request, VaultURI, RequestError, do_post_request}, models::{AccountContext, Credentials, ChangePasswordBody, AccountListItem, AccountDeleteBody, AccountCreateBody}};
 
 pub async fn api_call_context(url: VaultURI) -> Result<AccountContext, RequestError> {
     let res = do_get_request(url, "/api/account".to_string()).await;
@@ -12,11 +10,10 @@ pub async fn api_call_context(url: VaultURI) -> Result<AccountContext, RequestEr
             let parsed_body: Result<AccountContext, _> = serde_json::from_str(&body_str);
 
             if parsed_body.is_err() {
-                return Err(RequestError::ApiError(RequestAPIError{
-                    status: StatusCode::OK,
-                    code: "INVALID_JSON".to_string(),
-                    message: "Invalid JSON body received: ".to_string() + &parsed_body.err().unwrap().to_string(),
-                }));
+                return Err(RequestError::JSONError{
+                    message: parsed_body.err().unwrap().to_string(),
+                    body: body_str.clone(),
+                });
             }
 
             return Ok(parsed_body.unwrap());
@@ -61,11 +58,10 @@ pub async fn api_call_list_accounts(url: VaultURI) -> Result<Vec<AccountListItem
             let parsed_body: Result<Vec<AccountListItem>, _> = serde_json::from_str(&body_str);
 
             if parsed_body.is_err() {
-                return Err(RequestError::ApiError(RequestAPIError{
-                    status: StatusCode::OK,
-                    code: "INVALID_JSON".to_string(),
-                    message: "Invalid JSON body received: ".to_string() + &parsed_body.err().unwrap().to_string(),
-                }));
+                return Err(RequestError::JSONError{
+                    message: parsed_body.err().unwrap().to_string(),
+                    body: body_str.clone(),
+                });
             }
 
             return Ok(parsed_body.unwrap());
