@@ -2,8 +2,8 @@
 
 use crate::{tools::{do_get_request, VaultURI, RequestError, do_post_request}, models::{AccountContext, Credentials, ChangePasswordBody, AccountListItem, AccountDeleteBody, AccountCreateBody}};
 
-pub async fn api_call_context(url: VaultURI) -> Result<AccountContext, RequestError> {
-    let res = do_get_request(url, "/api/account".to_string()).await;
+pub async fn api_call_context(url: VaultURI, debug: bool) -> Result<AccountContext, RequestError> {
+    let res = do_get_request(url, "/api/account".to_string(), debug).await;
 
     match res {
         Ok(body_str) => {
@@ -24,8 +24,8 @@ pub async fn api_call_context(url: VaultURI) -> Result<AccountContext, RequestEr
     }
 }
 
-pub async fn api_call_change_username(url: VaultURI, credentials: Credentials) -> Result<(), RequestError> {
-    let res = do_post_request(url, "/api/account/username".to_string(), serde_json::to_string(&credentials).unwrap()).await;
+pub async fn api_call_change_username(url: VaultURI, credentials: Credentials, debug: bool) -> Result<(), RequestError> {
+    let res = do_post_request(url, "/api/account/username".to_string(), serde_json::to_string(&credentials).unwrap(), debug).await;
 
     match res {
         Ok(_) => {
@@ -37,8 +37,8 @@ pub async fn api_call_change_username(url: VaultURI, credentials: Credentials) -
     }
 }
 
-pub async fn api_call_change_password(url: VaultURI, req_body: ChangePasswordBody) -> Result<(), RequestError> {
-    let res = do_post_request(url, "/api/account/password".to_string(), serde_json::to_string(&req_body).unwrap()).await;
+pub async fn api_call_change_password(url: VaultURI, req_body: ChangePasswordBody, debug: bool) -> Result<(), RequestError> {
+    let res = do_post_request(url, "/api/account/password".to_string(), serde_json::to_string(&req_body).unwrap(), debug).await;
 
     match res {
         Ok(_) => {
@@ -50,8 +50,8 @@ pub async fn api_call_change_password(url: VaultURI, req_body: ChangePasswordBod
     }
 }
 
-pub async fn api_call_list_accounts(url: VaultURI) -> Result<Vec<AccountListItem>, RequestError> {
-    let res = do_get_request(url, "/api/admin/accounts".to_string()).await;
+pub async fn api_call_list_accounts(url: VaultURI, debug: bool) -> Result<Vec<AccountListItem>, RequestError> {
+    let res = do_get_request(url, "/api/admin/accounts".to_string(), debug).await;
 
     match res {
         Ok(body_str) => {
@@ -72,8 +72,8 @@ pub async fn api_call_list_accounts(url: VaultURI) -> Result<Vec<AccountListItem
     }
 }
 
-pub async fn api_call_create_account(url: VaultURI, req_body: AccountCreateBody) -> Result<(), RequestError> {
-    let res = do_post_request(url, "/api/admin/accounts".to_string(), serde_json::to_string(&req_body).unwrap()).await;
+pub async fn api_call_create_account(url: VaultURI, req_body: AccountCreateBody, debug: bool) -> Result<(), RequestError> {
+    let res = do_post_request(url, "/api/admin/accounts".to_string(), serde_json::to_string(&req_body).unwrap(), debug).await;
 
     match res {
         Ok(_) => {
@@ -85,8 +85,8 @@ pub async fn api_call_create_account(url: VaultURI, req_body: AccountCreateBody)
     }
 }
 
-pub async fn api_call_delete_account(url: VaultURI, req_body: AccountDeleteBody) -> Result<(), RequestError> {
-    let res = do_post_request(url, "/api/admin/accounts/delete".to_string(), serde_json::to_string(&req_body).unwrap()).await;
+pub async fn api_call_delete_account(url: VaultURI, req_body: AccountDeleteBody, debug: bool) -> Result<(), RequestError> {
+    let res = do_post_request(url, "/api/admin/accounts/delete".to_string(), serde_json::to_string(&req_body).unwrap(), debug).await;
 
     match res {
         Ok(_) => {

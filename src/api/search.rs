@@ -2,7 +2,7 @@
 
 use crate::{tools::{VaultURI, do_get_request, RequestError}, models::{SearchMediaResult, RandomMediaResult}};
 
-pub async fn api_call_search(url: VaultURI, tag: Option<String>, reverse_order: bool, page: u32, page_size: u32) -> Result<SearchMediaResult, RequestError> {
+pub async fn api_call_search(url: VaultURI, tag: Option<String>, reverse_order: bool, page: u32, page_size: u32, debug: bool) -> Result<SearchMediaResult, RequestError> {
     let mut url_path = "/api/search?".to_string();
 
     url_path.push_str(&("page_index=".to_owned() + &page.to_string()));
@@ -19,7 +19,7 @@ pub async fn api_call_search(url: VaultURI, tag: Option<String>, reverse_order: 
         None => {},
     }
 
-    let res = do_get_request(url, url_path).await;
+    let res = do_get_request(url, url_path, debug).await;
 
     match res {
         Ok(body_str) => {
@@ -41,7 +41,7 @@ pub async fn api_call_search(url: VaultURI, tag: Option<String>, reverse_order: 
 }
 
 
-pub async fn api_call_random(url: VaultURI, tag: Option<String>, seed: i64, page_size: u32) -> Result<RandomMediaResult, RequestError> {
+pub async fn api_call_random(url: VaultURI, tag: Option<String>, seed: i64, page_size: u32, debug: bool) -> Result<RandomMediaResult, RequestError> {
     let mut url_path = "/api/random?".to_string();
 
     url_path.push_str(&("page_size=".to_owned() + &page_size.to_string()));
@@ -54,7 +54,7 @@ pub async fn api_call_random(url: VaultURI, tag: Option<String>, seed: i64, page
         None => {},
     }
 
-    let res = do_get_request(url, url_path).await;
+    let res = do_get_request(url, url_path, debug).await;
 
     match res {
         Ok(body_str) => {

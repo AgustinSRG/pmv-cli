@@ -16,9 +16,9 @@ struct Cli {
     #[arg(short = 'u', long)]
     pub vault_url: Option<String>,
 
-    /// Turn verbose messages on
+    /// Turn debug messages on
     #[arg(short, long)]
-    pub verbose: bool,
+    pub debug: bool,
 
     /// Auto confirm actions
     #[arg(short, long)]
@@ -33,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
     let global_opts = CommandGlobalOptions{
-        verbose: cli.verbose,
+        debug: cli.debug,
         auto_confirm: cli.yes,
         vault_url: cli.vault_url,
     };

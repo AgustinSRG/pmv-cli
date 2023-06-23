@@ -109,6 +109,21 @@ impl VaultURI {
         }
     }
 
+    pub fn get_base_url(&self) -> Url {
+        match self {
+            VaultURI::LoginURI {
+                base_url,
+                username: _,
+                password: _,
+            } => {
+                return base_url.clone();
+            }
+            VaultURI::SessionURI { base_url, session: _ } => {
+                return base_url.clone();
+            }
+        }
+    }
+
     pub fn is_login(&self) -> bool {
         match self {
             VaultURI::LoginURI {
@@ -120,6 +135,21 @@ impl VaultURI {
             }
             VaultURI::SessionURI { base_url: _, session: _ } => {
                 return false;
+            }
+        }
+    }
+
+    pub fn is_session(&self) -> bool {
+        match self {
+            VaultURI::LoginURI {
+                base_url: _,
+                username: _,
+                password: _,
+            } => {
+                return false;
+            }
+            VaultURI::SessionURI { base_url: _, session: _ } => {
+                return true;
             }
         }
     }

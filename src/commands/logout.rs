@@ -31,7 +31,9 @@ pub async fn run_cmd_logout(global_opts: CommandGlobalOptions) -> () {
     let logout_res = do_logout(global_opts, vault_url).await;
 
     match logout_res {
-        Ok(_) => {}
+        Ok(_) => {
+            eprintln!("Vault session closed.");
+        }
         Err(_) => {
             process::exit(1);
         }
@@ -45,17 +47,10 @@ pub async fn do_logout(global_opts: CommandGlobalOptions, vault_url: VaultURI) -
             return Err(());
         }
         crate::tools::VaultURI::SessionURI{base_url, session} => {
-            if global_opts.verbose {
-                eprintln!("Logging out...");
-            }
-
-            let logout_res = api_call_logout(VaultURI::SessionURI{base_url, session}).await;
+            let logout_res = api_call_logout(VaultURI::SessionURI{base_url, session}, global_opts.debug).await;
 
             match logout_res {
                 Ok(_) => {
-                    if global_opts.verbose {
-                        eprintln!("Done");
-                    }
                     return Ok(());
                 }
                 Err(e) => {

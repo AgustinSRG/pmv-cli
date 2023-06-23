@@ -2,8 +2,8 @@
 
 use crate::{tools::{VaultURI, do_get_request, RequestError, do_post_request}, models::{MediaTag, AddTagBody, RemoveTagBody}};
 
-pub async fn api_call_get_tags(url: VaultURI) -> Result<Vec<MediaTag>, RequestError> {
-    let res = do_get_request(url, "/api/tags".to_string()).await;
+pub async fn api_call_get_tags(url: VaultURI, debug: bool) -> Result<Vec<MediaTag>, RequestError> {
+    let res = do_get_request(url, "/api/tags".to_string(), debug).await;
 
     match res {
         Ok(body_str) => {
@@ -24,8 +24,8 @@ pub async fn api_call_get_tags(url: VaultURI) -> Result<Vec<MediaTag>, RequestEr
     }
 }
 
-pub async fn api_call_tag_add(url: VaultURI, req_body: AddTagBody) -> Result<MediaTag, RequestError> {
-    let res = do_post_request(url, "/api/tags/add".to_string(), serde_json::to_string(&req_body).unwrap()).await;
+pub async fn api_call_tag_add(url: VaultURI, req_body: AddTagBody, debug: bool) -> Result<MediaTag, RequestError> {
+    let res = do_post_request(url, "/api/tags/add".to_string(), serde_json::to_string(&req_body).unwrap(), debug).await;
 
     match res {
         Ok(body_str) => {
@@ -46,8 +46,8 @@ pub async fn api_call_tag_add(url: VaultURI, req_body: AddTagBody) -> Result<Med
     }
 }
 
-pub async fn api_call_tag_remove(url: VaultURI, req_body: RemoveTagBody) -> Result<(), RequestError> {
-    let res = do_post_request(url, "/api/tags/remove".to_string(), serde_json::to_string(&req_body).unwrap()).await;
+pub async fn api_call_tag_remove(url: VaultURI, req_body: RemoveTagBody, debug: bool) -> Result<(), RequestError> {
+    let res = do_post_request(url, "/api/tags/remove".to_string(), serde_json::to_string(&req_body).unwrap(), debug).await;
 
     match res {
         Ok(_) => {

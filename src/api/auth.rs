@@ -2,8 +2,8 @@
 
 use crate::{tools::{VaultURI, RequestError, do_post_request}, models::{Credentials, LoginResult}};
 
-pub async fn api_call_login(url: VaultURI, credentials: Credentials) -> Result<LoginResult, RequestError> {
-    let res = do_post_request(url, "/api/auth/login".to_string(), serde_json::to_string(&credentials).unwrap()).await;
+pub async fn api_call_login(url: VaultURI, credentials: Credentials, debug: bool) -> Result<LoginResult, RequestError> {
+    let res = do_post_request(url, "/api/auth/login".to_string(), serde_json::to_string(&credentials).unwrap(), debug).await;
 
     match res {
         Ok(body_str) => {
@@ -24,8 +24,8 @@ pub async fn api_call_login(url: VaultURI, credentials: Credentials) -> Result<L
     }
 }
 
-pub async fn api_call_logout(url: VaultURI) -> Result<(), RequestError> {
-    let res = do_post_request(url, "/api/auth/logout".to_string(), "".to_string()).await;
+pub async fn api_call_logout(url: VaultURI, debug: bool) -> Result<(), RequestError> {
+    let res = do_post_request(url, "/api/auth/logout".to_string(), "".to_string(), debug).await;
 
     match res {
         Ok(_) => {

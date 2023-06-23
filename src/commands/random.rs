@@ -31,7 +31,7 @@ pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.verbose).await;
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -41,7 +41,7 @@ pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>
 
     // Get tags
 
-    let tags_res = api_call_get_tags(vault_url.clone()).await;
+    let tags_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
 
     if tags_res.is_err() {
         print_request_error(tags_res.err().unwrap());
@@ -87,7 +87,7 @@ pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>
 
     // Call API
 
-    let api_res = api_call_random(vault_url.clone(), tag_param, seed_param, page_size_param).await;
+    let api_res = api_call_random(vault_url.clone(), tag_param, seed_param, page_size_param, global_opts.debug).await;
 
     match api_res {
         Ok(random_result) => {

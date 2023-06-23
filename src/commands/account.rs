@@ -102,7 +102,7 @@ pub async fn run_cmd_context(global_opts: CommandGlobalOptions) -> () {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.verbose).await;
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -112,7 +112,7 @@ pub async fn run_cmd_context(global_opts: CommandGlobalOptions) -> () {
 
     // Call API
 
-    let api_res = api_call_context(vault_url.clone()).await;
+    let api_res = api_call_context(vault_url.clone(), global_opts.debug).await;
 
     match api_res {
         Ok(context) => {
@@ -186,7 +186,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.verbose).await;
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -211,6 +211,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
             username: username.clone(),
             password,
         },
+        global_opts.debug,
     )
     .await;
 
@@ -227,9 +228,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
                 }
             }
 
-            if global_opts.verbose {
-                eprintln!("Successfully changed account username to: {username}");
-            }
+            eprintln!("Successfully changed account username to: {username}");
         }
         Err(e) => {
             print_request_error(e);
@@ -268,7 +267,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) -> () {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.verbose).await;
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -332,6 +331,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) -> () {
             old_password: password,
             password: new_password,
         },
+        global_opts.debug,
     )
     .await;
 
@@ -348,9 +348,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) -> () {
                 }
             }
 
-            if global_opts.verbose {
-                eprintln!("Successfully changed account password");
-            }
+            eprintln!("Successfully changed account password.");
         }
         Err(e) => {
             print_request_error(e);
@@ -389,7 +387,7 @@ pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool)
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.verbose).await;
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -399,7 +397,7 @@ pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool)
 
     // Call API
 
-    let api_res = api_call_list_accounts(vault_url.clone()).await;
+    let api_res = api_call_list_accounts(vault_url.clone(), global_opts.debug).await;
 
     match api_res {
         Ok(accounts) => {
@@ -493,7 +491,7 @@ pub async fn run_cmd_create_account(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.verbose).await;
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -550,6 +548,7 @@ pub async fn run_cmd_create_account(
             password: new_password,
             write: allow_write,
         },
+        global_opts.debug,
     )
     .await;
 
@@ -566,9 +565,7 @@ pub async fn run_cmd_create_account(
                 }
             }
 
-            if global_opts.verbose {
-                eprintln!("Successfully created account: {username}");
-            }
+            eprintln!("Successfully created account: {username}");
         }
         Err(e) => {
             print_request_error(e);
@@ -607,7 +604,7 @@ pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username:
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.verbose).await;
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -643,6 +640,7 @@ pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username:
         AccountDeleteBody {
             username: username.clone(),
         },
+        global_opts.debug,
     )
     .await;
 
@@ -659,9 +657,7 @@ pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username:
                 }
             }
 
-            if global_opts.verbose {
-                eprintln!("Successfully deleted account: {username}");
-            }
+            eprintln!("Successfully deleted account: {username}");
         }
         Err(e) => {
             print_request_error(e);

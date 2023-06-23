@@ -4,7 +4,7 @@ use crate::{tools::{ask_user, ask_user_password}, models::Credentials, api::api_
 
 use super::VaultURI;
 
-pub async fn ensure_login(url: VaultURI, given_username: Option<String>, verbose: bool) -> Result<VaultURI, ()> {
+pub async fn ensure_login(url: VaultURI, given_username: Option<String>, debug: bool) -> Result<VaultURI, ()> {
     match url.clone() {
         VaultURI::LoginURI{base_url, username, password} => {
             let mut username_m = username.clone();
@@ -27,14 +27,10 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>, verbose
 
             // Login
 
-            if verbose {
-                eprintln!("Logging into vault: {base_url}");
-            }
-
             let login_res = api_call_login(url.clone(), Credentials{
                 username: username_m,
                 password: password_m,
-            }).await;
+            }, debug).await;
 
             if login_res.is_err() {
                 print_request_error(login_res.err().unwrap());
@@ -43,10 +39,6 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>, verbose
 
             let session_id = login_res.unwrap().session_id;
             
-            if verbose {
-                eprintln!("Login successful!");
-            }
-            
             return Ok(VaultURI::SessionURI{
                 base_url: base_url.clone(),
                 session: session_id,
@@ -54,8 +46,8 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>, verbose
         },
         VaultURI::SessionURI{base_url, session: _} => {
             // Session URI is already logged in
-            if verbose {
-                eprintln!("Provided session URL for vault: {base_url}");
+            if debug {
+                eprintln!("DEBUG: Provided session URL for vault: {base_url}");
             }
             return Ok(url);
         }

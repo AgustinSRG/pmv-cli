@@ -50,10 +50,16 @@ fn get_session_from_uri(uri: VaultURI) -> Option<String> {
     }
 }
 
-pub async fn do_get_request(uri: VaultURI, path: String) -> Result<String, RequestError> {
+pub async fn do_get_request(uri: VaultURI, path: String, debug: bool) -> Result<String, RequestError> {
+    let final_uri = resolve_vault_api_uri(uri.clone(), path);
+
+    if debug {
+        eprintln!("DEBUG: GET {final_uri}");
+    }
+
     let mut request_builder = Request::builder()
         .method(Method::GET)
-        .uri(resolve_vault_api_uri(uri.clone(), path));
+        .uri(final_uri);
 
     let session = get_session_from_uri(uri.clone());
 
@@ -117,10 +123,17 @@ pub async fn do_post_request(
     uri: VaultURI,
     path: String,
     body: String,
+    debug: bool,
 ) -> Result<String, RequestError> {
+    let final_uri = resolve_vault_api_uri(uri.clone(), path);
+
+    if debug {
+        eprintln!("DEBUG: POST {final_uri}");
+    }
+
     let mut request_builder = Request::builder()
         .method(Method::POST)
-        .uri(resolve_vault_api_uri(uri.clone(), path))
+        .uri(final_uri)
         .header("Content-Type", "application/json");
 
     let session = get_session_from_uri(uri.clone());
@@ -201,11 +214,17 @@ pub async fn do_multipart_upload_request(
     path: String,
     field: String,
     file_path: String,
+    debug: bool,
 ) -> Result<String, MultipartRequestError> {
+    let final_uri = resolve_vault_api_uri(uri.clone(), path);
+
+    if debug {
+        eprintln!("DEBUG: POST {final_uri}");
+    }
+
     let mut request_builder = Request::builder()
         .method(Method::POST)
-        .uri(resolve_vault_api_uri(uri.clone(), path))
-        .header("Content-Type", "application/json");
+        .uri(final_uri);
 
     let session = get_session_from_uri(uri.clone());
 
@@ -297,10 +316,16 @@ pub enum RequestDownloadError {
     FileSystemError(String),
 }
 
-pub async fn do_get_download_request(uri: VaultURI, path: String, file_path: String) -> Result<(), RequestDownloadError> {
+pub async fn do_get_download_request(uri: VaultURI, path: String, file_path: String, debug: bool) -> Result<(), RequestDownloadError> {
+    let final_uri = resolve_vault_api_uri(uri.clone(), path);
+
+    if debug {
+        eprintln!("DEBUG: GET {final_uri} -> {file_path}");
+    }
+
     let mut request_builder = Request::builder()
         .method(Method::GET)
-        .uri(resolve_vault_api_uri(uri.clone(), path));
+        .uri(final_uri);
 
     let session = get_session_from_uri(uri.clone());
 
