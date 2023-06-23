@@ -1,6 +1,6 @@
 // Random media list command
 
-use std::{process, iter, time::Duration};
+use std::{process, time::Duration};
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -139,28 +139,30 @@ pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>
             } else {
                 if !extended {
                     let table_head: Vec<String> = vec!["Id".to_string(), "Type".to_string(), "Title".to_string()];
-                    let mut table_body: Vec<Vec<String>> = iter::repeat_with(|| iter::repeat_with(|| "".to_string()).take(table_head.len()).collect()).take(page_items).collect();
+                    let mut table_body: Vec<Vec<String>> = Vec::with_capacity(page_items);
     
-                    for (i, item) in random_result.page_items.iter().enumerate() {
-                        table_body[i][0] = identifier_to_string(item.id).clone();
-                        table_body[i][1] = item.media_type.to_string();
-                        table_body[i][2] = to_csv_string(&item.title);
+                    for item in random_result.page_items {
+                        table_body.push(vec!(
+                            identifier_to_string(item.id).clone(),
+                            item.media_type.to_string(),
+                            to_csv_string(&item.title),
+                        ));
                     }
     
                     print_table(&table_head, &table_body);
                 } else {
                     let table_head: Vec<String> = vec!["Id".to_string(), "Type".to_string(), "Title".to_string(), "Description".to_string(), "Tags".to_string(), "Duration".to_string()];
-                    let mut table_body: Vec<Vec<String>> = iter::repeat_with(|| iter::repeat_with(|| "".to_string()).take(table_head.len()).collect()).take(page_items).collect();
+                    let mut table_body: Vec<Vec<String>> = Vec::with_capacity(page_items);
     
-                    for (i, item) in random_result.page_items.iter().enumerate() {
-                        table_body[i][0] = identifier_to_string(item.id).clone();
-                        table_body[i][1] = item.media_type.to_string();
-                        table_body[i][2] = to_csv_string(&item.title);
-                        table_body[i][3] = to_csv_string(&item.description);
-    
-                        table_body[i][4] = to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(", "));
-    
-                        table_body[i][5] = render_media_duration(item.media_type, item.duration);
+                    for item in random_result.page_items {
+                        table_body.push(vec!(
+                            identifier_to_string(item.id).clone(),
+                            item.media_type.to_string(),
+                            to_csv_string(&item.title),
+                            to_csv_string(&item.description),
+                            to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(", ")),
+                            render_media_duration(item.media_type, item.duration),
+                        ));
                     }
     
                     print_table(&table_head, &table_body);

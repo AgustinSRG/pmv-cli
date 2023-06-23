@@ -1,15 +1,15 @@
 // Account command
 
-use std::{iter, process};
+use std::{process};
 
 use clap::Subcommand;
 
 use crate::{
     api::{
         api_call_change_password, api_call_change_username, api_call_context,
-        api_call_create_account, api_call_list_accounts, api_call_delete_account,
+        api_call_create_account, api_call_delete_account, api_call_list_accounts,
     },
-    models::{AccountCreateBody, ChangePasswordBody, Credentials, AccountDeleteBody},
+    models::{AccountCreateBody, AccountDeleteBody, ChangePasswordBody, Credentials},
     tools::{
         ask_user, ask_user_password, ensure_login, parse_vault_uri, print_table, to_csv_string,
     },
@@ -75,10 +75,10 @@ pub async fn run_account_cmd(global_opts: CommandGlobalOptions, cmd: AccountComm
             allow_write,
         } => {
             run_cmd_create_account(global_opts, username, allow_write).await;
-        },
+        }
         AccountCommand::Delete { username } => {
             run_cmd_delete_account(global_opts, username).await;
-        },
+        }
     }
 }
 
@@ -436,19 +436,17 @@ pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool)
                 let table_head: Vec<String> =
                     vec!["Username".to_string(), "Permissions".to_string()];
 
-                let mut table_body: Vec<Vec<String>> =
-                    iter::repeat_with(|| iter::repeat_with(|| "".to_string()).take(2).collect())
-                        .take(accounts.len())
-                        .collect();
+                let mut table_body: Vec<Vec<String>> = Vec::with_capacity(total);
 
-                for (i, account) in accounts.iter().enumerate() {
-                    table_body[i][0] = to_csv_string(&account.username);
-
-                    if account.write {
-                        table_body[i][1] = to_csv_string("read, write");
-                    } else {
-                        table_body[i][1] = to_csv_string("read");
-                    }
+                for account in accounts {
+                    table_body.push(vec![
+                        to_csv_string(&account.username),
+                        if account.write {
+                            to_csv_string("read, write")
+                        } else {
+                            to_csv_string("read")
+                        },
+                    ]);
                 }
 
                 print_table(&table_head, &table_body);
