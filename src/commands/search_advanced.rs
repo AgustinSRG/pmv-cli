@@ -238,23 +238,46 @@ pub async fn run_cmd_search_advanced(
 
     match album_filter {
         Some(album_list) => {
-            for item in album_list {
-                if media_matches_filter(
-                    &item,
-                    &title_filter,
-                    &description_filter,
-                    &media_type_filter,
-                    &tags_filter,
-                    &tags_filter_mode,
-                ) {
-                    if skipped >= skip_param {
-                        advanced_search_results.push(item);
-
-                        if advanced_search_results.len() as u32 >= limit_param {
-                            break;
+            if reverse {
+                for item in album_list.iter().rev() {
+                    if media_matches_filter(
+                        &item,
+                        &title_filter,
+                        &description_filter,
+                        &media_type_filter,
+                        &tags_filter,
+                        &tags_filter_mode,
+                    ) {
+                        if skipped >= skip_param {
+                            advanced_search_results.push(item.clone());
+    
+                            if advanced_search_results.len() as u32 >= limit_param {
+                                break;
+                            }
+                        } else {
+                            skipped += 1;
                         }
-                    } else {
-                        skipped += 1;
+                    }
+                }
+            } else {
+                for item in album_list {
+                    if media_matches_filter(
+                        &item,
+                        &title_filter,
+                        &description_filter,
+                        &media_type_filter,
+                        &tags_filter,
+                        &tags_filter_mode,
+                    ) {
+                        if skipped >= skip_param {
+                            advanced_search_results.push(item);
+    
+                            if advanced_search_results.len() as u32 >= limit_param {
+                                break;
+                            }
+                        } else {
+                            skipped += 1;
+                        }
                     }
                 }
             }
@@ -364,8 +387,7 @@ pub async fn run_cmd_search_advanced(
                 let row_type = to_csv_string(&item.media_type.to_string());
                 let row_title = to_csv_string(&item.title);
                 let row_description = to_csv_string(&item.description);
-                let row_tags =
-                    to_csv_string(&tags_names_from_ids(&item.tags, &tags_map).join(" "));
+                let row_tags = to_csv_string(&tags_names_from_ids(&item.tags, &tags_map).join(" "));
                 let row_duration = render_media_duration(item.media_type, item.duration);
 
                 println!(
