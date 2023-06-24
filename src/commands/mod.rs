@@ -12,6 +12,9 @@ use logout::*;
 mod random;
 use random::*;
 
+mod search_basic;
+use search_basic::*;
+
 use clap::Subcommand;
 
 use crate::tools::RequestError;
@@ -63,6 +66,72 @@ pub enum Commands {
         #[arg(short, long)]
         csv: bool,
     },
+
+    /// Searches for media assets in the vault (Basic)
+    Search {
+        /// Selects the results page. The fist page is the page 1.
+        #[arg(short, long)]
+        page: Option<u32>,
+
+        /// Page size, 10 by default
+        #[arg(short = 's', long)]
+        page_size: Option<u32>,
+
+        /// Filter by a tag
+        #[arg(short, long)]
+        tag: Option<String>,
+
+        /// Reverses results sorting. By default newest results are first. With this option, oldest results are first.
+        #[arg(short, long)]
+        reverse: bool,
+
+        /// Extended version of the results table
+        #[arg(short, long)]
+        extended: bool,
+
+        /// CSV format
+        #[arg(short, long)]
+        csv: bool,
+    },
+
+    /// Searches for media assets in the vault (Advanced)
+    AdvancedSearch {
+        /// Filter by media type. Can be: video, audio or image
+        #[arg(short, long)]
+        media_type: Option<String>,
+
+        /// Filter by tags. Expected a list of tag names, separated by spaces.
+        #[arg(short, long)]
+        tags: Option<String>,
+
+        // Tag filtering mode. Can be: all, any, none or untagged
+        #[arg(short = 'm', long)]
+        tags_mode: Option<String>,
+
+        /// Filter by album. Expected an album ID, like: #1
+        #[arg(short, long)]
+        album: Option<String>,
+
+        /// Limit on the number of results to get. 25 by default.
+        #[arg(short, long)]
+        limit: Option<u32>,
+
+        /// Number of results to skip. 0 by default.
+        #[arg(short, long)]
+        skip: Option<u32>,
+
+        /// Reverses results sorting. By default newest results are first. With this option, oldest results are first.
+        #[arg(short, long)]
+        reverse: bool,
+
+        /// Extended version of the results table
+        #[arg(short, long)]
+        extended: bool,
+
+        /// CSV format
+        #[arg(short, long)]
+        csv: bool,
+    },
 }
 
 pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
@@ -85,6 +154,27 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
         } => {
             run_cmd_random(global_opts, seed, page_size, tag, extended, csv).await;
         }
+        Commands::Search {
+            page,
+            page_size,
+            tag,
+            reverse,
+            extended,
+            csv,
+        } => {
+            run_cmd_search_basic(global_opts, page, page_size, tag, reverse, extended, csv).await;
+        }
+        Commands::AdvancedSearch {
+            media_type,
+            tags,
+            tags_mode,
+            album,
+            limit,
+            skip,
+            reverse,
+            extended,
+            csv,
+        } => {}
     }
 }
 
