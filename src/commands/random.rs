@@ -44,6 +44,16 @@ pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>
     let tags_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
 
     if tags_res.is_err() {
+        if logout_after_operation {
+            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+            match logout_res {
+                Ok(_) => {}
+                Err(_) => {
+                    process::exit(1);
+                }
+            }
+        }
         print_request_error(tags_res.err().unwrap());
         process::exit(1);
     }
@@ -130,7 +140,7 @@ pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>
                         let row_type = to_csv_string(&item.media_type.to_string());
                         let row_title = to_csv_string(&item.title);
                         let row_description = to_csv_string(&item.description);
-                        let row_tags = to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(", "));
+                        let row_tags = to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" "));
                         let row_duration = render_media_duration(item.media_type, item.duration);
 
                         println!("{row_id},{row_type},{row_title},{row_description},{row_tags},{row_duration}");
@@ -160,7 +170,7 @@ pub async fn run_cmd_random(global_opts: CommandGlobalOptions, seed: Option<i64>
                             item.media_type.to_string(),
                             to_csv_string(&item.title),
                             to_csv_string(&item.description),
-                            to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(", ")),
+                            to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" ")),
                             render_media_duration(item.media_type, item.duration),
                         ));
                     }

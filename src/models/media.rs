@@ -30,3 +30,17 @@ impl MediaType {
     }
 }
 
+pub fn parse_media_type(s: &str) -> Result<MediaType, ()> {
+    let s_lower = s.to_lowercase();
+
+    if s_lower == "video" || s_lower == "videos" {
+        return Ok(MediaType::Video);
+    } else if s_lower == "audio" || s_lower == "audios" {
+        return Ok(MediaType::Audio);
+    } else if s_lower == "image" || s_lower == "images" || s_lower == "picture" || s_lower == "pictures" {
+        return Ok(MediaType::Image);
+    } else {
+        return Err(());
+    }
+}
+

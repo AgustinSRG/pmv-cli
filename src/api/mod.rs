@@ -3,6 +3,9 @@
 mod account;
 pub use account::*;
 
+mod albums;
+pub use albums::*;
+
 mod auth;
 pub use auth::*;
 

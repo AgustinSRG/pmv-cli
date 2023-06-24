@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::MediaType;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MediaListItem {
     #[serde(rename = "id")]
     pub id: u64,

@@ -12,6 +12,9 @@ use logout::*;
 mod random;
 use random::*;
 
+mod search_advanced;
+use search_advanced::*;
+
 mod search_basic;
 use search_basic::*;
 
@@ -95,16 +98,25 @@ pub enum Commands {
     },
 
     /// Searches for media assets in the vault (Advanced)
+    #[clap(alias("adv-search"))]
     AdvancedSearch {
-        /// Filter by media type. Can be: video, audio or image
+        /// Filter by title
+        #[arg(short = 'q', long)]
+        title: Option<String>,
+
+        /// Filter by description.
         #[arg(short, long)]
+        description: Option<String>,
+
+        /// Filter by media type. Can be: video, audio or image
+        #[arg(short = 'k', long)]
         media_type: Option<String>,
 
         /// Filter by tags. Expected a list of tag names, separated by spaces.
         #[arg(short, long)]
         tags: Option<String>,
 
-        // Tag filtering mode. Can be: all, any, none or untagged
+        /// Tag filtering mode. Can be: all, any, none or untagged
         #[arg(short = 'm', long)]
         tags_mode: Option<String>,
 
@@ -165,6 +177,8 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
             run_cmd_search_basic(global_opts, page, page_size, tag, reverse, extended, csv).await;
         }
         Commands::AdvancedSearch {
+            title,
+            description,
             media_type,
             tags,
             tags_mode,
@@ -174,7 +188,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
             reverse,
             extended,
             csv,
-        } => {}
+        } => {
+            run_cmd_search_advanced(global_opts, title, description, media_type, tags, tags_mode, album, limit, skip, reverse, extended, csv).await;
+        }
     }
 }
 
