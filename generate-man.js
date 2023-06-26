@@ -40,6 +40,7 @@ function parseHelp(text) {
 
     let usage = "";
     let commands = [];
+    let args = [];
     let options = [];
 
     let current = "";
@@ -59,6 +60,9 @@ function parseHelp(text) {
             continue;
         } else if (line === "Options:") {
             current = "o";
+            continue;
+        } else if (line === "Arguments:") {
+            current = "a";
             continue;
         }
 
@@ -82,12 +86,22 @@ function parseHelp(text) {
                 syntax: optionSyntax,
                 desc: optionDesc,
             });
+        } else if (current === "a") {
+            // Option
+            const argName = spl[0].trim();
+            const argDesc = spl.slice(1).join("  ").trim();
+
+            args.push({
+                name: argName,
+                desc: argDesc,
+            });
         }
     }
 
     return {
         desc: commandDesc,
         usage: usage,
+        args: args,
         commands: commands,
         options: options,
     };
@@ -114,6 +128,19 @@ function toMd(ph) {
 
         for (let cmd of ph.commands) {
             lines.push(`| \`${cmd.name}\` | ${cmd.desc} |`);
+        }
+
+        lines.push("");
+    }
+
+    if (ph.args.length > 0) {
+        lines.push("<ins>**Arguments:**</ins>");
+        lines.push("");
+        lines.push("| Argument | Description |");
+        lines.push("| --- | --- |");
+
+        for (let arg of ph.args) {
+            lines.push(`| \`${arg.name}\` | ${arg.desc} |`);
         }
 
         lines.push("");
