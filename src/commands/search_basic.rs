@@ -143,7 +143,7 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
                         let row_title = to_csv_string(&item.title);
                         let row_description = to_csv_string(&item.description);
                         let row_tags = to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" "));
-                        let row_duration = render_media_duration(item.media_type, item.duration);
+                        let row_duration = render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
 
                         println!("{row_id},{row_type},{row_title},{row_description},{row_tags},{row_duration}");
                     }
@@ -173,7 +173,7 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
                             to_csv_string(&item.title),
                             to_csv_string(&item.description),
                             to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" ")),
-                            render_media_duration(item.media_type, item.duration),
+                            render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
                         ));
                     }
     

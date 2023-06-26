@@ -2,31 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::MediaType;
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MediaListItem {
-    #[serde(rename = "id")]
-    pub id: u64,
-
-    #[serde(rename = "type")]
-    pub media_type: MediaType,
-
-    #[serde(rename = "title")]
-    pub title: String,
-
-    #[serde(rename = "description")]
-    pub description: String,
-
-    #[serde(rename = "thumbnail")]
-    pub thumbnail: String,
-
-    #[serde(rename = "tags")]
-    pub tags: Vec<u64>,
-
-    #[serde(rename = "duration")]
-    pub duration: f64,
-}
+use super::MediaListItem;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchMediaResult {

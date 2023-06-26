@@ -9,6 +9,9 @@ pub use albums::*;
 mod auth;
 pub use auth::*;
 
+mod media;
+pub use media::*;
+
 mod search;
 pub use search::*;
 

@@ -18,6 +18,9 @@ use search_advanced::*;
 mod search_basic;
 use search_basic::*;
 
+mod tag;
+use tag::*;
+
 use clap::Subcommand;
 
 use crate::tools::RequestError;
@@ -144,6 +147,12 @@ pub enum Commands {
         #[arg(short, long)]
         csv: bool,
     },
+
+    /// Manages tags
+    Tag {
+        #[command(subcommand)]
+        tag_cmd: TagCommand,
+    },
 }
 
 pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
@@ -190,6 +199,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
             csv,
         } => {
             run_cmd_search_advanced(global_opts, title, description, media_type, tags, tags_mode, album, limit, skip, reverse, extended, csv).await;
+        }
+        Commands::Tag { tag_cmd } => {
+            run_tag_cmd(global_opts, tag_cmd).await;
         }
     }
 }
