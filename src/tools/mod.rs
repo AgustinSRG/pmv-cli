@@ -3,6 +3,9 @@
 mod console_table;
 pub use console_table::*;
 
+mod date;
+pub use date::*;
+
 mod duration;
 pub use duration::*;
 

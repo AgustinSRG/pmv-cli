@@ -3,6 +3,9 @@
 mod account;
 use account::*;
 
+mod album;
+use album::*;
+
 mod login;
 use login::*;
 
@@ -149,9 +152,17 @@ pub enum Commands {
     },
 
     /// Manages tags
+    #[clap(alias("tags"))]
     Tag {
         #[command(subcommand)]
         tag_cmd: TagCommand,
+    },
+
+    /// Manages albums
+    #[clap(alias("albums"))]
+    Album {
+        #[command(subcommand)]
+        album_cmd: AlbumCommand,
     },
 }
 
@@ -202,6 +213,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
         }
         Commands::Tag { tag_cmd } => {
             run_tag_cmd(global_opts, tag_cmd).await;
+        }
+        Commands::Album { album_cmd } => {
+            run_album_cmd(global_opts, album_cmd).await;
         }
     }
 }

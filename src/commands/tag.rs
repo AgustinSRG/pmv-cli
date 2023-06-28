@@ -10,7 +10,7 @@ use crate::{
     commands::logout::do_logout,
     models::{parse_tag_name, tags_map_from_list, tags_reverse_map_from_list, AddTagBody, RemoveTagBody},
     tools::{
-        ensure_login, is_identifier, parse_identifier, parse_vault_uri, print_table, to_csv_string,
+        ensure_login, is_identifier, parse_identifier, parse_vault_uri, print_table, to_csv_string, identifier_to_string,
     },
 };
 
@@ -125,7 +125,7 @@ pub async fn run_cmd_list_tags(global_opts: CommandGlobalOptions, csv: bool, alp
                 println!("\"Tag Id\",\"Tag Name\"");
 
                 for tag in tags {
-                    let row_id = tag.id.to_string();
+                    let row_id = identifier_to_string(tag.id);
                     let row_name = to_csv_string(&tag.name);
                     println!("{row_id},{row_name}");
                 }
@@ -135,7 +135,7 @@ pub async fn run_cmd_list_tags(global_opts: CommandGlobalOptions, csv: bool, alp
                 let mut table_body: Vec<Vec<String>> = Vec::with_capacity(total);
 
                 for tag in tags {
-                    table_body.push(vec![tag.id.to_string(), to_csv_string(&tag.name)]);
+                    table_body.push(vec![identifier_to_string(tag.id), to_csv_string(&tag.name)]);
                 }
 
                 print_table(&table_head, &table_body);
