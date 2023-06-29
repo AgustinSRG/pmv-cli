@@ -96,7 +96,7 @@ pub struct MediaMetadata {
     #[serde(rename = "width")]
     pub width: Option<i32>,
 
-    #[serde(rename = "width")]
+    #[serde(rename = "height")]
     pub height: Option<i32>,
 
     #[serde(rename = "fps")]
@@ -148,10 +148,10 @@ pub struct MediaMetadata {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MediaResolution {
     #[serde(rename = "width")]
-    pub width: Option<i32>,
+    pub width: i32,
 
-    #[serde(rename = "width")]
-    pub height: Option<i32>,
+    #[serde(rename = "height")]
+    pub height: i32,
 
     #[serde(rename = "fps")]
     pub fps: Option<i32>,

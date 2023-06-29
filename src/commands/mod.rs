@@ -6,6 +6,9 @@ use account::*;
 mod album;
 use album::*;
 
+mod config;
+use config::*;
+
 mod login;
 use login::*;
 
@@ -164,6 +167,13 @@ pub enum Commands {
         #[command(subcommand)]
         album_cmd: AlbumCommand,
     },
+
+    /// Manages vault configuration
+    #[clap(alias("configuration"))]
+    Config {
+        #[command(subcommand)]
+        config_cmd: ConfigCommand,
+    },
 }
 
 pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
@@ -216,6 +226,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
         }
         Commands::Album { album_cmd } => {
             run_album_cmd(global_opts, album_cmd).await;
+        }
+        Commands::Config { config_cmd } => {
+            run_config_cmd(global_opts, config_cmd).await;
         }
     }
 }
