@@ -27,6 +27,9 @@ use search_basic::*;
 mod tag;
 use tag::*;
 
+mod task;
+use task::*;
+
 use clap::Subcommand;
 
 use crate::tools::RequestError;
@@ -174,6 +177,13 @@ pub enum Commands {
         #[command(subcommand)]
         config_cmd: ConfigCommand,
     },
+
+    /// Retrieves tasks information
+    #[clap(alias("tasks"))]
+    Task {
+        #[command(subcommand)]
+        task_cmd: TaskCommand,
+    },
 }
 
 pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
@@ -229,6 +239,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
         }
         Commands::Config { config_cmd } => {
             run_config_cmd(global_opts, config_cmd).await;
+        }
+        Commands::Task { task_cmd } => {
+            run_task_cmd(global_opts, task_cmd).await;
         }
     }
 }

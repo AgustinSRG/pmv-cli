@@ -161,7 +161,7 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
                         ));
                     }
     
-                    print_table(&table_head, &table_body);
+                    print_table(&table_head, &table_body, false);
                 } else {
                     let table_head: Vec<String> = vec!["Id".to_string(), "Type".to_string(), "Title".to_string(), "Description".to_string(), "Tags".to_string(), "Duration".to_string()];
                     let mut table_body: Vec<Vec<String>> = Vec::with_capacity(page_items);
@@ -177,7 +177,7 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
                         ));
                     }
     
-                    print_table(&table_head, &table_body);
+                    print_table(&table_head, &table_body, false);
                 }
             }
         },

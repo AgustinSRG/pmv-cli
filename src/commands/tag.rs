@@ -138,7 +138,7 @@ pub async fn run_cmd_list_tags(global_opts: CommandGlobalOptions, csv: bool, alp
                     table_body.push(vec![identifier_to_string(tag.id), to_csv_string(&tag.name)]);
                 }
 
-                print_table(&table_head, &table_body);
+                print_table(&table_head, &table_body, false);
             }
         }
         Err(e) => {

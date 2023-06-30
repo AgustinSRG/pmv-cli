@@ -409,7 +409,7 @@ pub async fn run_cmd_search_advanced(
                 ]);
             }
 
-            print_table(&table_head, &table_body);
+            print_table(&table_head, &table_body, false);
         } else {
             let table_head: Vec<String> = vec![
                 "Id".to_string(),
@@ -432,7 +432,7 @@ pub async fn run_cmd_search_advanced(
                 ]);
             }
 
-            print_table(&table_head, &table_body);
+            print_table(&table_head, &table_body, false);
         }
     }
 }

@@ -19,6 +19,9 @@ pmv-cli [OPTIONS] <COMMAND>
 | `search` | Searches for media assets in the vault (Basic) |
 | `advanced-search` | Searches for media assets in the vault (Advanced) |
 | `tag` | Manages tags |
+| `album` | Manages albums |
+| `config` | Manages vault configuration |
+| `task` | Retrieves tasks information |
 | `help` | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
@@ -360,6 +363,577 @@ pmv-cli tag remove <TAG> <MEDIA>
 | --- | --- |
 | `<TAG>` | Tag name or identifier |
 | `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+## Command: album
+
+Manages albums
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album <COMMAND>
+```
+
+<ins>**Commands:**</ins>
+
+| Command | Description |
+| --- | --- |
+| `list` | List albums |
+| `get` | Get album and prints it |
+| `create` | Creates a new album |
+| `rename` | Renames an album |
+| `delete` | Deletes album |
+| `add` | Adds a media asset to an album |
+| `remove` | Removes a media asset from an album |
+| `set-position` | Changes the position of a media asset inside al album |
+| `help` | Print this message or the help of the given subcommand(s) |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: album list
+
+List albums
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album list [OPTIONS]
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-m, --media <MEDIA>` | Filter by media |
+| `-c, --csv` | CSV format |
+| `-a, --alphabetically` | Sort alphabetically by name |
+| `-i, --id-sorted` | Sort by ID |
+| `-h, --help` | Print help |
+
+### Command: album get
+
+Get album and prints it
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album get [OPTIONS] <ALBUM>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-e, --extended` | Extended version of the results table |
+| `-c, --csv` | CSV format |
+| `-h, --help` | Print help |
+
+### Command: album create
+
+Creates a new album
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album create <NAME>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<NAME>` | Album name |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: album rename
+
+Renames an album
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album rename <ALBUM> <NAME>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+| `<NAME>` | Album name |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: album delete
+
+Deletes album
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album delete <ALBUM>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: album add
+
+Adds a media asset to an album
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album add <ALBUM> <MEDIA>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+| `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: album remove
+
+Removes a media asset from an album
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album remove <ALBUM> <MEDIA>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+| `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: album set-position
+
+Changes the position of a media asset inside al album
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album set-position <ALBUM> <MEDIA> <POSITION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+| `<MEDIA>` | Media asset ID |
+| `<POSITION>` | New position for the media asset, starting at 1 |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+## Command: config
+
+Manages vault configuration
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config <COMMAND>
+```
+
+<ins>**Commands:**</ins>
+
+| Command | Description |
+| --- | --- |
+| `get` | Gets vault configuration |
+| `get-css` | Gets custom CSS code configured for the vault |
+| `set-title` | Sets vault title |
+| `set-max-tasks` | Sets max tasks in parallel |
+| `set-encoding-threads` | Sets number of encoding threads to use |
+| `set-css` | Sets custom CSS for the vault |
+| `clear-css` |  |
+| `add-video-resolution` | Adds video resolution |
+| `remove-video-resolution` | Removes video resolution |
+| `add-image-resolution` | Adds image resolution |
+| `remove-image-resolution` | Removes image resolution |
+| `help` | Print this message or the help of the given subcommand(s) |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config get
+
+Gets vault configuration
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config get
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config get-css
+
+Gets custom CSS code configured for the vault
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config get-css
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config set-title
+
+Sets vault title
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config set-title <TITLE>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<TITLE>` | Vault title |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config set-max-tasks
+
+Sets max tasks in parallel
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config set-max-tasks <MAX_TASKS>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MAX_TASKS>` | Max tasks in parallel |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config set-encoding-threads
+
+Sets number of encoding threads to use
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config set-encoding-threads <ENCODING_THREADS>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ENCODING_THREADS>` | Number of encoding threads to use |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config set-css
+
+Sets custom CSS for the vault
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config set-css <FILE_PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<FILE_PATH>` | Path to the css file to use |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config clear-css
+
+Usage: pmv-cli config clear-css
+
+<ins>**Usage:**</ins>
+
+```
+
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config add-video-resolution
+
+Adds video resolution
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config add-video-resolution <RESOLUTION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<RESOLUTION>` | Video resolution. Example: 1280x720:30 |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config remove-video-resolution
+
+Removes video resolution
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config remove-video-resolution <RESOLUTION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<RESOLUTION>` | Video resolution. Example: 1280x720:30 |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config add-image-resolution
+
+Adds image resolution
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config add-image-resolution <RESOLUTION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<RESOLUTION>` | Image resolution. Example: 1280x720 |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config remove-image-resolution
+
+Removes image resolution
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config remove-image-resolution <RESOLUTION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<RESOLUTION>` | Image resolution. Example: 1280x720 |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+## Command: task
+
+Retrieves tasks information
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli task <COMMAND>
+```
+
+<ins>**Commands:**</ins>
+
+| Command | Description |
+| --- | --- |
+| `list` | Lists current existing tasks |
+| `monitor` | Monitors tasks |
+| `get` | Get task status |
+| `wait` | Waits for a task to finish, monitoring its status |
+| `help` | Print this message or the help of the given subcommand(s) |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: task list
+
+Lists current existing tasks
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli task list [OPTIONS]
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-c, --csv` | CSV format |
+| `-h, --help` | Print help |
+
+### Command: task monitor
+
+Monitors tasks
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli task monitor
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: task get
+
+Get task status
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli task get <TASK>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<TASK>` | Task identifier |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: task wait
+
+Waits for a task to finish, monitoring its status
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli task wait <TASK>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<TASK>` | Task identifier |
 
 <ins>**Options:**</ins>
 

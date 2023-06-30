@@ -23,3 +23,6 @@ pub use search::*;
 
 mod tags;
 pub use tags::*;
+
+mod tasks;
+pub use tasks::*;

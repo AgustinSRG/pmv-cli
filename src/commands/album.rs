@@ -317,7 +317,7 @@ pub async fn run_cmd_list_albums(
                     ]);
                 }
 
-                print_table(&table_head, &table_body);
+                print_table(&table_head, &table_body, false);
             }
         }
         Err(e) => {
@@ -390,7 +390,7 @@ pub async fn run_cmd_get_album(
                     }
                 }
             }
-            eprintln!("Invalid media asset identifier specified.");
+            eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
     }
@@ -491,7 +491,7 @@ pub async fn run_cmd_get_album(
                         ]);
                     }
 
-                    print_table(&table_head, &table_body);
+                    print_table(&table_head, &table_body, false);
                 } else {
                     let table_head: Vec<String> = vec![
                         "Pos".to_string(),
@@ -516,7 +516,7 @@ pub async fn run_cmd_get_album(
                         ]);
                     }
 
-                    print_table(&table_head, &table_body);
+                    print_table(&table_head, &table_body, false);
                 }
             }
         }
@@ -660,7 +660,7 @@ pub async fn run_cmd_album_rename(
                     }
                 }
             }
-            eprintln!("Invalid media asset identifier specified.");
+            eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
     }
@@ -755,7 +755,7 @@ pub async fn run_cmd_album_delete(global_opts: CommandGlobalOptions, album: Stri
                     }
                 }
             }
-            eprintln!("Invalid media asset identifier specified.");
+            eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
     }
@@ -895,7 +895,7 @@ pub async fn run_cmd_album_add_media(
                     }
                 }
             }
-            eprintln!("Invalid media asset identifier specified.");
+            eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
     }
@@ -1114,7 +1114,7 @@ pub async fn run_cmd_album_remove_media(
                     }
                 }
             }
-            eprintln!("Invalid media asset identifier specified.");
+            eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
     }
@@ -1292,7 +1292,7 @@ pub async fn run_cmd_album_media_change_position(
                     }
                 }
             }
-            eprintln!("Invalid media asset identifier specified.");
+            eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
     }

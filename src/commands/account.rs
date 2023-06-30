@@ -447,7 +447,7 @@ pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool)
                     ]);
                 }
 
-                print_table(&table_head, &table_body);
+                print_table(&table_head, &table_body, false);
             }
         }
         Err(e) => {

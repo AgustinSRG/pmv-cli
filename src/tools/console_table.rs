@@ -2,7 +2,7 @@
 
 use std::cmp::max;
 
-use unicode_width::UnicodeWidthStr;
+use unicode_width::{UnicodeWidthStr, UnicodeWidthChar};
 
 const MIN_ALLOWED_COL_LENGTH: usize = 8;
 
@@ -10,7 +10,7 @@ pub fn to_csv_string(s: &str) -> String {
     return serde_json::to_string(s).unwrap();
 }
 
-pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>) -> () {
+pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>, std_err: bool) -> () {
     let len = head.len();
 
     // Get term size
@@ -63,7 +63,7 @@ pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>) -> () {
     let total_size = total_max_size + extra_size;
 
     if term_cols >= total_size {
-        print_table_with_sizes(head, body, &max_sizes);
+        print_table_with_sizes(head, body, &max_sizes, std_err);
     } else {
         let col_allowed_size = max(MIN_ALLOWED_COL_LENGTH, (term_cols - extra_size) / len);
 
@@ -97,25 +97,25 @@ pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>) -> () {
         }
 
         // Print
-        print_table_with_sizes(head, body, &allowed_sizes);
+        print_table_with_sizes(head, body, &allowed_sizes, std_err);
     }
 }
 
-fn print_table_with_sizes(head: &Vec<String>, body: &Vec<Vec<String>>, sizes: &Vec<usize>) -> () {
-    print_table_separator(&sizes);
+fn print_table_with_sizes(head: &Vec<String>, body: &Vec<Vec<String>>, sizes: &Vec<usize>, std_err: bool) -> () {
+    print_table_separator(&sizes, std_err);
 
-    print_table_line(head, sizes);
+    print_table_line(head, sizes, std_err);
 
-    print_table_separator(&sizes);
+    print_table_separator(&sizes, std_err);
 
     for body_row in body {
-        print_table_line(body_row, sizes);
+        print_table_line(body_row, sizes, std_err);
     }
 
-    print_table_separator(&sizes);
+    print_table_separator(&sizes, std_err);
 }
 
-fn print_table_line(col: &Vec<String>, sizes: &Vec<usize>) {
+fn print_table_line(col: &Vec<String>, sizes: &Vec<usize>, std_err: bool) {
     let mut more_lines = true;
     let mut line = 0;
 
@@ -145,7 +145,11 @@ fn print_table_line(col: &Vec<String>, sizes: &Vec<usize>) {
             line_str.push('|');
         }
 
-        println!("{line_str}");
+        if std_err {
+            eprintln!("{line_str}");
+        } else {
+            println!("{line_str}");
+        }
 
         if more_lines {
             line += 1;
@@ -164,16 +168,17 @@ fn sub_string(original_str: &str, skip: usize, limit: usize) -> String {
             return original_str.to_string();
         } else {
             let mut res = "".to_string();
+            let mut res_width: usize = 0;
 
             for c in original_str.chars() {
-                let mut new_res = res.clone();
-                new_res.push(c);
+                let c_width = c.width_cjk().unwrap_or(0);
 
-                if new_res.width() > limit {
+                if res_width + c_width > limit {
                     return res;
                 }
 
-                res = new_res;
+                res.push(c);
+                res_width += c_width;
             }
 
             return res;
@@ -217,7 +222,7 @@ fn sub_string(original_str: &str, skip: usize, limit: usize) -> String {
     }
 }
 
-fn print_table_separator(sizes: &Vec<usize>) -> () {
+fn print_table_separator(sizes: &Vec<usize>, std_err: bool) -> () {
     let mut line = "".to_string();
 
     line.push('|');
@@ -231,14 +236,24 @@ fn print_table_separator(sizes: &Vec<usize>) -> () {
         line.push('|');
     }
 
-    println!("{line}");
+    if std_err {
+        eprintln!("{line}");
+    } else {
+        println!("{line}");
+    }
 }
 
 fn pad_str(str: &str, s: usize) -> String {
     let mut res = str.to_string();
 
-    while res.width() < s {
-        res.push(' ');
+    let w = res.width();
+
+    if w < s {
+        let d = s - w;
+
+        for _ in 0..d {
+            res.push(' ');
+        }
     }
 
     return res;
