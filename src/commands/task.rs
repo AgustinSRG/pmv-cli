@@ -315,11 +315,15 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) -> () {
 
     // Call API
 
+    let mut monitoring_started = false;
+
     loop {
         let api_res = api_call_get_tasks(vault_url.clone(), false).await;
 
         match api_res {
             Ok(tasks) => {
+                monitoring_started = true;
+
                 eprint!("\x1B[2J\x1B[1;1H"); // Clear screen and position the cursor at the top
 
                 eprintln!("Monitoring tasks. Press Enter or Ctrl + C to exit.");
@@ -370,20 +374,57 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) -> () {
 
                 print_table(&table_head, &table_body, true);
             }
-            Err(e) => {
-                print_request_error(e);
-                if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            Err(e) => match e {
+                crate::tools::RequestError::ApiError {
+                    status,
+                    code: _,
+                    message: _,
+                } => {
+                    if status == StatusCode::UNAUTHORIZED && monitoring_started {
+                        if logout_after_operation {
+                            let logout_res = do_logout(global_opts, vault_url.clone()).await;
 
-                    match logout_res {
-                        Ok(_) => {}
-                        Err(_) => {
-                            process::exit(1);
+                            match logout_res {
+                                Ok(_) => {}
+                                Err(_) => {}
+                            }
                         }
+                        process::exit(0);
+                    } else {
+                        print_request_error(e);
+                        if logout_after_operation {
+                            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                            match logout_res {
+                                Ok(_) => {}
+                                Err(_) => {
+                                    process::exit(1);
+                                }
+                            }
+                        }
+                        process::exit(1);
                     }
                 }
-                process::exit(1);
-            }
+                crate::tools::RequestError::StatusCodeError(_)
+                | crate::tools::RequestError::JSONError {
+                    message: _,
+                    body: _,
+                }
+                | crate::tools::RequestError::HyperError(_) => {
+                    print_request_error(e);
+                    if logout_after_operation {
+                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                        match logout_res {
+                            Ok(_) => {}
+                            Err(_) => {
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    process::exit(1);
+                }
+            },
         }
 
         // Wait
@@ -521,7 +562,11 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
                     crate::tools::RequestError::StatusCodeError(_) => {
                         print_request_error(e);
                     }
-                    crate::tools::RequestError::ApiError { status, code: _, message: _ } => {
+                    crate::tools::RequestError::ApiError {
+                        status,
+                        code: _,
+                        message: _,
+                    } => {
                         if *status == StatusCode::NOT_FOUND {
                             eprint!("\r{clear_line_str}");
                             if task_found {
@@ -537,7 +582,10 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
                     crate::tools::RequestError::HyperError(_) => {
                         print_request_error(e);
                     }
-                    crate::tools::RequestError::JSONError { message: _, body: _ } => {
+                    crate::tools::RequestError::JSONError {
+                        message: _,
+                        body: _,
+                    } => {
                         print_request_error(e);
                     }
                 }
