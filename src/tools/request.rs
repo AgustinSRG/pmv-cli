@@ -10,6 +10,7 @@ use hyper::{
 use hyper_multipart_rfc7578::client::{multipart};
 use tokio::{fs::File, io::AsyncWriteExt};
 use hyper::{body::HttpBody};
+use hyper_tls::HttpsConnector;
 
 const SESSION_HEADER_NAME: &str = "x-session-token";
 
@@ -69,7 +70,8 @@ pub async fn do_get_request(uri: VaultURI, path: String, debug: bool) -> Result<
 
     let request = request_builder.body(Body::empty()).unwrap();
 
-    let client = Client::new();
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
 
     let result = client.request(request).await;
 
@@ -144,7 +146,8 @@ pub async fn do_post_request(
 
     let request = request_builder.body(Body::from(body)).unwrap();
 
-    let client = Client::new();
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
 
     let result = client.request(request).await;
 
@@ -253,7 +256,8 @@ pub async fn do_multipart_upload_request(
 
     let request = request_build_result.unwrap();
 
-    let client = Client::new();
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
 
     let result = client.request(request).await;
 
@@ -335,7 +339,8 @@ pub async fn do_get_download_request(uri: VaultURI, path: String, file_path: Str
 
     let request = request_builder.body(Body::empty()).unwrap();
 
-    let client = Client::new();
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
 
     let result = client.request(request).await;
 
