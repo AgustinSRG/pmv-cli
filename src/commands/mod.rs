@@ -15,6 +15,9 @@ use login::*;
 mod logout;
 use logout::*;
 
+mod media;
+use media::*;
+
 mod random;
 use random::*;
 
@@ -57,6 +60,12 @@ pub enum Commands {
     Account {
         #[command(subcommand)]
         account_cmd: AccountCommand,
+    },
+
+    /// Manages media assets
+    Media {
+        #[command(subcommand)]
+        media_cmd: MediaCommand,
     },
 
     /// Retrieves random media assets from the vault
@@ -196,6 +205,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
         }
         Commands::Account { account_cmd } => {
             run_account_cmd(global_opts, account_cmd).await;
+        }
+        Commands::Media { media_cmd } => {
+            run_media_cmd(global_opts, media_cmd).await;
         }
         Commands::Random {
             seed,

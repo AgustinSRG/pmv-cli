@@ -78,6 +78,9 @@ pub struct MediaMetadata {
     #[serde(rename = "type")]
     pub media_type: MediaType,
 
+    #[serde(rename = "upload_time")]
+    pub upload_time: i64,
+
     #[serde(rename = "title")]
     pub title: String,
 
@@ -164,6 +167,19 @@ pub struct MediaResolution {
 
     #[serde(rename = "url")]
     pub url: Option<String>,
+}
+
+impl MediaResolution {
+    pub fn to_string(&self) -> String {
+        let w = self.width;
+        let h = self.height;
+        let fps = self.fps.unwrap_or(0);
+        if fps > 0 {
+            return format!("{w}x{h}:{fps}");
+        } else {
+            return format!("{w}x{h}");
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
