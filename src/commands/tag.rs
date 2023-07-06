@@ -8,9 +8,12 @@ use hyper::StatusCode;
 use crate::{
     api::{api_call_get_media, api_call_get_tags, api_call_tag_add, api_call_tag_remove},
     commands::logout::do_logout,
-    models::{parse_tag_name, tags_map_from_list, tags_reverse_map_from_list, AddTagBody, RemoveTagBody},
+    models::{
+        parse_tag_name, tags_map_from_list, tags_reverse_map_from_list, AddTagBody, RemoveTagBody,
+    },
     tools::{
-        ensure_login, is_identifier, parse_identifier, parse_vault_uri, print_table, to_csv_string, identifier_to_string,
+        ensure_login, identifier_to_string, is_identifier, parse_identifier, parse_vault_uri,
+        print_table, to_csv_string,
     },
 };
 
@@ -51,7 +54,10 @@ pub enum TagCommand {
 
 pub async fn run_tag_cmd(global_opts: CommandGlobalOptions, cmd: TagCommand) -> () {
     match cmd {
-        TagCommand::List { csv, alphabetically } => {
+        TagCommand::List {
+            csv,
+            alphabetically,
+        } => {
             run_cmd_list_tags(global_opts, csv, alphabetically).await;
         }
         TagCommand::Add { tag, media } => {
@@ -63,7 +69,11 @@ pub async fn run_tag_cmd(global_opts: CommandGlobalOptions, cmd: TagCommand) -> 
     }
 }
 
-pub async fn run_cmd_list_tags(global_opts: CommandGlobalOptions, csv: bool, alphabetically: bool) -> () {
+pub async fn run_cmd_list_tags(
+    global_opts: CommandGlobalOptions,
+    csv: bool,
+    alphabetically: bool,
+) -> () {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -205,6 +215,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
                     match e {
                         crate::tools::RequestError::StatusCodeError(_)
                         | crate::tools::RequestError::HyperError(_)
+                        | crate::tools::RequestError::FileSystemError(_)
                         | crate::tools::RequestError::JSONError {
                             message: _,
                             body: _,

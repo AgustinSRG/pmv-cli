@@ -74,6 +74,11 @@ pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<S
                         eprintln!("Error: {e_str}");
                         process::exit(1);
                     }
+                    crate::tools::RequestError::FileSystemError(e) => {
+                        let e_str = e.to_string();
+                        eprintln!("Error: {e_str}");
+                        process::exit(1);
+                    }
                     crate::tools::RequestError::JSONError { message, body } => {
                         eprintln!("Body received: {body}");
                         eprintln!("Error parsing the body: {message}");

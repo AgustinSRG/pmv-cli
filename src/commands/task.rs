@@ -410,7 +410,8 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) -> () {
                     message: _,
                     body: _,
                 }
-                | crate::tools::RequestError::HyperError(_) => {
+                | crate::tools::RequestError::HyperError(_)
+                | crate::tools::RequestError::FileSystemError(_) => {
                     print_request_error(e);
                     if logout_after_operation {
                         let logout_res = do_logout(global_opts, vault_url.clone()).await;
@@ -579,7 +580,8 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
                             print_request_error(e);
                         }
                     }
-                    crate::tools::RequestError::HyperError(_) => {
+                    crate::tools::RequestError::HyperError(_)
+                    | crate::tools::RequestError::FileSystemError(_) => {
                         print_request_error(e);
                     }
                     crate::tools::RequestError::JSONError {

@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-use super::{get_vault_url, print_request_error, CommandGlobalOptions};
+use super::{get_vault_url, print_request_error, CommandGlobalOptions, media_download::run_cmd_download_media};
 
 #[derive(Subcommand)]
 pub enum MediaCommand {
@@ -70,7 +70,9 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
             asset,
             output,
             print_link,
-        } => todo!(),
+        } => {
+            run_cmd_download_media(global_opts, media, asset, output, print_link).await;
+        }
         MediaCommand::Upload {
             path,
             title,

@@ -7,13 +7,14 @@ use hyper::StatusCode;
 
 use crate::{
     api::{
-        api_call_album_add_media, api_call_album_remove_media, api_call_create_album,
-        api_call_delete_album, api_call_get_album, api_call_get_albums, api_call_get_media,
-        api_call_get_media_albums, api_call_get_tags, api_call_rename_album, api_call_album_set_order,
+        api_call_album_add_media, api_call_album_remove_media, api_call_album_set_order,
+        api_call_create_album, api_call_delete_album, api_call_get_album, api_call_get_albums,
+        api_call_get_media, api_call_get_media_albums, api_call_get_tags, api_call_rename_album,
     },
     commands::logout::do_logout,
     models::{
-        tags_map_from_list, tags_names_from_ids, AlbumListItem, AlbumMediaBody, AlbumNameBody, AlbumSetOrderBody,
+        tags_map_from_list, tags_names_from_ids, AlbumListItem, AlbumMediaBody, AlbumNameBody,
+        AlbumSetOrderBody,
     },
     tools::{
         ask_user, ensure_login, format_date, identifier_to_string, parse_identifier,
@@ -919,6 +920,7 @@ pub async fn run_cmd_album_add_media(
                     match e {
                         crate::tools::RequestError::StatusCodeError(_)
                         | crate::tools::RequestError::HyperError(_)
+                        | crate::tools::RequestError::FileSystemError(_)
                         | crate::tools::RequestError::JSONError {
                             message: _,
                             body: _,
@@ -1316,6 +1318,7 @@ pub async fn run_cmd_album_media_change_position(
                     match e {
                         crate::tools::RequestError::StatusCodeError(_)
                         | crate::tools::RequestError::HyperError(_)
+                        | crate::tools::RequestError::FileSystemError(_)
                         | crate::tools::RequestError::JSONError {
                             message: _,
                             body: _,

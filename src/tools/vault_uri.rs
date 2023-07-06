@@ -103,7 +103,10 @@ impl VaultURI {
             } => {
                 return base_url.to_string();
             }
-            VaultURI::SessionURI { base_url, session: _ } => {
+            VaultURI::SessionURI {
+                base_url,
+                session: _,
+            } => {
                 return base_url.to_string();
             }
         }
@@ -118,7 +121,10 @@ impl VaultURI {
             } => {
                 return base_url.clone();
             }
-            VaultURI::SessionURI { base_url, session: _ } => {
+            VaultURI::SessionURI {
+                base_url,
+                session: _,
+            } => {
                 return base_url.clone();
             }
         }
@@ -133,7 +139,10 @@ impl VaultURI {
             } => {
                 return true;
             }
-            VaultURI::SessionURI { base_url: _, session: _ } => {
+            VaultURI::SessionURI {
+                base_url: _,
+                session: _,
+            } => {
                 return false;
             }
         }
@@ -148,8 +157,39 @@ impl VaultURI {
             } => {
                 return false;
             }
-            VaultURI::SessionURI { base_url: _, session: _ } => {
+            VaultURI::SessionURI {
+                base_url: _,
+                session: _,
+            } => {
                 return true;
+            }
+        }
+    }
+
+    pub fn resolve_asset(&self, path: &str) -> String {
+        match self {
+            VaultURI::LoginURI {
+                base_url: _,
+                username: _,
+                password: _,
+            } => {
+                return path.to_string();
+            }
+            VaultURI::SessionURI { base_url, session } => {
+                let cloned_base_url = base_url.clone();
+
+                let resolved_url_res = cloned_base_url.join(path);
+
+                match resolved_url_res {
+                    Ok(mut resolved_url) => {
+                        resolved_url.query_pairs_mut().append_pair("session_token", &session);
+
+                        return resolved_url.to_string();
+                    }
+                    Err(_) => {
+                        return path.to_string();
+                    }
+                }
             }
         }
     }

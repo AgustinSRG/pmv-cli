@@ -18,6 +18,8 @@ use logout::*;
 mod media;
 use media::*;
 
+mod media_download;
+
 mod random;
 use random::*;
 
@@ -241,7 +243,21 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
             extended,
             csv,
         } => {
-            run_cmd_search_advanced(global_opts, title, description, media_type, tags, tags_mode, album, limit, skip, reverse, extended, csv).await;
+            run_cmd_search_advanced(
+                global_opts,
+                title,
+                description,
+                media_type,
+                tags,
+                tags_mode,
+                album,
+                limit,
+                skip,
+                reverse,
+                extended,
+                csv,
+            )
+            .await;
         }
         Commands::Tag { tag_cmd } => {
             run_tag_cmd(global_opts, tag_cmd).await;
@@ -295,6 +311,10 @@ pub fn print_request_error(e: RequestError) -> () {
             eprintln!("API Error | Status: {status} | Code: {code} | Message: {message}");
         }
         RequestError::HyperError(e) => {
+            let e_str = e.to_string();
+            eprintln!("Error: {e_str}");
+        }
+        RequestError::FileSystemError(e) => {
             let e_str = e.to_string();
             eprintln!("Error: {e_str}");
         }
