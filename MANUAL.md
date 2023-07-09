@@ -15,6 +15,7 @@ pmv-cli [OPTIONS] <COMMAND>
 | `login` | Logins into an active vault, printing a session URL into the standard output |
 | `logout` | Closes the active session, given a session URL |
 | `account` | Manages accounts |
+| `media` | Manages media assets |
 | `random` | Retrieves random media assets from the vault |
 | `search` | Searches for media assets in the vault (Basic) |
 | `advanced-search` | Searches for media assets in the vault (Advanced) |
@@ -209,6 +210,104 @@ pmv-cli account delete <USERNAME>
 
 | Option | Description |
 | --- | --- |
+| `-h, --help` | Print help |
+
+## Command: media
+
+Manages media assets
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media <COMMAND>
+```
+
+<ins>**Commands:**</ins>
+
+| Command | Description |
+| --- | --- |
+| `get` | Gets media asset metadata and download links |
+| `download` | Downloads a media asset |
+| `upload` | Uploads a new media asset, waits for encryption and adds tags if specified |
+| `help` | Print this message or the help of the given subcommand(s) |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media get
+
+Gets media asset metadata and download links
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media get <MEDIA>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media download
+
+Downloads a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media download [OPTIONS] <MEDIA> [ASSET]
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `[ASSET]` | Asset to download. Examples: original, thumbnail, resolution:1280x720:30, sub:ID, audio:ID, notes, preview:Index |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-o, --output <OUTPUT>` | Path to the file to download the asset into |
+| `-p, --print-link` | Prints the download link, instead of downloading to a file |
+| `-h, --help` | Print help |
+
+### Command: media upload
+
+Uploads a new media asset, waits for encryption and adds tags if specified
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media upload [OPTIONS] <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<PATH>` | Path to the file to upload |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-t, --title <TITLE>` | A title for the media asset |
+| `-a, --album <ALBUM>` | Album to upload the media asset into |
+| `-T, --tags <TAGS>` | Tags to add to the media asset, separated by spaces |
+| `-s, --skip-encryption` | Do not wait for encryption |
 | `-h, --help` | Print help |
 
 ## Command: random
