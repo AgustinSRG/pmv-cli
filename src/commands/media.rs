@@ -14,7 +14,10 @@ use crate::{
     },
 };
 
-use super::{get_vault_url, print_request_error, CommandGlobalOptions, media_download::run_cmd_download_media};
+use super::{
+    get_vault_url, media_download::run_cmd_download_media, media_upload::run_cmd_upload_media,
+    print_request_error, CommandGlobalOptions,
+};
 
 #[derive(Subcommand)]
 pub enum MediaCommand {
@@ -41,7 +44,7 @@ pub enum MediaCommand {
         print_link: bool,
     },
 
-    /// Uploads a new media asset
+    /// Uploads a new media asset, waits for encryption and adds tags if specified
     Upload {
         /// Path to the file to upload
         path: String,
@@ -55,8 +58,12 @@ pub enum MediaCommand {
         album: Option<String>,
 
         /// Tags to add to the media asset, separated by spaces.
-        #[arg(short, long)]
+        #[arg(short = 'T', long)]
         tags: Option<String>,
+
+        /// Do not wait for encryption
+        #[arg(short, long)]
+        skip_encryption: bool,
     },
 }
 
@@ -78,7 +85,10 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
             title,
             album,
             tags,
-        } => todo!(),
+            skip_encryption,
+        } => {
+            run_cmd_upload_media(global_opts, path, title, album, tags, skip_encryption).await;
+        }
     }
 }
 
@@ -280,7 +290,7 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
                                         println!("\t  File: {resolution_url}");
                                     }
                                     None => {}
-                                } 
+                                }
                             } else {
                                 println!("\t  Status: Not ready yet");
                                 match resolution.task {

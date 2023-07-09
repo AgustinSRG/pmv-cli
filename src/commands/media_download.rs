@@ -1,6 +1,6 @@
 // Media download command
 
-use std::{process, time::Instant};
+use std::process;
 
 use unicode_width::UnicodeWidthStr;
 
@@ -10,7 +10,7 @@ use crate::{
     models::{ConfigImageResolution, ConfigVideoResolution, TaskEncodeResolution},
     tools::{
         ask_user, do_get_download_request, ensure_login, parse_identifier, parse_vault_uri,
-        VaultURI, ProgressReceiver,
+        ProgressReceiver, VaultURI,
     },
 };
 
@@ -750,14 +750,14 @@ pub async fn download_media_asset(
         }
     }
 
-    let mut progressPrinter = DownloaderProgressPrinter::new();
+    let mut progress_printer = DownloaderProgressPrinter::new();
 
     let download_result = do_get_download_request(
         vault_url.clone(),
         download_path,
         out_file.clone(),
         global_opts.debug,
-        &mut progressPrinter
+        &mut progress_printer,
     )
     .await;
 
@@ -784,20 +784,20 @@ pub async fn download_media_asset(
 }
 
 struct DownloaderProgressPrinter {
-    loaded: i64,
-    total: i64,
     last_line_width: usize,
 }
 
 impl DownloaderProgressPrinter {
     fn new() -> DownloaderProgressPrinter {
-        return DownloaderProgressPrinter { loaded: 0, total: 0, last_line_width: 0 };
+        return DownloaderProgressPrinter {
+            last_line_width: 0,
+        };
     }
-}  
+}
 
 impl ProgressReceiver for DownloaderProgressPrinter {
     fn progress_start(self: &mut Self) -> () {
-        let line =  "Downloading...".to_string();
+        let line = "Downloading...".to_string();
         eprint!("{line}");
         self.last_line_width = line.width();
     }
@@ -809,12 +809,10 @@ impl ProgressReceiver for DownloaderProgressPrinter {
     fn progress_update(self: &mut Self, loaded: u64, total: u64) -> () {
         let mut line: String;
         if total > 0 {
-            let progress_percent: f64 =
-                (loaded as f64) * 100.0 / (total as f64);
+            let progress_percent: f64 = (loaded as f64) * 100.0 / (total as f64);
             line = format!("Downloading... {loaded} of {total} bytes. ({progress_percent:.2}%)");
         } else {
-            line =
-                format!("Downloading... {loaded} of unknown bytes.");
+            line = format!("Downloading... {loaded} of unknown bytes.");
         }
 
         let line_width = line.width();

@@ -214,3 +214,9 @@ pub struct MediaTimeSlice {
     #[serde(rename = "name")]
     pub name: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaUploadResponse {
+    #[serde(rename = "media_id")]
+    pub media_id: u64,
+}
