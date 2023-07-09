@@ -1,15 +1,17 @@
 // Media download command
 
-use std::{process, sync::{Arc, Mutex}};
+use std::{process, time::Instant};
 
-use tokio::join;
 use unicode_width::UnicodeWidthStr;
 
 use crate::{
     api::api_call_get_media,
     commands::logout::do_logout,
     models::{ConfigImageResolution, ConfigVideoResolution, TaskEncodeResolution},
-    tools::{ensure_login, parse_identifier, parse_vault_uri, RequestProgress, get_request_progress, VaultURI, do_get_download_request, ask_user},
+    tools::{
+        ask_user, do_get_download_request, ensure_login, parse_identifier, parse_vault_uri,
+        VaultURI, ProgressReceiver,
+    },
 };
 
 use super::{get_vault_url, print_request_error, CommandGlobalOptions};
@@ -650,8 +652,14 @@ pub async fn run_cmd_download_media(
                 let download_link = vault_url.resolve_asset(&download_path);
                 println!("{download_link}");
             } else {
-                download_media_asset(global_opts, vault_url, download_path, output, logout_after_operation)
-                    .await;
+                download_media_asset(
+                    global_opts,
+                    vault_url,
+                    download_path,
+                    output,
+                    logout_after_operation,
+                )
+                .await;
             }
         }
         Err(e) => {
@@ -723,7 +731,9 @@ pub async fn download_media_asset(
 
     if out_exists && !global_opts.auto_confirm {
         eprintln!("The file {out_file} already exists");
-        let confirmation = ask_user("Do you want to overwrite it? y/n: ").await.unwrap_or("".to_string());
+        let confirmation = ask_user("Do you want to overwrite it? y/n: ")
+            .await
+            .unwrap_or("".to_string());
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
@@ -740,23 +750,16 @@ pub async fn download_media_asset(
         }
     }
 
-    let progress = Arc::new(Mutex::new(RequestProgress{
-        started: false,
-        loaded: 0,
-        total: 0,
-        finished: false,
-    }));
+    let mut progressPrinter = DownloaderProgressPrinter::new();
 
-    if global_opts.debug {
-        eprintln!("DEBUG: DOWNLOAD {download_path} -> {out_file}");
-    }
-
-    let progress_print_future = print_download_progress(&progress);
-    let download_future = do_get_download_request(vault_url.clone(), download_path, out_file.clone(), &progress);
-
-    let (download_result, _) = join!(download_future, progress_print_future);
-
-    eprint!("\n");
+    let download_result = do_get_download_request(
+        vault_url.clone(),
+        download_path,
+        out_file.clone(),
+        global_opts.debug,
+        &mut progressPrinter
+    )
+    .await;
 
     if logout_after_operation {
         let logout_res = do_logout(global_opts, vault_url.clone()).await;
@@ -780,45 +783,50 @@ pub async fn download_media_asset(
     }
 }
 
-
-pub async fn print_download_progress(progress: &Arc<Mutex<RequestProgress>>) {
-    let mut line = "Downloading...".to_string();
-    eprint!("{line}");
-
-    let mut last_line_width = line.width();
-
-    loop {
-        let progress_m = get_request_progress(progress);
-
-        if progress_m.started {
-            let loaded = progress_m.loaded;
-            let total = progress_m.total;
-
-            if total > 0 {
-                let progress_percent: f64 = (loaded as f64) * 100.0 / (total as f64);
-                line = format!("Downloading... {loaded} of {total} bytes. ({progress_percent:.2}%)");
-            } else {
-                line = format!("Downloading... {loaded} of unknown bytes.");
-            }
-
-            let line_width = line.width();
-
-            if last_line_width > line_width {
-                let pad = last_line_width - line_width;
-                for _ in 0..pad {
-                    line.push(' ');
-                }
-            }
-
-            eprint!("\r{line}");
-            last_line_width = line.width();
-        }
-
-        if progress_m.finished {
-            return;
-        }
-
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-    }
+struct DownloaderProgressPrinter {
+    loaded: i64,
+    total: i64,
+    last_line_width: usize,
 }
 
+impl DownloaderProgressPrinter {
+    fn new() -> DownloaderProgressPrinter {
+        return DownloaderProgressPrinter { loaded: 0, total: 0, last_line_width: 0 };
+    }
+}  
+
+impl ProgressReceiver for DownloaderProgressPrinter {
+    fn progress_start(self: &mut Self) -> () {
+        let line =  "Downloading...".to_string();
+        eprint!("{line}");
+        self.last_line_width = line.width();
+    }
+
+    fn progress_finish(self: &mut Self) -> () {
+        eprint!("\n")
+    }
+
+    fn progress_update(self: &mut Self, loaded: u64, total: u64) -> () {
+        let mut line: String;
+        if total > 0 {
+            let progress_percent: f64 =
+                (loaded as f64) * 100.0 / (total as f64);
+            line = format!("Downloading... {loaded} of {total} bytes. ({progress_percent:.2}%)");
+        } else {
+            line =
+                format!("Downloading... {loaded} of unknown bytes.");
+        }
+
+        let line_width = line.width();
+
+        if self.last_line_width > line_width {
+            let pad = self.last_line_width - line_width;
+            for _ in 0..pad {
+                line.push(' ');
+            }
+        }
+
+        eprint!("\r{line}");
+        self.last_line_width = line.width();
+    }
+}

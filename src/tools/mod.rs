@@ -18,6 +18,12 @@ pub use identifier::*;
 mod request;
 pub use request::*;
 
+mod request_download;
+pub use request_download::*;
+
+mod request_upload;
+pub use request_upload::*;
+
 mod user_input;
 pub use user_input::*;
 

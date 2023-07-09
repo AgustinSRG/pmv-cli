@@ -19,6 +19,7 @@ mod media;
 use media::*;
 
 mod media_download;
+mod media_upload;
 
 mod random;
 use random::*;
