@@ -27,6 +27,12 @@ pub enum MediaCommand {
         media: String,
     },
 
+    /// Gets media asset size stats
+    Stats {
+        /// Media asset ID
+        media: String,
+    },
+
     /// Downloads a media asset
     Download {
         /// Media asset ID
@@ -65,6 +71,146 @@ pub enum MediaCommand {
         #[arg(short, long)]
         skip_encryption: bool,
     },
+
+    /// Changes the title of a media asset
+    SetTitle {
+        /// Media asset ID
+        media: String,
+
+        /// Title
+        title: String,
+    },
+
+    /// Changes the description of a media asset
+    SetDescription {
+        /// Media asset ID
+        media: String,
+
+        /// Description
+        description: String,
+    },
+
+    /// Changes the description of a media asset
+    SetForceStartBeginning {
+        /// Media asset ID
+        media: String,
+
+        /// Set to 'true' if you want to tell the clients not to store the time, so they always start from the beginning
+        force_start_beginning: String,
+    },
+
+    /// Sets the thumbnail of a media asset
+    SetThumbnail {
+        /// Media asset ID
+        media: String,
+
+        /// Path to the thumbnail file
+        path: String,
+    },
+
+    /// Prints the time slices of a media asset
+    GetTimeSlices {
+        /// Media asset ID
+        media: String,
+    },
+
+    /// Sets the time slices of a media asset
+    SetTimeSlices {
+        /// Media asset ID
+        media: String,
+
+        /// Path to the file containing the time slices
+        path: String,
+    },
+
+    /// Sets the image notes of a media asset
+    SetImageNotes {
+        /// Media asset ID
+        media: String,
+
+        /// Path to the image notes file
+        path: String,
+    },
+
+    /// Adds new resolution to the media asset
+    AddResolution {
+        /// Media asset ID
+        media: String,
+
+        /// Resolution. Example: 1280x720:30
+        resolution: String,
+    },
+
+    /// Removes a resolution from the media asset
+    RemoveResolution {
+        /// Media asset ID
+        media: String,
+
+        /// Resolution. Example: 1280x720:30
+        resolution: String,
+    },
+
+    /// Adds subtitle file to a media asset
+    AddSubtitle {
+        /// Media asset ID
+        media: String,
+
+        /// Subtitle file identifier. Example: EN
+        sub_id: String,
+
+        /// Path to the subtitles file
+        path: String,
+
+        /// Subtitle file display name. If not specified, the identifier is used.
+        #[arg(long)]
+        name: Option<String>,
+    },
+
+    /// Removes subtitle file from a media asset
+    RemoveSubtitle {
+        /// Media asset ID
+        media: String,
+
+        /// Subtitle file identifier. Example: EN
+        sub_id: String,
+    },
+
+    /// Adds audio track file to a media asset
+    AddAudio {
+        /// Media asset ID
+        media: String,
+
+        /// Audio track file identifier. Example: EN
+        sub_id: String,
+
+        /// Path to the audio track file
+        path: String,
+
+        /// Audio track file display name. If not specified, the identifier is used.
+        #[arg(long)]
+        name: Option<String>,
+    },
+
+    /// Removes audio track file from a media asset
+    RemoveAudio {
+        /// Media asset ID
+        media: String,
+
+        /// Audio track file identifier. Example: EN
+        sub_id: String,
+    },
+
+    /// Re-Encodes a media asset
+    ReEncode {
+        /// Media asset ID
+        media: String,
+    },
+
+    /// Deletes a media asset
+    Delete {
+        /// Media asset ID
+        media: String,
+    },
 }
 
 pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand) -> () {
@@ -89,6 +235,22 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         } => {
             run_cmd_upload_media(global_opts, path, title, album, tags, skip_encryption).await;
         }
+        MediaCommand::Stats { media } => todo!(),
+        MediaCommand::SetTitle { media, title } => todo!(),
+        MediaCommand::SetDescription { media, description } => todo!(),
+        MediaCommand::SetForceStartBeginning { media, force_start_beginning } => todo!(),
+        MediaCommand::SetThumbnail { media, path } => todo!(),
+        MediaCommand::GetTimeSlices { media } => todo!(),
+        MediaCommand::SetTimeSlices { media, path } => todo!(),
+        MediaCommand::SetImageNotes { media, path } => todo!(),
+        MediaCommand::AddResolution { media, resolution } => todo!(),
+        MediaCommand::RemoveResolution { media, resolution } => todo!(),
+        MediaCommand::AddSubtitle { media, sub_id, path, name } => todo!(),
+        MediaCommand::RemoveSubtitle { media, sub_id } => todo!(),
+        MediaCommand::AddAudio { media, sub_id, path, name } => todo!(),
+        MediaCommand::RemoveAudio { media, sub_id } => todo!(),
+        MediaCommand::ReEncode { media } => todo!(),
+        MediaCommand::Delete { media } => todo!(),
     }
 }
 

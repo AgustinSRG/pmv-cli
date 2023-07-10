@@ -220,3 +220,69 @@ pub struct MediaUploadResponse {
     #[serde(rename = "media_id")]
     pub media_id: u64,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaAssetSizeStatsItem {
+    #[serde(rename = "id")]
+    pub id: u64,
+
+    #[serde(rename = "type")]
+    pub asset_type: String,
+
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(rename = "size")]
+    pub size: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaAssetSizeStats {
+    #[serde(rename = "meta_size")]
+    pub meta_size: u64,
+
+    #[serde(rename = "assets")]
+    pub assets: Vec<MediaAssetSizeStatsItem>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaUpdateTitleBody {
+    #[serde(rename = "title")]
+    pub title: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaUpdateDescriptionBody {
+    #[serde(rename = "description")]
+    pub description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaUpdateExtraBody {
+    #[serde(rename = "force_start_beginning")]
+    pub force_start_beginning: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ImageNote {
+    #[serde(rename = "x")]
+    pub x: i32,
+
+    #[serde(rename = "y")]
+    pub y: i32,
+
+    #[serde(rename = "w")]
+    pub w: i32,
+
+    #[serde(rename = "h")]
+    pub h: i32,
+
+    #[serde(rename = "text")]
+    pub text: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaUpdateThumbnailResponse {
+    #[serde(rename = "url")]
+    pub url: String,
+}
