@@ -5,17 +5,25 @@ use std::process;
 use clap::Subcommand;
 
 use crate::{
-    api::{api_call_get_media, api_call_get_tags},
+    api::{
+        api_call_get_media, api_call_get_media_stats, api_call_get_tags,
+        api_call_media_change_description, api_call_media_change_extra,
+        api_call_media_change_title, api_call_media_re_encode, api_call_media_delete,
+    },
     commands::logout::do_logout,
-    models::{tags_map_from_list, tags_names_from_ids},
+    models::{
+        tags_map_from_list, tags_names_from_ids, MediaUpdateDescriptionBody, MediaUpdateExtraBody,
+        MediaUpdateTitleBody,
+    },
     tools::{
         duration_to_string, ensure_login, format_date, identifier_to_string, parse_identifier,
-        parse_vault_uri, to_csv_string,
+        parse_vault_uri, render_size_bytes, to_csv_string, ask_user,
     },
 };
 
 use super::{
-    get_vault_url, media_download::run_cmd_download_media, media_upload::run_cmd_upload_media,
+    get_vault_url, media_download::run_cmd_download_media,
+    media_thumbnail::run_cmd_upload_media_thumbnail, media_upload::run_cmd_upload_media,
     print_request_error, CommandGlobalOptions,
 };
 
@@ -218,6 +226,9 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         MediaCommand::Get { media } => {
             run_cmd_get_media(global_opts, media).await;
         }
+        MediaCommand::Stats { media } => {
+            run_cmd_get_media_stats(global_opts, media).await;
+        }
         MediaCommand::Download {
             media,
             asset,
@@ -235,22 +246,47 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         } => {
             run_cmd_upload_media(global_opts, path, title, album, tags, skip_encryption).await;
         }
-        MediaCommand::Stats { media } => todo!(),
-        MediaCommand::SetTitle { media, title } => todo!(),
-        MediaCommand::SetDescription { media, description } => todo!(),
-        MediaCommand::SetForceStartBeginning { media, force_start_beginning } => todo!(),
-        MediaCommand::SetThumbnail { media, path } => todo!(),
+        MediaCommand::SetTitle { media, title } => {
+            run_cmd_media_set_title(global_opts, media, title).await;
+        }
+        MediaCommand::SetDescription { media, description } => {
+            run_cmd_media_set_description(global_opts, media, description).await;
+        }
+        MediaCommand::SetForceStartBeginning {
+            media,
+            force_start_beginning,
+        } => {
+            run_cmd_media_set_force_start_beginning(global_opts, media, force_start_beginning)
+                .await;
+        }
+        MediaCommand::SetThumbnail { media, path } => {
+            run_cmd_upload_media_thumbnail(global_opts, media, path).await;
+        }
         MediaCommand::GetTimeSlices { media } => todo!(),
         MediaCommand::SetTimeSlices { media, path } => todo!(),
         MediaCommand::SetImageNotes { media, path } => todo!(),
         MediaCommand::AddResolution { media, resolution } => todo!(),
         MediaCommand::RemoveResolution { media, resolution } => todo!(),
-        MediaCommand::AddSubtitle { media, sub_id, path, name } => todo!(),
+        MediaCommand::AddSubtitle {
+            media,
+            sub_id,
+            path,
+            name,
+        } => todo!(),
         MediaCommand::RemoveSubtitle { media, sub_id } => todo!(),
-        MediaCommand::AddAudio { media, sub_id, path, name } => todo!(),
+        MediaCommand::AddAudio {
+            media,
+            sub_id,
+            path,
+            name,
+        } => todo!(),
         MediaCommand::RemoveAudio { media, sub_id } => todo!(),
-        MediaCommand::ReEncode { media } => todo!(),
-        MediaCommand::Delete { media } => todo!(),
+        MediaCommand::ReEncode { media } => {
+            run_cmd_media_re_encode(global_opts, media).await;
+        }
+        MediaCommand::Delete { media } => {
+            run_cmd_media_delete(global_opts, media).await;
+        }
     }
 }
 
@@ -551,6 +587,788 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
                 },
                 None => {}
             }
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_get_media_stats(global_opts: CommandGlobalOptions, media: String) -> () {
+    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Params
+
+    let media_id_res = parse_identifier(&media);
+    let media_id: u64;
+
+    match media_id_res {
+        Ok(id) => {
+            media_id = id;
+        }
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid album identifier specified.");
+            process::exit(1);
+        }
+    }
+
+    // Call API
+
+    let api_res = api_call_get_media_stats(vault_url.clone(), media_id, global_opts.debug).await;
+
+    match api_res {
+        Ok(stats) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            let meta_size = render_size_bytes(stats.meta_size);
+
+            println!("Metadata size: {meta_size}");
+            println!("Assets:");
+
+            for asset in stats.assets {
+                let asset_name = asset.name;
+                let size = render_size_bytes(asset.size);
+                println!("\t- {asset_name}: {size}");
+            }
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_media_set_title(
+    global_opts: CommandGlobalOptions,
+    media: String,
+    title: String,
+) -> () {
+    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Media ID
+
+    let media_id_res = parse_identifier(&media);
+
+    let media_id_param: u64;
+
+    match media_id_res {
+        Ok(media_id) => {
+            let media_api_res =
+                api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+
+            match media_api_res {
+                Ok(_) => {
+                    media_id_param = media_id;
+                }
+                Err(e) => {
+                    print_request_error(e);
+
+                    if logout_after_operation {
+                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                        match logout_res {
+                            Ok(_) => {}
+                            Err(_) => {
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    process::exit(1);
+                }
+            }
+        }
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid media asset identifier specified.");
+            process::exit(1);
+        }
+    }
+
+    // Call API
+
+    let api_res = api_call_media_change_title(
+        vault_url.clone(),
+        media_id_param,
+        MediaUpdateTitleBody {
+            title: title.clone(),
+        },
+        global_opts.debug,
+    )
+    .await;
+
+    match api_res {
+        Ok(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            let title_csv = to_csv_string(&title);
+
+            eprintln!("Successfully updated the title of #{media_id_param}: {title_csv}");
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_media_set_description(
+    global_opts: CommandGlobalOptions,
+    media: String,
+    description: String,
+) -> () {
+    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Media ID
+
+    let media_id_res = parse_identifier(&media);
+
+    let media_id_param: u64;
+
+    match media_id_res {
+        Ok(media_id) => {
+            let media_api_res =
+                api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+
+            match media_api_res {
+                Ok(_) => {
+                    media_id_param = media_id;
+                }
+                Err(e) => {
+                    print_request_error(e);
+
+                    if logout_after_operation {
+                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                        match logout_res {
+                            Ok(_) => {}
+                            Err(_) => {
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    process::exit(1);
+                }
+            }
+        }
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid media asset identifier specified.");
+            process::exit(1);
+        }
+    }
+
+    // Call API
+
+    let api_res = api_call_media_change_description(
+        vault_url.clone(),
+        media_id_param,
+        MediaUpdateDescriptionBody {
+            description: description.clone(),
+        },
+        global_opts.debug,
+    )
+    .await;
+
+    match api_res {
+        Ok(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            let description_csv = to_csv_string(&description);
+
+            eprintln!(
+                "Successfully updated the description of #{media_id_param}: {description_csv}"
+            );
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_media_set_force_start_beginning(
+    global_opts: CommandGlobalOptions,
+    media: String,
+    force_start_beginning: String,
+) -> () {
+    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Media ID
+
+    let media_id_res = parse_identifier(&media);
+
+    let media_id_param: u64;
+
+    match media_id_res {
+        Ok(media_id) => {
+            let media_api_res =
+                api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+
+            match media_api_res {
+                Ok(_) => {
+                    media_id_param = media_id;
+                }
+                Err(e) => {
+                    print_request_error(e);
+
+                    if logout_after_operation {
+                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                        match logout_res {
+                            Ok(_) => {}
+                            Err(_) => {
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    process::exit(1);
+                }
+            }
+        }
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid media asset identifier specified.");
+            process::exit(1);
+        }
+    }
+
+    // Param
+
+    let force_start_beginning_lower = force_start_beginning.to_lowercase();
+    let force_start_beginning_bool: bool;
+
+    if force_start_beginning_lower == "true"
+        || force_start_beginning_lower == "yes"
+        || force_start_beginning_lower == "1"
+    {
+        force_start_beginning_bool = true;
+    } else if force_start_beginning_lower == "false"
+        || force_start_beginning_lower == "no"
+        || force_start_beginning_lower == "0"
+    {
+        force_start_beginning_bool = false;
+    } else {
+        if logout_after_operation {
+            let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+            match logout_res {
+                Ok(_) => {}
+                Err(_) => {
+                    process::exit(1);
+                }
+            }
+        }
+        eprintln!("Invalid FORCE_START_BEGINNING parameter. Set it to 'true' or 'false'.");
+        process::exit(1);
+    }
+
+    // Call API
+
+    let api_res = api_call_media_change_extra(
+        vault_url.clone(),
+        media_id_param,
+        MediaUpdateExtraBody {
+            force_start_beginning: force_start_beginning_bool,
+        },
+        global_opts.debug,
+    )
+    .await;
+
+    match api_res {
+        Ok(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            eprintln!("Successfully updated the force-start-beginning param of #{media_id_param}: {force_start_beginning_bool}");
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_media_re_encode(global_opts: CommandGlobalOptions, media: String) -> () {
+    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Media ID
+
+    let media_id_res = parse_identifier(&media);
+
+    let media_id_param: u64;
+
+    match media_id_res {
+        Ok(media_id) => {
+            let media_api_res =
+                api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+
+            match media_api_res {
+                Ok(_) => {
+                    media_id_param = media_id;
+                }
+                Err(e) => {
+                    print_request_error(e);
+
+                    if logout_after_operation {
+                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                        match logout_res {
+                            Ok(_) => {}
+                            Err(_) => {
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    process::exit(1);
+                }
+            }
+        }
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid media asset identifier specified.");
+            process::exit(1);
+        }
+    }
+
+    // Ask confirmation
+
+    if !global_opts.auto_confirm {
+        eprintln!("Are you sure you want to re-encode the media asset {media_id_param}?");
+        let confirmation = ask_user("Continue? y/n: ").await.unwrap_or("".to_string());
+
+        if confirmation.to_lowercase() != "y" {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+
+    // Call API
+
+    let api_res = api_call_media_re_encode(
+        vault_url.clone(),
+        media_id_param,
+        global_opts.debug,
+    )
+    .await;
+
+    match api_res {
+        Ok(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            eprintln!("Successfully requested media asset #{media_id_param} to be re-encoded");
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_media_delete(global_opts: CommandGlobalOptions, media: String) -> () {
+    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Media ID
+
+    let media_id_res = parse_identifier(&media);
+
+    let media_id_param: u64;
+
+    match media_id_res {
+        Ok(media_id) => {
+            let media_api_res =
+                api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+
+            match media_api_res {
+                Ok(_) => {
+                    media_id_param = media_id;
+                }
+                Err(e) => {
+                    print_request_error(e);
+
+                    if logout_after_operation {
+                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                        match logout_res {
+                            Ok(_) => {}
+                            Err(_) => {
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    process::exit(1);
+                }
+            }
+        }
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid media asset identifier specified.");
+            process::exit(1);
+        }
+    }
+
+    // Ask confirmation
+
+    if !global_opts.auto_confirm {
+        eprintln!("Are you sure you want to delete the media asset {media_id_param}?");
+        let confirmation = ask_user("Continue? y/n: ").await.unwrap_or("".to_string());
+
+        if confirmation.to_lowercase() != "y" {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+
+    // Call API
+
+    let api_res = api_call_media_delete(
+        vault_url.clone(),
+        media_id_param,
+        global_opts.debug,
+    )
+    .await;
+
+    match api_res {
+        Ok(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            eprintln!("Successfully deleted asset #{media_id_param}");
         }
         Err(e) => {
             print_request_error(e);

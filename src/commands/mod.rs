@@ -20,6 +20,7 @@ use media::*;
 
 mod media_download;
 mod media_upload;
+mod media_thumbnail;
 
 mod random;
 use random::*;

@@ -24,6 +24,9 @@ pub use request_download::*;
 mod request_upload;
 pub use request_upload::*;
 
+mod size_render;
+pub use size_render::*;
+
 mod user_input;
 pub use user_input::*;
 

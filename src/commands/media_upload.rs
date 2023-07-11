@@ -217,12 +217,12 @@ pub async fn run_cmd_upload_media(
     }
 }
 
-struct UploaderProgressPrinter {
+pub struct UploaderProgressPrinter {
     last_line_width: usize,
 }
 
 impl UploaderProgressPrinter {
-    fn new() -> UploaderProgressPrinter {
+    pub fn new() -> UploaderProgressPrinter {
         return UploaderProgressPrinter { last_line_width: 0 };
     }
 }
