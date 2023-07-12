@@ -24,7 +24,7 @@ use crate::{
 use super::{
     get_vault_url, media_download::run_cmd_download_media,
     media_thumbnail::run_cmd_upload_media_thumbnail, media_upload::run_cmd_upload_media,
-    print_request_error, CommandGlobalOptions,
+    print_request_error, CommandGlobalOptions, media_time_slices::{run_cmd_get_media_time_slices, run_cmd_set_media_time_slices}, media_image_notes::run_cmd_set_media_image_notes,
 };
 
 #[derive(Subcommand)]
@@ -262,9 +262,15 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         MediaCommand::SetThumbnail { media, path } => {
             run_cmd_upload_media_thumbnail(global_opts, media, path).await;
         }
-        MediaCommand::GetTimeSlices { media } => todo!(),
-        MediaCommand::SetTimeSlices { media, path } => todo!(),
-        MediaCommand::SetImageNotes { media, path } => todo!(),
+        MediaCommand::GetTimeSlices { media } => {
+            run_cmd_get_media_time_slices(global_opts, media).await;
+        }
+        MediaCommand::SetTimeSlices { media, path } => {
+            run_cmd_set_media_time_slices(global_opts, media, path).await;
+        }
+        MediaCommand::SetImageNotes { media, path } => {
+            run_cmd_set_media_image_notes(global_opts, media, path).await;
+        }
         MediaCommand::AddResolution { media, resolution } => todo!(),
         MediaCommand::RemoveResolution { media, resolution } => todo!(),
         MediaCommand::AddSubtitle {
@@ -338,7 +344,7 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
                     }
                 }
             }
-            eprintln!("Invalid album identifier specified.");
+            eprintln!("Invalid media identifier specified.");
             process::exit(1);
         }
     }
@@ -653,7 +659,7 @@ pub async fn run_cmd_get_media_stats(global_opts: CommandGlobalOptions, media: S
                     }
                 }
             }
-            eprintln!("Invalid album identifier specified.");
+            eprintln!("Invalid media identifier specified.");
             process::exit(1);
         }
     }

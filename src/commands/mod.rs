@@ -19,8 +19,10 @@ mod media;
 use media::*;
 
 mod media_download;
+mod media_image_notes;
 mod media_upload;
 mod media_thumbnail;
+mod media_time_slices;
 
 mod random;
 use random::*;

@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use serde_repr::{Serialize_repr, Deserialize_repr};
 
+use crate::tools::{parse_duration, duration_to_string};
+
 #[derive(Debug, Serialize_repr, Deserialize_repr, PartialEq, Copy, Clone)]
 #[repr(u8)]
 pub enum MediaType {
@@ -213,6 +215,63 @@ pub struct MediaTimeSlice {
 
     #[serde(rename = "name")]
     pub name: String,
+}
+
+impl MediaTimeSlice {
+    pub fn parse(line: &str) -> Result<MediaTimeSlice, ()> {
+        let line_parts: Vec<&str> = line.trim().split(" ").collect();
+        let slice_time_str = line_parts.clone().into_iter().nth(0).unwrap_or("");
+        let slice_name_vec: Vec<&str> = line_parts.into_iter().skip(1).collect();
+        let mut slice_name_str = slice_name_vec.join(" ");
+
+        if slice_name_str.chars().nth(0).unwrap_or(' ') == '-' {
+            slice_name_str = slice_name_str.chars().skip(1).collect();
+        }
+
+        let time_res = parse_duration(slice_time_str);
+
+        match time_res {
+            Ok(time) => {
+                return Ok(MediaTimeSlice{
+                    time: time,
+                    name: slice_name_str,
+                });
+            }
+            Err(_) => {
+                return Err(());
+            }
+        }
+    }
+
+    pub fn parse_vector(text: &str) -> Result<Vec<MediaTimeSlice>, ()> {
+        let lines: Vec<&str> = text.split("\n").map(|line| line.trim()).filter(|line| !line.is_empty()).collect();
+
+        let mut result: Vec<MediaTimeSlice> = Vec::with_capacity(lines.len());
+
+        for line in lines {
+            let line_parse_res = MediaTimeSlice::parse(line);
+
+            match line_parse_res {
+                Ok(slice) => {
+                    result.push(slice);
+                }
+                Err(_) => {
+                    return Err(());
+                }
+            }
+        }
+
+        return Ok(result);
+    }
+
+    pub fn vector_to_string(v: &Vec<MediaTimeSlice>) -> String {
+        let vec_string: Vec<String> = v.iter().map(|slice| slice.to_string()).collect();
+        return vec_string.join("\n");
+    }
+
+    pub fn to_string(&self) -> String {
+        return duration_to_string(self.time) + " " + &self.name;
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

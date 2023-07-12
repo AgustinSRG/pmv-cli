@@ -6,13 +6,13 @@ pub fn render_media_duration(media_type: MediaType, d: f64) -> String {
     match media_type {
         crate::models::MediaType::Deleted => {
             return "".to_string();
-        },
+        }
         crate::models::MediaType::Image => {
             return "N/A".to_string();
-        },
+        }
         crate::models::MediaType::Video | crate::models::MediaType::Audio => {
             return duration_to_string(d);
-        },
+        }
     }
 }
 
@@ -40,9 +40,53 @@ pub fn duration_to_string(d: f64) -> String {
 
     let mut h_s = hours.to_string();
 
-    if h_s.chars().count()< 2 {
+    if h_s.chars().count() < 2 {
         h_s = "0".to_owned() + &h_s;
     }
 
     return format!("{h_s}:{m_s}:{s_s}");
+}
+
+pub fn parse_duration(duration_str: &str) -> Result<f64, ()> {
+    let parts: Vec<&str> = duration_str.trim().split(":").collect();
+
+    if parts.len() == 3 {
+        let hours = parts[0].parse::<f64>();
+
+        if hours.is_err() {
+            return Err(());
+        }
+
+        let minutes = parts[1].parse::<f64>();
+
+        if minutes.is_err() {
+            return Err(());
+        }
+
+        let seconds = parts[2].parse::<f64>();
+
+        if seconds.is_err() {
+            return Err(());
+        }
+
+        return Ok((hours.unwrap_or(0.0) * 60.0 * 60.0)
+            + (minutes.unwrap_or(0.0) * 60.0)
+            + seconds.unwrap_or(0.0));
+    } else if parts.len() == 2 {
+        let minutes = parts[0].parse::<f64>();
+
+        if minutes.is_err() {
+            return Err(());
+        }
+
+        let seconds = parts[1].parse::<f64>();
+
+        if seconds.is_err() {
+            return Err(());
+        }
+
+        return Ok((minutes.unwrap_or(0.0) * 60.0) + seconds.unwrap_or(0.0));
+    } else {
+        return Err(());
+    }
 }
