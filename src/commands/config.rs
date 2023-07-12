@@ -8,7 +8,7 @@ use tokio::fs;
 use crate::{
     api::{api_call_get_config, api_call_set_config},
     commands::logout::do_logout,
-    models::{ConfigVideoResolution, VaultConfig, ConfigImageResolution},
+    models::{ConfigImageResolution, ConfigVideoResolution, VaultConfig},
     tools::{ask_user, ensure_login, parse_vault_uri},
 };
 
@@ -38,6 +38,12 @@ pub enum ConfigCommand {
     SetEncodingThreads {
         /// Number of encoding threads to use
         encoding_threads: i32,
+    },
+
+    /// Sets the video previews interval in seconds
+    SetVideoPreviewsInterval {
+        /// Interval in seconds
+        interval_seconds: i32,
     },
 
     /// Sets custom CSS for the vault
@@ -90,6 +96,9 @@ pub async fn run_config_cmd(global_opts: CommandGlobalOptions, cmd: ConfigComman
         }
         ConfigCommand::SetEncodingThreads { encoding_threads } => {
             run_cmd_config_set_encoding_threads(global_opts, encoding_threads).await;
+        }
+        ConfigCommand::SetVideoPreviewsInterval { interval_seconds } => {
+            run_cmd_config_set_video_previews_interval(global_opts, interval_seconds).await;
         }
         ConfigCommand::SetCSS { file_path } => {
             run_cmd_config_set_css(global_opts, file_path).await;
@@ -178,9 +187,15 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) -> () {
 
             let res_max_tasks = config.max_tasks;
             let res_encoding_threads = config.encoding_threads;
+            let mut res_video_previews_interval = config.video_previews_interval.unwrap_or(0);
+
+            if res_video_previews_interval <= 0 {
+                res_video_previews_interval = 3;
+            }
 
             println!("Max tasks in parallel: {res_max_tasks}");
             println!("Number of encoding threads: {res_encoding_threads}");
+            println!("Video previews interval: {res_video_previews_interval} seconds");
 
             if !config.resolutions.is_empty() {
                 let list: Vec<String> = config.resolutions.iter().map(|r| r.to_string()).collect();
@@ -531,6 +546,103 @@ pub async fn run_cmd_config_set_encoding_threads(
     match api_res_set_conf {
         Ok(_) => {
             eprintln!("Successfully changed number of encoding threads: {encoding_threads}");
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_config_set_video_previews_interval(
+    global_opts: CommandGlobalOptions,
+    interval_seconds: i32,
+) -> () {
+    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Get config
+
+    let current_config: VaultConfig;
+
+    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+
+    match api_res_get_conf {
+        Ok(config) => {
+            current_config = config;
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+
+    // Changes
+
+    let mut new_config = current_config.clone();
+
+    new_config.video_previews_interval = Some(interval_seconds);
+
+    // Set config
+
+    let api_res_set_conf =
+        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+
+    match api_res_set_conf {
+        Ok(_) => {
+            let interval_seconds_fixed: i32;
+            if interval_seconds > 0 {
+                interval_seconds_fixed = interval_seconds
+            } else {
+                interval_seconds_fixed = 3
+            }
+            eprintln!(
+                "Successfully changed video previews interval: {interval_seconds_fixed} seconds"
+            );
         }
         Err(e) => {
             print_request_error(e);
@@ -1015,7 +1127,11 @@ pub async fn run_cmd_config_remove_video_resolution(
 
     let mut new_config = current_config.clone();
 
-    new_config.resolutions = new_config.resolutions.into_iter().filter(|r| *r != parsed_resolution).collect();
+    new_config.resolutions = new_config
+        .resolutions
+        .into_iter()
+        .filter(|r| *r != parsed_resolution)
+        .collect();
 
     // Set config
 
@@ -1291,7 +1407,11 @@ pub async fn run_cmd_config_remove_image_resolution(
 
     let mut new_config = current_config.clone();
 
-    new_config.image_resolutions = new_config.image_resolutions.into_iter().filter(|r| *r != parsed_resolution).collect();
+    new_config.image_resolutions = new_config
+        .image_resolutions
+        .into_iter()
+        .filter(|r| *r != parsed_resolution)
+        .collect();
 
     // Set config
 

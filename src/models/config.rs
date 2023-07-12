@@ -37,6 +37,9 @@ pub struct VaultConfig {
     #[serde(rename = "encoding_threads")]
     pub encoding_threads: i32,
 
+    #[serde(rename = "video_previews_interval")]
+    pub video_previews_interval: Option<i32>,
+
     #[serde(rename = "resolutions")]
     pub resolutions: Vec<ConfigVideoResolution>,
 
