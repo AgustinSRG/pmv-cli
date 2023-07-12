@@ -128,7 +128,7 @@ pub async fn do_multipart_upload_request(
     let final_uri = resolve_vault_api_uri(uri.clone(), path);
 
     if debug {
-        eprintln!("DEBUG: UPLOAD {file_path} -> {final_uri}");
+        eprintln!("\rDEBUG: UPLOAD {file_path} -> {final_uri}");
     }
 
     let mut request_builder = Request::builder().method(Method::POST).uri(final_uri);

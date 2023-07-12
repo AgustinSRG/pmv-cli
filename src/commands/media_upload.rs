@@ -118,7 +118,7 @@ pub async fn run_cmd_upload_media(
     
                 while !encryption_done {
                     let api_get_res =
-                        api_call_get_media(vault_url.clone(), upload_res.media_id, false).await;
+                        api_call_get_media(vault_url.clone(), upload_res.media_id, global_opts.debug).await;
     
                     match api_get_res {
                         Ok(media_data) => {

@@ -26,7 +26,7 @@ pub async fn do_get_download_request(
     let final_uri = resolve_vault_api_uri(uri.clone(), path);
 
     if debug {
-        eprintln!("DEBUG: DOWNLOAD {final_uri} -> {file_path}");
+        eprintln!("\rDEBUG: DOWNLOAD {final_uri} -> {file_path}");
     }
 
     let mut request_builder = Request::builder().method(Method::GET).uri(final_uri);

@@ -68,7 +68,7 @@ pub async fn do_get_request(
     let final_uri = resolve_vault_api_uri(uri.clone(), path);
 
     if debug {
-        eprintln!("DEBUG: GET {final_uri}");
+        eprintln!("\rDEBUG: GET {final_uri}");
     }
 
     let mut request_builder = Request::builder().method(Method::GET).uri(final_uri);
@@ -141,7 +141,7 @@ pub async fn do_post_request(
     let final_uri = resolve_vault_api_uri(uri.clone(), path);
 
     if debug {
-        eprintln!("DEBUG: POST {final_uri}");
+        eprintln!("\rDEBUG: POST {final_uri}");
     }
 
     let mut request_builder = Request::builder()
