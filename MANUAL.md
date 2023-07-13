@@ -227,8 +227,24 @@ pmv-cli media <COMMAND>
 | Command | Description |
 | --- | --- |
 | `get` | Gets media asset metadata and download links |
+| `stats` | Gets media asset size stats |
 | `download` | Downloads a media asset |
 | `upload` | Uploads a new media asset, waits for encryption and adds tags if specified |
+| `set-title` | Changes the title of a media asset |
+| `set-description` | Changes the description of a media asset |
+| `set-force-start-beginning` | Changes the description of a media asset |
+| `set-thumbnail` | Sets the thumbnail of a media asset |
+| `get-time-slices` | Prints the time slices of a media asset |
+| `set-time-slices` | Sets the time slices of a media asset |
+| `set-image-notes` | Sets the image notes of a media asset |
+| `add-resolution` | Adds new resolution to the media asset |
+| `remove-resolution` | Removes a resolution from the media asset |
+| `add-subtitle` | Adds subtitle file to a media asset |
+| `remove-subtitle` | Removes subtitle file from a media asset |
+| `add-audio` | Adds audio track file to a media asset |
+| `remove-audio` | Removes audio track file from a media asset |
+| `re-encode` | Re-Encodes a media asset |
+| `delete` | Deletes a media asset |
 | `help` | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
@@ -245,6 +261,28 @@ Gets media asset metadata and download links
 
 ```
 pmv-cli media get <MEDIA>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media stats
+
+Gets media asset size stats
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media stats <MEDIA>
 ```
 
 <ins>**Arguments:**</ins>
@@ -308,6 +346,352 @@ pmv-cli media upload [OPTIONS] <PATH>
 | `-a, --album <ALBUM>` | Album to upload the media asset into |
 | `-T, --tags <TAGS>` | Tags to add to the media asset, separated by spaces |
 | `-s, --skip-encryption` | Do not wait for encryption |
+| `-h, --help` | Print help |
+
+### Command: media set-title
+
+Changes the title of a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media set-title <MEDIA> <TITLE>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<TITLE>` | Title |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media set-description
+
+Changes the description of a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media set-description <MEDIA> <DESCRIPTION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<DESCRIPTION>` | Description |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media set-force-start-beginning
+
+Changes the description of a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media set-force-start-beginning <MEDIA> <FORCE_START_BEGINNING>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<FORCE_START_BEGINNING>` | Set to 'true' if you want to tell the clients not to store the time, so they always start from the beginning |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media set-thumbnail
+
+Sets the thumbnail of a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media set-thumbnail <MEDIA> <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<PATH>` | Path to the thumbnail file |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media get-time-slices
+
+Prints the time slices of a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media get-time-slices <MEDIA>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media set-time-slices
+
+Sets the time slices of a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media set-time-slices <MEDIA> <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<PATH>` | Path to the file containing the time slices |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media set-image-notes
+
+Sets the image notes of a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media set-image-notes <MEDIA> <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<PATH>` | Path to the image notes file |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media add-resolution
+
+Adds new resolution to the media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media add-resolution <MEDIA> <RESOLUTION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<RESOLUTION>` | Resolution. Example: 1280x720:30 |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media remove-resolution
+
+Removes a resolution from the media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media remove-resolution <MEDIA> <RESOLUTION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<RESOLUTION>` | Resolution. Example: 1280x720:30 |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media add-subtitle
+
+Adds subtitle file to a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media add-subtitle [OPTIONS] <MEDIA> <SUB_ID> <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<SUB_ID>` | Subtitle file identifier. Example: EN |
+| `<PATH>` | Path to the subtitles file |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--name <NAME>` | Subtitle file display name. If not specified, the identifier is used |
+| `-h, --help` | Print help |
+
+### Command: media remove-subtitle
+
+Removes subtitle file from a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media remove-subtitle <MEDIA> <SUB_ID>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<SUB_ID>` | Subtitle file identifier. Example: EN |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media add-audio
+
+Adds audio track file to a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media add-audio [OPTIONS] <MEDIA> <TRACK_ID> <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<TRACK_ID>` | Audio track file identifier. Example: EN |
+| `<PATH>` | Path to the audio track file |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--name <NAME>` | Audio track file display name. If not specified, the identifier is used |
+| `-h, --help` | Print help |
+
+### Command: media remove-audio
+
+Removes audio track file from a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media remove-audio <MEDIA> <TRACK_ID>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<TRACK_ID>` | Audio track file identifier. Example: EN |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media re-encode
+
+Re-Encodes a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media re-encode <MEDIA>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media delete
+
+Deletes a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media delete <MEDIA>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
 | `-h, --help` | Print help |
 
 ## Command: random
@@ -699,6 +1083,7 @@ pmv-cli config <COMMAND>
 | `set-title` | Sets vault title |
 | `set-max-tasks` | Sets max tasks in parallel |
 | `set-encoding-threads` | Sets number of encoding threads to use |
+| `set-video-previews-interval` | Sets the video previews interval in seconds |
 | `set-css` | Sets custom CSS for the vault |
 | `clear-css` |  |
 | `add-video-resolution` | Adds video resolution |
@@ -804,6 +1189,28 @@ pmv-cli config set-encoding-threads <ENCODING_THREADS>
 | Argument | Description |
 | --- | --- |
 | `<ENCODING_THREADS>` | Number of encoding threads to use |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config set-video-previews-interval
+
+Sets the video previews interval in seconds
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config set-video-previews-interval <INTERVAL_SECONDS>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<INTERVAL_SECONDS>` | Interval in seconds |
 
 <ins>**Options:**</ins>
 

@@ -18,8 +18,11 @@ use logout::*;
 mod media;
 use media::*;
 
+mod media_audio_tracks;
 mod media_download;
 mod media_image_notes;
+mod media_resolutions;
+mod media_subtitles;
 mod media_upload;
 mod media_thumbnail;
 mod media_time_slices;

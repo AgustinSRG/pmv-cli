@@ -8,7 +8,7 @@ use crate::{
     api::{
         api_call_get_media, api_call_get_media_stats, api_call_get_tags,
         api_call_media_change_description, api_call_media_change_extra,
-        api_call_media_change_title, api_call_media_re_encode, api_call_media_delete,
+        api_call_media_change_title, api_call_media_delete, api_call_media_re_encode,
     },
     commands::logout::do_logout,
     models::{
@@ -16,15 +16,22 @@ use crate::{
         MediaUpdateTitleBody,
     },
     tools::{
-        duration_to_string, ensure_login, format_date, identifier_to_string, parse_identifier,
-        parse_vault_uri, render_size_bytes, to_csv_string, ask_user,
+        ask_user, duration_to_string, ensure_login, format_date, identifier_to_string,
+        parse_identifier, parse_vault_uri, render_size_bytes, to_csv_string,
     },
 };
 
 use super::{
-    get_vault_url, media_download::run_cmd_download_media,
-    media_thumbnail::run_cmd_upload_media_thumbnail, media_upload::run_cmd_upload_media,
-    print_request_error, CommandGlobalOptions, media_time_slices::{run_cmd_get_media_time_slices, run_cmd_set_media_time_slices}, media_image_notes::run_cmd_set_media_image_notes,
+    get_vault_url,
+    media_audio_tracks::{run_cmd_delete_media_audio_track, run_cmd_upload_media_audio_track},
+    media_download::run_cmd_download_media,
+    media_image_notes::run_cmd_set_media_image_notes,
+    media_resolutions::{run_cmd_media_add_resolution, run_cmd_media_remove_resolution},
+    media_subtitles::{run_cmd_delete_media_subtitle, run_cmd_upload_media_subtitle},
+    media_thumbnail::run_cmd_upload_media_thumbnail,
+    media_time_slices::{run_cmd_get_media_time_slices, run_cmd_set_media_time_slices},
+    media_upload::run_cmd_upload_media,
+    print_request_error, CommandGlobalOptions,
 };
 
 #[derive(Subcommand)]
@@ -189,7 +196,7 @@ pub enum MediaCommand {
         media: String,
 
         /// Audio track file identifier. Example: EN
-        sub_id: String,
+        track_id: String,
 
         /// Path to the audio track file
         path: String,
@@ -205,7 +212,7 @@ pub enum MediaCommand {
         media: String,
 
         /// Audio track file identifier. Example: EN
-        sub_id: String,
+        track_id: String,
     },
 
     /// Re-Encodes a media asset
@@ -271,22 +278,34 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         MediaCommand::SetImageNotes { media, path } => {
             run_cmd_set_media_image_notes(global_opts, media, path).await;
         }
-        MediaCommand::AddResolution { media, resolution } => todo!(),
-        MediaCommand::RemoveResolution { media, resolution } => todo!(),
+        MediaCommand::AddResolution { media, resolution } => {
+            run_cmd_media_add_resolution(global_opts, media, resolution).await;
+        }
+        MediaCommand::RemoveResolution { media, resolution } => {
+            run_cmd_media_remove_resolution(global_opts, media, resolution).await;
+        }
         MediaCommand::AddSubtitle {
             media,
             sub_id,
             path,
             name,
-        } => todo!(),
-        MediaCommand::RemoveSubtitle { media, sub_id } => todo!(),
+        } => {
+            run_cmd_upload_media_subtitle(global_opts, media, sub_id, path, name).await;
+        }
+        MediaCommand::RemoveSubtitle { media, sub_id } => {
+            run_cmd_delete_media_subtitle(global_opts, media, sub_id).await;
+        }
         MediaCommand::AddAudio {
             media,
-            sub_id,
+            track_id,
             path,
             name,
-        } => todo!(),
-        MediaCommand::RemoveAudio { media, sub_id } => todo!(),
+        } => {
+            run_cmd_upload_media_audio_track(global_opts, media, track_id, path, name).await;
+        }
+        MediaCommand::RemoveAudio { media, track_id } => {
+            run_cmd_delete_media_audio_track(global_opts, media, track_id).await;
+        }
         MediaCommand::ReEncode { media } => {
             run_cmd_media_re_encode(global_opts, media).await;
         }
@@ -1216,12 +1235,8 @@ pub async fn run_cmd_media_re_encode(global_opts: CommandGlobalOptions, media: S
 
     // Call API
 
-    let api_res = api_call_media_re_encode(
-        vault_url.clone(),
-        media_id_param,
-        global_opts.debug,
-    )
-    .await;
+    let api_res =
+        api_call_media_re_encode(vault_url.clone(), media_id_param, global_opts.debug).await;
 
     match api_res {
         Ok(_) => {
@@ -1354,12 +1369,7 @@ pub async fn run_cmd_media_delete(global_opts: CommandGlobalOptions, media: Stri
 
     // Call API
 
-    let api_res = api_call_media_delete(
-        vault_url.clone(),
-        media_id_param,
-        global_opts.debug,
-    )
-    .await;
+    let api_res = api_call_media_delete(vault_url.clone(), media_id_param, global_opts.debug).await;
 
     match api_res {
         Ok(_) => {
