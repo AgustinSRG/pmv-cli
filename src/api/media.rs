@@ -2,7 +2,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use crate::{tools::{VaultURI, RequestError, do_get_request, do_multipart_upload_request, ProgressReceiver, do_post_request}, models::{MediaMetadata, MediaUploadResponse, MediaUpdateDescriptionBody, MediaUpdateExtraBody, MediaTimeSlice, ImageNote, MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaAssetSizeStats, TaskEncodeResolution, MediaResolution, MediaSubtitle, MediaAudioTrack}};
+use crate::{tools::{VaultURI, RequestError, do_get_request, do_multipart_upload_request, ProgressReceiver, do_post_request}, models::{MediaMetadata, MediaUploadResponse, MediaUpdateDescriptionBody, MediaUpdateExtraBody, MediaTimeSlice, ImageNote, MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaAssetSizeStats, TaskEncodeResolution, MediaResolution, MediaSubtitle, MediaAudioTrack, MediaUpdateExtendedDescriptionBody}};
 
 pub async fn api_call_get_media(url: VaultURI, media: u64, debug: bool) -> Result<MediaMetadata, RequestError> {
     let res = do_get_request(url, format!("/api/media/{media}"), debug).await;
@@ -131,6 +131,19 @@ pub async fn api_call_media_change_title(url: VaultURI, media: u64, req_body: Me
 
 pub async fn api_call_media_change_description(url: VaultURI, media: u64, req_body: MediaUpdateDescriptionBody, debug: bool) -> Result<(), RequestError> {
     let res = do_post_request(url, format!("/api/media/{media}/edit/description"), serde_json::to_string(&req_body).unwrap(), debug).await;
+
+    match res {
+        Ok(_) => {
+            return Ok(());
+        },
+        Err(err) => {
+            return Err(err);
+        },
+    }
+}
+
+pub async fn api_call_media_change_extended_description(url: VaultURI, media: u64, req_body: MediaUpdateExtendedDescriptionBody, debug: bool) -> Result<(), RequestError> {
+    let res = do_post_request(url, format!("/api/media/{media}/edit/ext_desc"), serde_json::to_string(&req_body).unwrap(), debug).await;
 
     match res {
         Ok(_) => {

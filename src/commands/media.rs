@@ -31,7 +31,7 @@ use super::{
     media_thumbnail::run_cmd_upload_media_thumbnail,
     media_time_slices::{run_cmd_get_media_time_slices, run_cmd_set_media_time_slices},
     media_upload::run_cmd_upload_media,
-    print_request_error, CommandGlobalOptions,
+    print_request_error, CommandGlobalOptions, media_extended_description::run_cmd_set_media_extended_description,
 };
 
 #[derive(Subcommand)]
@@ -53,7 +53,7 @@ pub enum MediaCommand {
         /// Media asset ID
         media: String,
 
-        /// Asset to download. Examples: original, thumbnail, resolution:1280x720:30, sub:ID, audio:ID, notes, preview:Index
+        /// Asset to download. Examples: original, thumbnail, resolution:1280x720:30, sub:ID, audio:ID, notes, preview:Index, ext_desc
         asset: Option<String>,
 
         /// Path to the file to download the asset into
@@ -103,6 +103,15 @@ pub enum MediaCommand {
 
         /// Description
         description: String,
+    },
+
+    /// Changes the extended description of a media asset
+    SetExtendedDescription {
+        /// Media asset ID
+        media: String,
+
+        /// Path to the text file containing the extended description
+        path: String,
     },
 
     /// Changes the description of a media asset
@@ -311,6 +320,9 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         }
         MediaCommand::Delete { media } => {
             run_cmd_media_delete(global_opts, media).await;
+        }
+        MediaCommand::SetExtendedDescription { media, path } => {
+            run_cmd_set_media_extended_description(global_opts, media, path).await;
         }
     }
 }
@@ -579,6 +591,13 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
                         }
                     }
                     None => {}
+                },
+                None => {}
+            }
+
+            match media_data.ext_desc_url {
+                Some(ext_desc_url) => {
+                    println!("Extended description: {ext_desc_url}");
                 },
                 None => {}
             }

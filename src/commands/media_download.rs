@@ -25,6 +25,7 @@ pub enum DownloadAssetType {
     Audio(String),
     VideoPreview(u32),
     Notes,
+    ExtendedDescription,
 }
 
 pub fn parse_asset_type(s: &str) -> Result<DownloadAssetType, ()> {
@@ -43,6 +44,8 @@ pub fn parse_asset_type(s: &str) -> Result<DownloadAssetType, ()> {
         return Ok(DownloadAssetType::Thumbnail);
     } else if parts_type == "notes" {
         return Ok(DownloadAssetType::Notes);
+    } else if parts_type == "ext_desc" {
+        return Ok(DownloadAssetType::ExtendedDescription);
     } else if parts_type == "resolution" || parts_type == "res" || parts_type == "r" {
         // Try video resolution
         let video_res = ConfigVideoResolution::from_str(&val);
@@ -620,6 +623,44 @@ pub async fn run_cmd_download_media(
                         process::exit(1);
                     }
                 },
+                DownloadAssetType::ExtendedDescription => {
+                    match media_data.ext_desc_url {
+                        Some(u) => {
+                            if u.is_empty() {
+                                if logout_after_operation {
+                                    let logout_res =
+                                        do_logout(global_opts.clone(), vault_url.clone()).await;
+        
+                                    match logout_res {
+                                        Ok(_) => {}
+                                        Err(_) => {
+                                            process::exit(1);
+                                        }
+                                    }
+                                }
+                                eprintln!("This media asset has no extended description");
+                                process::exit(1);
+                            }
+
+                            download_path = u;
+                        }
+                        None => {
+                            if logout_after_operation {
+                                let logout_res =
+                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+    
+                                match logout_res {
+                                    Ok(_) => {}
+                                    Err(_) => {
+                                        process::exit(1);
+                                    }
+                                }
+                            }
+                            eprintln!("This media asset has no extended description");
+                            process::exit(1);
+                        }
+                    }
+                }
             }
 
             if download_path.is_empty() {

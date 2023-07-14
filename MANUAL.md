@@ -232,6 +232,7 @@ pmv-cli media <COMMAND>
 | `upload` | Uploads a new media asset, waits for encryption and adds tags if specified |
 | `set-title` | Changes the title of a media asset |
 | `set-description` | Changes the description of a media asset |
+| `set-extended-description` | Changes the extended description of a media asset |
 | `set-force-start-beginning` | Changes the description of a media asset |
 | `set-thumbnail` | Sets the thumbnail of a media asset |
 | `get-time-slices` | Prints the time slices of a media asset |
@@ -312,7 +313,7 @@ pmv-cli media download [OPTIONS] <MEDIA> [ASSET]
 | Argument | Description |
 | --- | --- |
 | `<MEDIA>` | Media asset ID |
-| `[ASSET]` | Asset to download. Examples: original, thumbnail, resolution:1280x720:30, sub:ID, audio:ID, notes, preview:Index |
+| `[ASSET]` | Asset to download. Examples: original, thumbnail, resolution:1280x720:30, sub:ID, audio:ID, notes, preview:Index, ext_desc |
 
 <ins>**Options:**</ins>
 
@@ -387,6 +388,29 @@ pmv-cli media set-description <MEDIA> <DESCRIPTION>
 | --- | --- |
 | `<MEDIA>` | Media asset ID |
 | `<DESCRIPTION>` | Description |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media set-extended-description
+
+Changes the extended description of a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media set-extended-description <MEDIA> <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<PATH>` | Path to the text file containing the extended description |
 
 <ins>**Options:**</ins>
 

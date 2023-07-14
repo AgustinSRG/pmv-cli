@@ -148,6 +148,9 @@ pub struct MediaMetadata {
 
     #[serde(rename = "img_notes_url")]
     pub img_notes_url: Option<String>,
+
+    #[serde(rename = "ext_desc_url")]
+    pub ext_desc_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -315,6 +318,13 @@ pub struct MediaUpdateDescriptionBody {
     #[serde(rename = "description")]
     pub description: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaUpdateExtendedDescriptionBody {
+    #[serde(rename = "ext_desc")]
+    pub ext_desc: String,
+}
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MediaUpdateExtraBody {
