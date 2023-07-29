@@ -229,6 +229,7 @@ pmv-cli media <COMMAND>
 | `get` | Gets media asset metadata and download links |
 | `stats` | Gets media asset size stats |
 | `download` | Downloads a media asset |
+| `export` | Exports a media asset, downloading everything (metadata + assets) into a folder |
 | `upload` | Uploads a new media asset, waits for encryption and adds tags if specified |
 | `set-title` | Changes the title of a media asset |
 | `set-description` | Changes the description of a media asset |
@@ -321,6 +322,29 @@ pmv-cli media download [OPTIONS] <MEDIA> [ASSET]
 | --- | --- |
 | `-o, --output <OUTPUT>` | Path to the file to download the asset into |
 | `-p, --print-link` | Prints the download link, instead of downloading to a file |
+| `-h, --help` | Print help |
+
+### Command: media export
+
+Exports a media asset, downloading everything (metadata + assets) into a folder
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media export [OPTIONS] <MEDIA>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-o, --output <OUTPUT>` | Path to the folder to download the files into |
 | `-h, --help` | Print help |
 
 ### Command: media upload

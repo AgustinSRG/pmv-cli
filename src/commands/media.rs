@@ -31,7 +31,7 @@ use super::{
     media_thumbnail::run_cmd_upload_media_thumbnail,
     media_time_slices::{run_cmd_get_media_time_slices, run_cmd_set_media_time_slices},
     media_upload::run_cmd_upload_media,
-    print_request_error, CommandGlobalOptions, media_extended_description::run_cmd_set_media_extended_description,
+    print_request_error, CommandGlobalOptions, media_extended_description::run_cmd_set_media_extended_description, media_export::run_cmd_export_media,
 };
 
 #[derive(Subcommand)]
@@ -63,6 +63,16 @@ pub enum MediaCommand {
         /// Prints the download link, instead of downloading to a file
         #[arg(short, long)]
         print_link: bool,
+    },
+
+    /// Exports a media asset, downloading everything (metadata + assets) into a folder
+    Export {
+        /// Media asset ID
+        media: String,
+
+        /// Path to the folder to download the files into
+        #[arg(short, long)]
+        output: Option<String>,
     },
 
     /// Uploads a new media asset, waits for encryption and adds tags if specified
@@ -323,6 +333,9 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         }
         MediaCommand::SetExtendedDescription { media, path } => {
             run_cmd_set_media_extended_description(global_opts, media, path).await;
+        }
+        MediaCommand::Export { media, output } => {
+            run_cmd_export_media(global_opts, media, output).await;
         }
     }
 }

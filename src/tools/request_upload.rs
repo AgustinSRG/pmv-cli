@@ -1,7 +1,6 @@
 // Upload multipart requests
 
 use std::fs::File;
-use std::io::Read;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
@@ -111,11 +110,6 @@ impl std::io::Read for UploadProgressReporterSync {
         }
     }
 }
-
-trait Test: Read + Sync + Send {}
-
-//verify that Foobar is Send + Sync
-impl Test for UploadProgressReporterSync { }
 
 pub async fn do_multipart_upload_request(
     uri: VaultURI,

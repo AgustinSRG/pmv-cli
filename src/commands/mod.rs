@@ -20,6 +20,7 @@ use media::*;
 
 mod media_audio_tracks;
 mod media_download;
+mod media_export;
 mod media_extended_description;
 mod media_image_notes;
 mod media_resolutions;

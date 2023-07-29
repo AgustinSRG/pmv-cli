@@ -154,6 +154,54 @@ pub struct MediaMetadata {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaMetadataExport {
+    #[serde(rename = "original")]
+    pub original: Option<String>,
+
+    #[serde(rename = "thumbnail")]
+    pub thumbnail: Option<String>,
+
+    #[serde(rename = "notes")]
+    pub notes: Option<String>,
+
+    #[serde(rename = "ext_desc")]
+    pub ext_desc: Option<String>,
+
+    #[serde(rename = "title")]
+    pub title: Option<String>,
+
+    #[serde(rename = "description")]
+    pub description: Option<String>,
+
+    #[serde(rename = "tags")]
+    pub tags: Option<Vec<String>>,
+
+    #[serde(rename = "force_start_beginning")]
+    pub force_start_beginning: Option<bool>,
+
+    #[serde(rename = "time_slices")]
+    pub time_slices: Option<Vec<MediaTimeSlice>>,
+
+    #[serde(rename = "subtitles")]
+    pub subtitles: Option<Vec<MediaSubtitleOrAudioExport>>, 
+
+    #[serde(rename = "audios")]
+    pub audios: Option<Vec<MediaSubtitleOrAudioExport>>, 
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaSubtitleOrAudioExport {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(rename = "file")]
+    pub file: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MediaResolution {
     #[serde(rename = "width")]
     pub width: i32,
