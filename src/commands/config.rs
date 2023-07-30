@@ -52,7 +52,7 @@ pub enum ConfigCommand {
         file_path: String,
     },
 
-    // Clears custom CSS for the vault
+    /// Clears custom CSS for the vault
     ClearCSS,
 
     /// Adds video resolution
