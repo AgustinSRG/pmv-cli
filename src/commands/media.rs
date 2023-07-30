@@ -31,7 +31,7 @@ use super::{
     media_thumbnail::run_cmd_upload_media_thumbnail,
     media_time_slices::{run_cmd_get_media_time_slices, run_cmd_set_media_time_slices},
     media_upload::run_cmd_upload_media,
-    print_request_error, CommandGlobalOptions, media_extended_description::run_cmd_set_media_extended_description, media_export::run_cmd_export_media,
+    print_request_error, CommandGlobalOptions, media_extended_description::run_cmd_set_media_extended_description, media_export::run_cmd_export_media, media_import::run_cmd_import_media,
 };
 
 #[derive(Subcommand)]
@@ -95,6 +95,16 @@ pub enum MediaCommand {
         /// Do not wait for encryption
         #[arg(short, long)]
         skip_encryption: bool,
+    },
+
+    /// Imports a media asset, expecting a folder with the same format the export command uses.
+    Import {
+        /// Path to the folder to import
+        path: String,
+
+        /// Album to upload the media asset into
+        #[arg(short, long)]
+        album: Option<String>,
     },
 
     /// Changes the title of a media asset
@@ -336,6 +346,9 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         }
         MediaCommand::Export { media, output } => {
             run_cmd_export_media(global_opts, media, output).await;
+        }
+        MediaCommand::Import { path, album } => {
+            run_cmd_import_media(global_opts, path, album).await;
         }
     }
 }

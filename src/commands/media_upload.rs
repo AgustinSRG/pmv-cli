@@ -261,12 +261,12 @@ impl ProgressReceiver for UploaderProgressPrinter {
     }
 }
 
-struct EncryptionProgressPrinter {
+pub struct EncryptionProgressPrinter {
     last_line_width: usize,
 }
 
 impl EncryptionProgressPrinter {
-    fn new() -> EncryptionProgressPrinter {
+    pub fn new() -> EncryptionProgressPrinter {
         return EncryptionProgressPrinter { last_line_width: 0 };
     }
 }

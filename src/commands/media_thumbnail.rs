@@ -115,6 +115,17 @@ pub async fn run_cmd_upload_media_thumbnail(
             let thumb_new_url = upload_res.url;
 
             eprintln!("Successfully updated the thumbnail of #{media_id_param}: {thumb_new_url}");
+
+            if logout_after_operation {
+                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
         }
         Err(e) => {
             if logout_after_operation {

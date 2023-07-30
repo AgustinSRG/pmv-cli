@@ -231,6 +231,7 @@ pmv-cli media <COMMAND>
 | `download` | Downloads a media asset |
 | `export` | Exports a media asset, downloading everything (metadata + assets) into a folder |
 | `upload` | Uploads a new media asset, waits for encryption and adds tags if specified |
+| `import` | Imports a media asset, expecting a folder with the same format the export command uses |
 | `set-title` | Changes the title of a media asset |
 | `set-description` | Changes the description of a media asset |
 | `set-extended-description` | Changes the extended description of a media asset |
@@ -371,6 +372,29 @@ pmv-cli media upload [OPTIONS] <PATH>
 | `-a, --album <ALBUM>` | Album to upload the media asset into |
 | `-T, --tags <TAGS>` | Tags to add to the media asset, separated by spaces |
 | `-s, --skip-encryption` | Do not wait for encryption |
+| `-h, --help` | Print help |
+
+### Command: media import
+
+Imports a media asset, expecting a folder with the same format the export command uses
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media import [OPTIONS] <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<PATH>` | Path to the folder to import |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-a, --album <ALBUM>` | Album to upload the media asset into |
 | `-h, --help` | Print help |
 
 ### Command: media set-title

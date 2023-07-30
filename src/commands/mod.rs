@@ -23,6 +23,7 @@ mod media_download;
 mod media_export;
 mod media_extended_description;
 mod media_image_notes;
+mod media_import;
 mod media_resolutions;
 mod media_subtitles;
 mod media_upload;
