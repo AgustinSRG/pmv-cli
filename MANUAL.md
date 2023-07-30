@@ -12,18 +12,18 @@ pmv-cli [OPTIONS] <COMMAND>
 
 | Command | Description |
 | --- | --- |
-| `login` | Logins into an active vault, printing a session URL into the standard output |
-| `logout` | Closes the active session, given a session URL |
-| `account` | Manages accounts |
-| `media` | Manages media assets |
-| `random` | Retrieves random media assets from the vault |
-| `search` | Searches for media assets in the vault (Basic) |
-| `advanced-search` | Searches for media assets in the vault (Advanced) |
-| `tag` | Manages tags |
-| `album` | Manages albums |
-| `config` | Manages vault configuration |
-| `task` | Retrieves tasks information |
-| `help` | Print this message or the help of the given subcommand(s) |
+| [login](#command-login) | Logins into an active vault, printing a session URL into the standard output |
+| [logout](#command-logout) | Closes the active session, given a session URL |
+| [account](#command-account) | Manages accounts |
+| [media](#command-media) | Manages media assets |
+| [random](#command-random) | Retrieves random media assets from the vault |
+| [search](#command-search) | Searches for media assets in the vault (Basic) |
+| [advanced-search](#command-advanced-search) | Searches for media assets in the vault (Advanced) |
+| [tag](#command-tag) | Manages tags |
+| [album](#command-album) | Manages albums |
+| [config](#command-config) | Manages vault configuration |
+| [task](#command-task) | Retrieves tasks information |
+| [help](#command-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -82,13 +82,13 @@ pmv-cli account <COMMAND>
 
 | Command | Description |
 | --- | --- |
-| `context` | Prints account context to the standard output |
-| `change-username` | Changes username (only for root account) |
-| `change-password` | Changes account password |
-| `list` | List accounts |
-| `create` | Creates new account |
-| `delete` | Deletes an existing account |
-| `help` | Print this message or the help of the given subcommand(s) |
+| [context](#command-account-context) | Prints account context to the standard output |
+| [change-username](#command-account-change-username) | Changes username (only for root account) |
+| [change-password](#command-account-change-password) | Changes account password |
+| [list](#command-account-list) | List accounts |
+| [create](#command-account-create) | Creates new account |
+| [delete](#command-account-delete) | Deletes an existing account |
+| [help](#command-account-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -226,29 +226,29 @@ pmv-cli media <COMMAND>
 
 | Command | Description |
 | --- | --- |
-| `get` | Gets media asset metadata and download links |
-| `stats` | Gets media asset size stats |
-| `download` | Downloads a media asset |
-| `export` | Exports a media asset, downloading everything (metadata + assets) into a folder |
-| `upload` | Uploads a new media asset, waits for encryption and adds tags if specified |
-| `import` | Imports a media asset, expecting a folder with the same format the export command uses |
-| `set-title` | Changes the title of a media asset |
-| `set-description` | Changes the description of a media asset |
-| `set-extended-description` | Changes the extended description of a media asset |
-| `set-force-start-beginning` | Changes the description of a media asset |
-| `set-thumbnail` | Sets the thumbnail of a media asset |
-| `get-time-slices` | Prints the time slices of a media asset |
-| `set-time-slices` | Sets the time slices of a media asset |
-| `set-image-notes` | Sets the image notes of a media asset |
-| `add-resolution` | Adds new resolution to the media asset |
-| `remove-resolution` | Removes a resolution from the media asset |
-| `add-subtitle` | Adds subtitle file to a media asset |
-| `remove-subtitle` | Removes subtitle file from a media asset |
-| `add-audio` | Adds audio track file to a media asset |
-| `remove-audio` | Removes audio track file from a media asset |
-| `re-encode` | Re-Encodes a media asset |
-| `delete` | Deletes a media asset |
-| `help` | Print this message or the help of the given subcommand(s) |
+| [get](#command-media-get) | Gets media asset metadata and download links |
+| [stats](#command-media-stats) | Gets media asset size stats |
+| [download](#command-media-download) | Downloads a media asset |
+| [export](#command-media-export) | Exports a media asset, downloading everything (metadata + assets) into a folder |
+| [upload](#command-media-upload) | Uploads a new media asset, waits for encryption and adds tags if specified |
+| [import](#command-media-import) | Imports a media asset, expecting a folder with the same format the export command uses |
+| [set-title](#command-media-set-title) | Changes the title of a media asset |
+| [set-description](#command-media-set-description) | Changes the description of a media asset |
+| [set-extended-description](#command-media-set-extended-description) | Changes the extended description of a media asset |
+| [set-force-start-beginning](#command-media-set-force-start-beginning) | Changes the description of a media asset |
+| [set-thumbnail](#command-media-set-thumbnail) | Sets the thumbnail of a media asset |
+| [get-time-slices](#command-media-get-time-slices) | Prints the time slices of a media asset |
+| [set-time-slices](#command-media-set-time-slices) | Sets the time slices of a media asset |
+| [set-image-notes](#command-media-set-image-notes) | Sets the image notes of a media asset |
+| [add-resolution](#command-media-add-resolution) | Adds new resolution to the media asset |
+| [remove-resolution](#command-media-remove-resolution) | Removes a resolution from the media asset |
+| [add-subtitle](#command-media-add-subtitle) | Adds subtitle file to a media asset |
+| [remove-subtitle](#command-media-remove-subtitle) | Removes subtitle file from a media asset |
+| [add-audio](#command-media-add-audio) | Adds audio track file to a media asset |
+| [remove-audio](#command-media-remove-audio) | Removes audio track file from a media asset |
+| [re-encode](#command-media-re-encode) | Re-Encodes a media asset |
+| [delete](#command-media-delete) | Deletes a media asset |
+| [help](#command-media-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -850,10 +850,10 @@ pmv-cli tag <COMMAND>
 
 | Command | Description |
 | --- | --- |
-| `list` | List tags |
-| `add` | Adds a tag to a media asset |
-| `remove` | Removes a tag from a media asset |
-| `help` | Print this message or the help of the given subcommand(s) |
+| [list](#command-tag-list) | List tags |
+| [add](#command-tag-add) | Adds a tag to a media asset |
+| [remove](#command-tag-remove) | Removes a tag from a media asset |
+| [help](#command-tag-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -939,15 +939,15 @@ pmv-cli album <COMMAND>
 
 | Command | Description |
 | --- | --- |
-| `list` | List albums |
-| `get` | Get album and prints it |
-| `create` | Creates a new album |
-| `rename` | Renames an album |
-| `delete` | Deletes album |
-| `add` | Adds a media asset to an album |
-| `remove` | Removes a media asset from an album |
-| `set-position` | Changes the position of a media asset inside al album |
-| `help` | Print this message or the help of the given subcommand(s) |
+| [list](#command-album-list) | List albums |
+| [get](#command-album-get) | Get album and prints it |
+| [create](#command-album-create) | Creates a new album |
+| [rename](#command-album-rename) | Renames an album |
+| [delete](#command-album-delete) | Deletes album |
+| [add](#command-album-add) | Adds a media asset to an album |
+| [remove](#command-album-remove) | Removes a media asset from an album |
+| [set-position](#command-album-set-position) | Changes the position of a media asset inside al album |
+| [help](#command-album-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -1150,19 +1150,19 @@ pmv-cli config <COMMAND>
 
 | Command | Description |
 | --- | --- |
-| `get` | Gets vault configuration |
-| `get-css` | Gets custom CSS code configured for the vault |
-| `set-title` | Sets vault title |
-| `set-max-tasks` | Sets max tasks in parallel |
-| `set-encoding-threads` | Sets number of encoding threads to use |
-| `set-video-previews-interval` | Sets the video previews interval in seconds |
-| `set-css` | Sets custom CSS for the vault |
-| `clear-css` |  |
-| `add-video-resolution` | Adds video resolution |
-| `remove-video-resolution` | Removes video resolution |
-| `add-image-resolution` | Adds image resolution |
-| `remove-image-resolution` | Removes image resolution |
-| `help` | Print this message or the help of the given subcommand(s) |
+| [get](#command-config-get) | Gets vault configuration |
+| [get-css](#command-config-get-css) | Gets custom CSS code configured for the vault |
+| [set-title](#command-config-set-title) | Sets vault title |
+| [set-max-tasks](#command-config-set-max-tasks) | Sets max tasks in parallel |
+| [set-encoding-threads](#command-config-set-encoding-threads) | Sets number of encoding threads to use |
+| [set-video-previews-interval](#command-config-set-video-previews-interval) | Sets the video previews interval in seconds |
+| [set-css](#command-config-set-css) | Sets custom CSS for the vault |
+| [clear-css](#command-config-clear-css) | Clears custom CSS for the vault |
+| [add-video-resolution](#command-config-add-video-resolution) | Adds video resolution |
+| [remove-video-resolution](#command-config-remove-video-resolution) | Removes video resolution |
+| [add-image-resolution](#command-config-add-image-resolution) | Adds image resolution |
+| [remove-image-resolution](#command-config-remove-image-resolution) | Removes image resolution |
+| [help](#command-config-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -1314,12 +1314,12 @@ pmv-cli config set-css <FILE_PATH>
 
 ### Command: config clear-css
 
-Usage: pmv-cli config clear-css
+Clears custom CSS for the vault
 
 <ins>**Usage:**</ins>
 
 ```
-
+pmv-cli config clear-css
 ```
 
 <ins>**Options:**</ins>
@@ -1430,11 +1430,11 @@ pmv-cli task <COMMAND>
 
 | Command | Description |
 | --- | --- |
-| `list` | Lists current existing tasks |
-| `monitor` | Monitors tasks |
-| `get` | Get task status |
-| `wait` | Waits for a task to finish, monitoring its status |
-| `help` | Print this message or the help of the given subcommand(s) |
+| [list](#command-task-list) | Lists current existing tasks |
+| [monitor](#command-task-monitor) | Monitors tasks |
+| [get](#command-task-get) | Get task status |
+| [wait](#command-task-wait) | Waits for a task to finish, monitoring its status |
+| [help](#command-task-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 

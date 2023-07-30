@@ -107,7 +107,8 @@ function parseHelp(text) {
     };
 }
 
-function toMd(ph) {
+function toMd(ph, cmdStack) {
+    const baseLink = "#command" + (cmdStack.length > 0 ? ("-" + cmdStack.join("-")) : "");
     const lines = [];
 
     lines.push(ph.desc);
@@ -127,7 +128,7 @@ function toMd(ph) {
         lines.push("| --- | --- |");
 
         for (let cmd of ph.commands) {
-            lines.push(`| \`${cmd.name}\` | ${cmd.desc} |`);
+            lines.push(`| [${cmd.name}](${baseLink}-${cmd.name}) | ${cmd.desc} |`);
         }
 
         lines.push("");
@@ -179,7 +180,7 @@ async function resolveRecursive(level, lines, cmdStack) {
 
     const baseHelp = parseHelp(await callPMV_CLI(cmdStack.concat(["--help"])));
 
-    toMd(baseHelp).forEach(line => {
+    toMd(baseHelp, cmdStack).forEach(line => {
         lines.push(line);
     });
 
