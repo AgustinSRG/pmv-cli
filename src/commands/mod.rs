@@ -6,6 +6,9 @@ use account::*;
 mod album;
 use album::*;
 
+mod batch_operation;
+use batch_operation::*;
+
 mod config;
 use config::*;
 
@@ -26,9 +29,9 @@ mod media_image_notes;
 mod media_import;
 mod media_resolutions;
 mod media_subtitles;
-mod media_upload;
 mod media_thumbnail;
 mod media_time_slices;
+mod media_upload;
 
 mod random;
 use random::*;
@@ -205,6 +208,40 @@ pub enum Commands {
         #[command(subcommand)]
         task_cmd: TaskCommand,
     },
+
+    /// Applies a batch operation to a list of media assets
+    Batch {
+        /// Filter by title
+        #[arg(short = 'q', long)]
+        title: Option<String>,
+
+        /// Filter by description.
+        #[arg(short, long)]
+        description: Option<String>,
+
+        /// Filter by media type. Can be: video, audio or image
+        #[arg(short = 'k', long)]
+        media_type: Option<String>,
+
+        /// Filter by tags. Expected a list of tag names, separated by spaces.
+        #[arg(short, long)]
+        tags: Option<String>,
+
+        /// Tag filtering mode. Can be: all, any, none or untagged
+        #[arg(short = 'm', long)]
+        tags_mode: Option<String>,
+
+        /// Filter by album. Expected an album ID, like: #1
+        #[arg(short, long)]
+        album: Option<String>,
+
+        /// Do not filter. Apply to the entire vault instead.
+        #[arg(short, long)]
+        everything: bool,
+
+        #[command(subcommand)]
+        batch_command: BatchCommand,
+    },
 }
 
 pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
@@ -280,6 +317,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
         }
         Commands::Task { task_cmd } => {
             run_task_cmd(global_opts, task_cmd).await;
+        }
+        Commands::Batch { title, description, media_type, tags, tags_mode, album, everything, batch_command } => {
+            run_cmd_batch_operation(global_opts, title, description, media_type, tags, tags_mode, album, everything, batch_command).await;
         }
     }
 }

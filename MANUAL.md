@@ -23,6 +23,7 @@ pmv-cli [OPTIONS] <COMMAND>
 | [album](#command-album) | Manages albums |
 | [config](#command-config) | Manages vault configuration |
 | [task](#command-task) | Retrieves tasks information |
+| [batch](#command-batch) | Applies a batch operation to a list of media assets |
 | [help](#command-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
@@ -1512,6 +1513,144 @@ pmv-cli task wait <TASK>
 | Argument | Description |
 | --- | --- |
 | `<TASK>` | Task identifier |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+## Command: batch
+
+Applies a batch operation to a list of media assets
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli batch [OPTIONS] <COMMAND>
+```
+
+<ins>**Commands:**</ins>
+
+| Command | Description |
+| --- | --- |
+| [add-tags](#command-batch-add-tags) | Adds tags to the media assets |
+| [remove-tags](#command-batch-remove-tags) | Removes tags from the media assets |
+| [add-to-album](#command-batch-add-to-album) | Adds media assets into an album |
+| [remove-from-album](#command-batch-remove-from-album) | Removes media assets from an album, if they were in it |
+| [delete](#command-batch-delete) | Delete media assets |
+| [help](#command-batch-help) | Print this message or the help of the given subcommand(s) |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-q, --title <TITLE>` | Filter by title |
+| `-d, --description <DESCRIPTION>` | Filter by description |
+| `-k, --media-type <MEDIA_TYPE>` | Filter by media type. Can be: video, audio or image |
+| `-t, --tags <TAGS>` | Filter by tags. Expected a list of tag names, separated by spaces |
+| `-m, --tags-mode <TAGS_MODE>` | Tag filtering mode. Can be: all, any, none or untagged |
+| `-a, --album <ALBUM>` | Filter by album. Expected an album ID, like: #1 |
+| `-e, --everything` | Do not filter. Apply to the entire vault instead |
+| `-h, --help` | Print help |
+
+### Command: batch add-tags
+
+Adds tags to the media assets
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli batch add-tags <TAGS>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<TAGS>` | List of tag names, separated by spaces |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: batch remove-tags
+
+Removes tags from the media assets
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli batch remove-tags <TAGS>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<TAGS>` | List of tag names, separated by spaces |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: batch add-to-album
+
+Adds media assets into an album
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli batch add-to-album <ALBUM>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: batch remove-from-album
+
+Removes media assets from an album, if they were in it
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli batch remove-from-album <ALBUM>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: batch delete
+
+Delete media assets
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli batch delete
+```
 
 <ins>**Options:**</ins>
 
