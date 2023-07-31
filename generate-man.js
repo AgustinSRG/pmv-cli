@@ -73,10 +73,12 @@ function parseHelp(text) {
             const commandName = spl[0].trim();
             const commandDesc = spl.slice(1).join("  ").trim();
 
-            commands.push({
-                name: commandName,
-                desc: commandDesc,
-            });
+            if (commandName !== "help") {
+                commands.push({
+                    name: commandName,
+                    desc: commandDesc,
+                });
+            }
         } else if (current === "o") {
             // Option
             const optionSyntax = spl[0].trim();

@@ -24,7 +24,6 @@ pmv-cli [OPTIONS] <COMMAND>
 | [config](#command-config) | Manages vault configuration |
 | [task](#command-task) | Retrieves tasks information |
 | [batch](#command-batch) | Applies a batch operation to a list of media assets |
-| [help](#command-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -89,7 +88,6 @@ pmv-cli account <COMMAND>
 | [list](#command-account-list) | List accounts |
 | [create](#command-account-create) | Creates new account |
 | [delete](#command-account-delete) | Deletes an existing account |
-| [help](#command-account-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -249,7 +247,6 @@ pmv-cli media <COMMAND>
 | [remove-audio](#command-media-remove-audio) | Removes audio track file from a media asset |
 | [re-encode](#command-media-re-encode) | Re-Encodes a media asset |
 | [delete](#command-media-delete) | Deletes a media asset |
-| [help](#command-media-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -854,7 +851,6 @@ pmv-cli tag <COMMAND>
 | [list](#command-tag-list) | List tags |
 | [add](#command-tag-add) | Adds a tag to a media asset |
 | [remove](#command-tag-remove) | Removes a tag from a media asset |
-| [help](#command-tag-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -948,7 +944,6 @@ pmv-cli album <COMMAND>
 | [add](#command-album-add) | Adds a media asset to an album |
 | [remove](#command-album-remove) | Removes a media asset from an album |
 | [set-position](#command-album-set-position) | Changes the position of a media asset inside al album |
-| [help](#command-album-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -1163,7 +1158,6 @@ pmv-cli config <COMMAND>
 | [remove-video-resolution](#command-config-remove-video-resolution) | Removes video resolution |
 | [add-image-resolution](#command-config-add-image-resolution) | Adds image resolution |
 | [remove-image-resolution](#command-config-remove-image-resolution) | Removes image resolution |
-| [help](#command-config-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -1435,7 +1429,6 @@ pmv-cli task <COMMAND>
 | [monitor](#command-task-monitor) | Monitors tasks |
 | [get](#command-task-get) | Get task status |
 | [wait](#command-task-wait) | Waits for a task to finish, monitoring its status |
-| [help](#command-task-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
@@ -1539,7 +1532,6 @@ pmv-cli batch [OPTIONS] <COMMAND>
 | [add-to-album](#command-batch-add-to-album) | Adds media assets into an album |
 | [remove-from-album](#command-batch-remove-from-album) | Removes media assets from an album, if they were in it |
 | [delete](#command-batch-delete) | Delete media assets |
-| [help](#command-batch-help) | Print this message or the help of the given subcommand(s) |
 
 <ins>**Options:**</ins>
 
