@@ -80,7 +80,7 @@ pub enum ConfigCommand {
     },
 }
 
-pub async fn run_config_cmd(global_opts: CommandGlobalOptions, cmd: ConfigCommand) -> () {
+pub async fn run_config_cmd(global_opts: CommandGlobalOptions, cmd: ConfigCommand) {
     match cmd {
         ConfigCommand::Get => {
             run_cmd_config_get(global_opts).await;
@@ -121,7 +121,7 @@ pub async fn run_config_cmd(global_opts: CommandGlobalOptions, cmd: ConfigComman
     }
 }
 
-pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) -> () {
+pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -168,21 +168,13 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) -> () {
 
             println!("---------------------------");
 
-            match config.title {
-                Some(title) => {
-                    println!("Vault title: {title}");
-                }
-                None => {}
+            if let Some(title) = config.title {
+                println!("Vault title: {title}");
             }
 
-            match config.css {
-                Some(css) => {
-                    let css_len = css.len();
-                    println!(
-                        "Custom CSS: {css_len} Bytes | Use the 'get-css' command to retrieve it."
-                    );
-                }
-                None => {}
+            if let Some(css) = config.css {
+                let css_len = css.len();
+                println!("Custom CSS: {css_len} Bytes | Use the 'get-css' command to retrieve it.");
             }
 
             let res_max_tasks = config.max_tasks;
@@ -198,7 +190,11 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) -> () {
             println!("Video previews interval: {res_video_previews_interval} seconds");
 
             if !config.resolutions.is_empty() {
-                let list: Vec<String> = config.resolutions.iter().map(|r| r.to_string()).collect();
+                let list: Vec<String> = config
+                    .resolutions
+                    .iter()
+                    .map(|r| r.to_resolution_string())
+                    .collect();
                 let list_str = list.join(", ");
 
                 println!("Video resolutions: {list_str}");
@@ -208,7 +204,7 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) -> () {
                 let list: Vec<String> = config
                     .image_resolutions
                     .iter()
-                    .map(|r| r.to_string())
+                    .map(|r| r.to_resolution_string())
                     .collect();
                 let list_str = list.join(", ");
 
@@ -234,7 +230,7 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) -> () {
     }
 }
 
-pub async fn run_cmd_config_get_css(global_opts: CommandGlobalOptions) -> () {
+pub async fn run_cmd_config_get_css(global_opts: CommandGlobalOptions) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -279,11 +275,8 @@ pub async fn run_cmd_config_get_css(global_opts: CommandGlobalOptions) -> () {
                 }
             }
 
-            match config.css {
-                Some(css) => {
-                    println!("{css}");
-                }
-                None => {}
+            if let Some(css) = config.css {
+                println!("{css}");
             }
         }
         Err(e) => {
@@ -303,7 +296,7 @@ pub async fn run_cmd_config_get_css(global_opts: CommandGlobalOptions) -> () {
     }
 }
 
-pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: String) -> () {
+pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -333,14 +326,10 @@ pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: 
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -355,7 +344,7 @@ pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: 
             }
             process::exit(1);
         }
-    }
+    };
 
     // Changes
 
@@ -389,7 +378,7 @@ pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: 
     }
 }
 
-pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max_tasks: i32) -> () {
+pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max_tasks: i32) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -419,14 +408,10 @@ pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -441,7 +426,7 @@ pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max
             }
             process::exit(1);
         }
-    }
+    };
 
     // Changes
 
@@ -478,7 +463,7 @@ pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max
 pub async fn run_cmd_config_set_encoding_threads(
     global_opts: CommandGlobalOptions,
     encoding_threads: i32,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -508,14 +493,10 @@ pub async fn run_cmd_config_set_encoding_threads(
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -530,7 +511,7 @@ pub async fn run_cmd_config_set_encoding_threads(
             }
             process::exit(1);
         }
-    }
+    };
 
     // Changes
 
@@ -567,7 +548,7 @@ pub async fn run_cmd_config_set_encoding_threads(
 pub async fn run_cmd_config_set_video_previews_interval(
     global_opts: CommandGlobalOptions,
     interval_seconds: i32,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -597,14 +578,10 @@ pub async fn run_cmd_config_set_video_previews_interval(
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -619,7 +596,7 @@ pub async fn run_cmd_config_set_video_previews_interval(
             }
             process::exit(1);
         }
-    }
+    };
 
     // Changes
 
@@ -634,12 +611,11 @@ pub async fn run_cmd_config_set_video_previews_interval(
 
     match api_res_set_conf {
         Ok(_) => {
-            let interval_seconds_fixed: i32;
-            if interval_seconds > 0 {
-                interval_seconds_fixed = interval_seconds
+            let interval_seconds_fixed: i32 = if interval_seconds > 0 {
+                interval_seconds
             } else {
-                interval_seconds_fixed = 3
-            }
+                3
+            };
             eprintln!(
                 "Successfully changed video previews interval: {interval_seconds_fixed} seconds"
             );
@@ -661,7 +637,7 @@ pub async fn run_cmd_config_set_video_previews_interval(
     }
 }
 
-pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path: String) -> () {
+pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -691,14 +667,10 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -713,7 +685,7 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
             }
             process::exit(1);
         }
-    }
+    };
 
     // Read file
 
@@ -772,7 +744,7 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
     }
 }
 
-pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) -> () {
+pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -802,14 +774,10 @@ pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) -> () {
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -824,7 +792,7 @@ pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) -> () {
             }
             process::exit(1);
         }
-    }
+    };
 
     // Ask confirmation
 
@@ -882,7 +850,7 @@ pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) -> () {
 pub async fn run_cmd_config_add_video_resolution(
     global_opts: CommandGlobalOptions,
     resolution: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -912,14 +880,10 @@ pub async fn run_cmd_config_add_video_resolution(
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -934,17 +898,13 @@ pub async fn run_cmd_config_add_video_resolution(
             }
             process::exit(1);
         }
-    }
+    };
 
     // Param
 
     let parse_res = ConfigVideoResolution::from_str(&resolution);
-    let parsed_resolution: ConfigVideoResolution;
-
-    match parse_res {
-        Ok(r) => {
-            parsed_resolution = r;
-        }
+    let parsed_resolution: ConfigVideoResolution = match parse_res {
+        Ok(r) => r,
         Err(_) => {
             eprintln!("Invalid video resolution specified: {resolution}");
             if logout_after_operation {
@@ -959,7 +919,7 @@ pub async fn run_cmd_config_add_video_resolution(
             }
             process::exit(1);
         }
-    }
+    };
 
     let mut already_exists = false;
 
@@ -1020,7 +980,7 @@ pub async fn run_cmd_config_add_video_resolution(
 pub async fn run_cmd_config_remove_video_resolution(
     global_opts: CommandGlobalOptions,
     resolution: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -1050,14 +1010,10 @@ pub async fn run_cmd_config_remove_video_resolution(
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -1072,17 +1028,14 @@ pub async fn run_cmd_config_remove_video_resolution(
             }
             process::exit(1);
         }
-    }
+    };
 
     // Param
 
     let parse_res = ConfigVideoResolution::from_str(&resolution);
-    let parsed_resolution: ConfigVideoResolution;
 
-    match parse_res {
-        Ok(r) => {
-            parsed_resolution = r;
-        }
+    let parsed_resolution: ConfigVideoResolution = match parse_res {
+        Ok(r) => r,
         Err(_) => {
             eprintln!("Invalid video resolution specified: {resolution}");
             if logout_after_operation {
@@ -1097,7 +1050,7 @@ pub async fn run_cmd_config_remove_video_resolution(
             }
             process::exit(1);
         }
-    }
+    };
 
     let mut already_exists = false;
 
@@ -1127,11 +1080,7 @@ pub async fn run_cmd_config_remove_video_resolution(
 
     let mut new_config = current_config.clone();
 
-    new_config.resolutions = new_config
-        .resolutions
-        .into_iter()
-        .filter(|r| *r != parsed_resolution)
-        .collect();
+    new_config.resolutions.retain(|r| *r != parsed_resolution);
 
     // Set config
 
@@ -1162,7 +1111,7 @@ pub async fn run_cmd_config_remove_video_resolution(
 pub async fn run_cmd_config_add_image_resolution(
     global_opts: CommandGlobalOptions,
     resolution: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -1192,14 +1141,10 @@ pub async fn run_cmd_config_add_image_resolution(
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -1214,17 +1159,14 @@ pub async fn run_cmd_config_add_image_resolution(
             }
             process::exit(1);
         }
-    }
+    };
 
     // Param
 
     let parse_res = ConfigImageResolution::from_str(&resolution);
-    let parsed_resolution: ConfigImageResolution;
 
-    match parse_res {
-        Ok(r) => {
-            parsed_resolution = r;
-        }
+    let parsed_resolution: ConfigImageResolution = match parse_res {
+        Ok(r) => r,
         Err(_) => {
             eprintln!("Invalid image resolution specified: {resolution}");
             if logout_after_operation {
@@ -1239,7 +1181,7 @@ pub async fn run_cmd_config_add_image_resolution(
             }
             process::exit(1);
         }
-    }
+    };
 
     let mut already_exists = false;
 
@@ -1300,7 +1242,7 @@ pub async fn run_cmd_config_add_image_resolution(
 pub async fn run_cmd_config_remove_image_resolution(
     global_opts: CommandGlobalOptions,
     resolution: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -1330,14 +1272,10 @@ pub async fn run_cmd_config_remove_image_resolution(
 
     // Get config
 
-    let current_config: VaultConfig;
-
     let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
 
-    match api_res_get_conf {
-        Ok(config) => {
-            current_config = config;
-        }
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -1352,17 +1290,14 @@ pub async fn run_cmd_config_remove_image_resolution(
             }
             process::exit(1);
         }
-    }
+    };
 
     // Param
 
     let parse_res = ConfigImageResolution::from_str(&resolution);
-    let parsed_resolution: ConfigImageResolution;
 
-    match parse_res {
-        Ok(r) => {
-            parsed_resolution = r;
-        }
+    let parsed_resolution: ConfigImageResolution = match parse_res {
+        Ok(r) => r,
         Err(_) => {
             eprintln!("Invalid image resolution specified: {resolution}");
             if logout_after_operation {
@@ -1377,7 +1312,7 @@ pub async fn run_cmd_config_remove_image_resolution(
             }
             process::exit(1);
         }
-    }
+    };
 
     let mut already_exists = false;
 
@@ -1407,11 +1342,9 @@ pub async fn run_cmd_config_remove_image_resolution(
 
     let mut new_config = current_config.clone();
 
-    new_config.image_resolutions = new_config
+    new_config
         .image_resolutions
-        .into_iter()
-        .filter(|r| *r != parsed_resolution)
-        .collect();
+        .retain(|r| *r != parsed_resolution);
 
     // Set config
 

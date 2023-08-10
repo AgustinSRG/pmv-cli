@@ -39,17 +39,17 @@ pub async fn ensure_login(url: VaultURI, given_username: Option<String>, debug: 
 
             let session_id = login_res.unwrap().session_id;
             
-            return Ok(VaultURI::SessionURI{
+            Ok(VaultURI::SessionURI{
                 base_url: base_url.clone(),
                 session: session_id,
-            });
+            })
         },
         VaultURI::SessionURI{base_url, session: _} => {
             // Session URI is already logged in
             if debug {
                 eprintln!("DEBUG: Provided session URL for vault: {base_url}");
             }
-            return Ok(url);
+            Ok(url)
         }
     }
 }

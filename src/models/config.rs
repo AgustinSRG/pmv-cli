@@ -48,15 +48,15 @@ pub struct VaultConfig {
 }
 
 impl ConfigVideoResolution {
-    pub fn to_string(&self) -> String {
+    pub fn to_resolution_string(&self) -> String {
         let w = self.width;
         let h = self.height;
         let fps = self.fps;
-        return format!("{w}x{h}:{fps}");
+        format!("{w}x{h}:{fps}")
     }
 
     pub fn from_str(res_str: &str) -> Result<Self, ()> {
-        let parts: Vec<&str> = res_str.split(":").collect();
+        let parts: Vec<&str> = res_str.split(':').collect();
 
         if parts.len() != 2 {
             return Err(());
@@ -68,7 +68,7 @@ impl ConfigVideoResolution {
             return Err(());
         }
 
-        let parts2: Vec<&str> = parts[0].split("x").collect();
+        let parts2: Vec<&str> = parts[0].split('x').collect();
 
         if parts2.len() != 2 {
             return Err(());
@@ -86,23 +86,23 @@ impl ConfigVideoResolution {
             return Err(());
         }
 
-        return Ok(ConfigVideoResolution{
+        Ok(ConfigVideoResolution{
             width: width.unwrap(),
             height: height.unwrap(),
             fps: fps.unwrap(),
-        });
+        })
     }
 }
 
 impl ConfigImageResolution {
-    pub fn to_string(&self) -> String {
+    pub fn to_resolution_string(&self) -> String {
         let w = self.width;
         let h = self.height;
-        return format!("{w}x{h}");
+        format!("{w}x{h}")
     }
 
     pub fn from_str(res_str: &str) -> Result<Self, ()> {
-        let parts: Vec<&str> = res_str.split("x").collect();
+        let parts: Vec<&str> = res_str.split('x').collect();
 
         if parts.len() != 2 {
             return Err(());
@@ -120,9 +120,9 @@ impl ConfigImageResolution {
             return Err(());
         }
 
-        return Ok(ConfigImageResolution{
+        Ok(ConfigImageResolution{
             width: width.unwrap(),
             height: height.unwrap(),
-        });
+        })
     }
 }

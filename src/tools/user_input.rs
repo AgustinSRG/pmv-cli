@@ -1,13 +1,13 @@
 // User input functions
 
-use tokio::io::AsyncBufReadExt;
-use tokio::io::{self, BufReader};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::task::{Context, Poll};
 use std::thread;
+use tokio::io::AsyncBufReadExt;
+use tokio::io::{self, BufReader};
 
 pub async fn ask_user(prompt: &str) -> Result<String, ()> {
     let stdin = io::stdin();
@@ -21,16 +21,10 @@ pub async fn ask_user(prompt: &str) -> Result<String, ()> {
 
     match line_res {
         Ok(line) => match line {
-            Some(line_str) => {
-                return Ok(line_str);
-            }
-            None => {
-                return Ok("".to_string());
-            }
+            Some(line_str) => Ok(line_str),
+            None => Ok("".to_string()),
         },
-        Err(_) => {
-            return Err(());
-        }
+        Err(_) => Err(()),
     }
 }
 
@@ -49,7 +43,7 @@ impl Future for PasswordPrompt {
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<String> {
         let status = self.status.lock().unwrap();
         if status.done {
-            return Poll::Ready(status.password.clone());
+            Poll::Ready(status.password.clone())
         } else {
             let waker = cx.waker().clone();
             let prompt = self.prompt.clone();
@@ -72,12 +66,15 @@ impl Future for PasswordPrompt {
 }
 
 pub async fn ask_user_password(prompt: &str) -> Result<String, ()> {
-    let pp = PasswordPrompt{
+    let pp = PasswordPrompt {
         prompt: prompt.to_string(),
-        status: Arc::new(Mutex::new(PasswordPromptStatus { done: false, password: "".to_string() })),
+        status: Arc::new(Mutex::new(PasswordPromptStatus {
+            done: false,
+            password: "".to_string(),
+        })),
     };
 
     let password = pp.await;
 
-    return Ok(password);
+    Ok(password)
 }

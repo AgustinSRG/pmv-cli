@@ -27,13 +27,13 @@ impl UploadProgressReporter {
         file_size: u64,
         progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
     ) -> UploadProgressReporter {
-        return UploadProgressReporter {
-            file: file,
+        UploadProgressReporter {
+            file,
             loaded: 0,
-            file_size: file_size,
+            file_size,
             timer: Instant::now(),
-            progress_receiver: progress_receiver,
-        };
+            progress_receiver,
+        }
     }
 
     fn start(&mut self) {
@@ -64,9 +64,13 @@ impl UploadProgressReporterSync {
         file_size: u64,
         progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
     ) -> UploadProgressReporterSync {
-        return UploadProgressReporterSync {
-           progress_reporter: Arc::new(Mutex::new(UploadProgressReporter::new(file, file_size, progress_receiver))),
-        };
+        UploadProgressReporterSync {
+            progress_reporter: Arc::new(Mutex::new(UploadProgressReporter::new(
+                file,
+                file_size,
+                progress_receiver,
+            ))),
+        }
     }
 
     fn start(&mut self) {
@@ -85,7 +89,6 @@ impl UploadProgressReporterSync {
     }
 }
 
-
 impl std::io::Read for UploadProgressReporterSync {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         let mut reporter = self.progress_reporter.lock().unwrap();
@@ -102,11 +105,9 @@ impl std::io::Read for UploadProgressReporterSync {
                     pr.progress_update(reporter.loaded, reporter.file_size);
                 }
 
-                return Ok(s);
+                Ok(s)
             }
-            Err(e) => {
-                return Err(e);
-            }
+            Err(e) => Err(e),
         }
     }
 }
@@ -136,16 +137,10 @@ pub async fn do_multipart_upload_request(
     // Load file
 
     let file_path_o = Path::new(&file_path);
-    let file_name: String;
-
-    match file_path_o.file_name() {
-        Some(n) => {
-            file_name = n.to_str().unwrap_or("").to_string();
-        },
-        None => {
-            file_name = "".to_string();
-        }
-    }
+    let file_name: String = match file_path_o.file_name() {
+        Some(n) => n.to_str().unwrap_or("").to_string(),
+        None => "".to_string(),
+    };
 
     let file_res = File::open(&file_path);
     let file_len: u64;
@@ -159,22 +154,19 @@ pub async fn do_multipart_upload_request(
                 Ok(meta) => {
                     if meta.is_file() {
                         file_len = meta.len();
-                        reporter = UploadProgressReporterSync::new(file_h, file_len, progress_receiver);
+                        reporter =
+                            UploadProgressReporterSync::new(file_h, file_len, progress_receiver);
                     } else {
-                        return Err(RequestError::FileSystemError("File not found".to_string()));
+                        return Err(RequestError::FileSystem("File not found".to_string()));
                     }
                 }
                 Err(e) => {
-                    return Err(RequestError::FileSystemError(
-                        e.to_string(),
-                     ));
+                    return Err(RequestError::FileSystem(e.to_string()));
                 }
             }
         }
         Err(e) => {
-            return Err(RequestError::FileSystemError(
-               e.to_string(),
-            ));
+            return Err(RequestError::FileSystem(e.to_string()));
         }
     }
 
@@ -189,7 +181,7 @@ pub async fn do_multipart_upload_request(
 
     if request_build_result.is_err() {
         reporter.finish();
-        return Err(RequestError::FileSystemError(
+        return Err(RequestError::FileSystem(
             request_build_result.err().unwrap().to_string(),
         ));
     }
@@ -204,7 +196,7 @@ pub async fn do_multipart_upload_request(
     if result.is_err() {
         // Network error
         reporter.finish();
-        return Err(RequestError::HyperError(result.err().unwrap()));
+        return Err(RequestError::Hyper(result.err().unwrap()));
     }
 
     reporter.update(file_len);
@@ -222,7 +214,7 @@ pub async fn do_multipart_upload_request(
 
     if res_body_bytes.is_err() {
         // Connection error receiving the body
-        return Err(RequestError::HyperError(res_body_bytes.err().unwrap()));
+        return Err(RequestError::Hyper(res_body_bytes.err().unwrap()));
     }
 
     let res_body = String::from_utf8(res_body_bytes.unwrap().to_vec()).unwrap_or("".to_string());
@@ -233,20 +225,20 @@ pub async fn do_multipart_upload_request(
 
             match parsed_body {
                 Ok(r) => {
-                    return Err(RequestError::ApiError {
+                    return Err(RequestError::Api {
                         status: res_status,
                         code: r.code,
                         message: r.message,
                     });
                 }
                 Err(_) => {
-                    return Err(RequestError::StatusCodeError(res_status));
+                    return Err(RequestError::StatusCode(res_status));
                 }
             }
         }
 
-        return Err(RequestError::StatusCodeError(res_status));
+        return Err(RequestError::StatusCode(res_status));
     }
 
-    return Ok(res_body);
+    Ok(res_body)
 }

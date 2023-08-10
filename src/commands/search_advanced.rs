@@ -18,6 +18,7 @@ use super::{get_vault_url, logout::do_logout, print_request_error, CommandGlobal
 
 const DEFAULT_RESULTS_LIMIT: u32 = 25;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn run_cmd_search_advanced(
     global_opts: CommandGlobalOptions,
     title: Option<String>,
@@ -31,7 +32,7 @@ pub async fn run_cmd_search_advanced(
     reverse: bool,
     extended: bool,
     csv: bool,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -164,12 +165,12 @@ pub async fn run_cmd_search_advanced(
 
     if tags.is_some() {
         let tags_str = tags.unwrap();
-        let tag_names = tags_str.split(" ");
+        let tag_names = tags_str.split(' ');
 
         let mut tag_ids: Vec<u64> = Vec::new();
 
         for tag_name in tag_names {
-            let parsed_tag_name = parse_tag_name(&tag_name);
+            let parsed_tag_name = parse_tag_name(tag_name);
             if parsed_tag_name.is_empty() {
                 continue;
             }
@@ -241,7 +242,7 @@ pub async fn run_cmd_search_advanced(
             if reverse {
                 for item in album_list.iter().rev() {
                     if media_matches_filter(
-                        &item,
+                        item,
                         &title_filter,
                         &description_filter,
                         &media_type_filter,
@@ -250,7 +251,7 @@ pub async fn run_cmd_search_advanced(
                     ) {
                         if skipped >= skip_param {
                             advanced_search_results.push(item.clone());
-    
+
                             if advanced_search_results.len() as u32 >= limit_param {
                                 break;
                             }
@@ -271,7 +272,7 @@ pub async fn run_cmd_search_advanced(
                     ) {
                         if skipped >= skip_param {
                             advanced_search_results.push(item);
-    
+
                             if advanced_search_results.len() as u32 >= limit_param {
                                 break;
                             }
@@ -369,13 +370,13 @@ pub async fn run_cmd_search_advanced(
     println!("items retrieved: {items_count}");
 
     if csv {
-        println!("");
+        println!();
         if !extended {
             println!("\"Id\",\"Type\",\"Title\"");
 
             for item in advanced_search_results {
                 let row_id = item.id.to_string();
-                let row_type = to_csv_string(&item.media_type.to_string());
+                let row_type = to_csv_string(&item.media_type.to_type_string());
                 let row_title = to_csv_string(&item.title);
                 println!("{row_id},{row_type},{row_title}");
             }
@@ -384,56 +385,55 @@ pub async fn run_cmd_search_advanced(
 
             for item in advanced_search_results {
                 let row_id = item.id.to_string();
-                let row_type = to_csv_string(&item.media_type.to_string());
+                let row_type = to_csv_string(&item.media_type.to_type_string());
                 let row_title = to_csv_string(&item.title);
                 let row_description = to_csv_string(&item.description);
                 let row_tags = to_csv_string(&tags_names_from_ids(&item.tags, &tags_map).join(" "));
-                let row_duration = render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
+                let row_duration =
+                    render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
 
                 println!(
                     "{row_id},{row_type},{row_title},{row_description},{row_tags},{row_duration}"
                 );
             }
         }
-    } else {
-        if !extended {
-            let table_head: Vec<String> =
-                vec!["Id".to_string(), "Type".to_string(), "Title".to_string()];
-            let mut table_body: Vec<Vec<String>> = Vec::with_capacity(items_count);
+    } else if !extended {
+        let table_head: Vec<String> =
+            vec!["Id".to_string(), "Type".to_string(), "Title".to_string()];
+        let mut table_body: Vec<Vec<String>> = Vec::with_capacity(items_count);
 
-            for item in advanced_search_results {
-                table_body.push(vec![
-                    identifier_to_string(item.id).clone(),
-                    item.media_type.to_string(),
-                    to_csv_string(&item.title),
-                ]);
-            }
-
-            print_table(&table_head, &table_body, false);
-        } else {
-            let table_head: Vec<String> = vec![
-                "Id".to_string(),
-                "Type".to_string(),
-                "Title".to_string(),
-                "Description".to_string(),
-                "Tags".to_string(),
-                "Duration".to_string(),
-            ];
-            let mut table_body: Vec<Vec<String>> = Vec::with_capacity(items_count);
-
-            for item in advanced_search_results {
-                table_body.push(vec![
-                    identifier_to_string(item.id).clone(),
-                    item.media_type.to_string(),
-                    to_csv_string(&item.title),
-                    to_csv_string(&item.description),
-                    to_csv_string(&tags_names_from_ids(&item.tags, &tags_map).join(" ")),
-                    render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
-                ]);
-            }
-
-            print_table(&table_head, &table_body, false);
+        for item in advanced_search_results {
+            table_body.push(vec![
+                identifier_to_string(item.id).clone(),
+                item.media_type.to_type_string(),
+                to_csv_string(&item.title),
+            ]);
         }
+
+        print_table(&table_head, &table_body, false);
+    } else {
+        let table_head: Vec<String> = vec![
+            "Id".to_string(),
+            "Type".to_string(),
+            "Title".to_string(),
+            "Description".to_string(),
+            "Tags".to_string(),
+            "Duration".to_string(),
+        ];
+        let mut table_body: Vec<Vec<String>> = Vec::with_capacity(items_count);
+
+        for item in advanced_search_results {
+            table_body.push(vec![
+                identifier_to_string(item.id).clone(),
+                item.media_type.to_type_string(),
+                to_csv_string(&item.title),
+                to_csv_string(&item.description),
+                to_csv_string(&tags_names_from_ids(&item.tags, &tags_map).join(" ")),
+                render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
+            ]);
+        }
+
+        print_table(&table_head, &table_body, false);
     }
 }
 
@@ -445,16 +445,12 @@ pub fn media_matches_filter(
     tags_filter: &Option<Vec<u64>>,
     tags_filter_mode: &TagSearchMode,
 ) -> bool {
-    if !title.is_empty() {
-        if !media.title.contains(title) {
-            return false;
-        }
+    if !title.is_empty() && !media.title.contains(title) {
+        return false;
     }
 
-    if !description.is_empty() {
-        if !media.description.contains(description) {
-            return false;
-        }
+    if !description.is_empty() && !media.description.contains(description) {
+        return false;
     }
 
     match media_type_filter {
@@ -510,5 +506,5 @@ pub fn media_matches_filter(
         }
     }
 
-    return true;
+    true
 }

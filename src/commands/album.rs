@@ -112,7 +112,7 @@ pub enum AlbumCommand {
     },
 }
 
-pub async fn run_album_cmd(global_opts: CommandGlobalOptions, cmd: AlbumCommand) -> () {
+pub async fn run_album_cmd(global_opts: CommandGlobalOptions, cmd: AlbumCommand) {
     match cmd {
         AlbumCommand::List {
             media,
@@ -160,7 +160,7 @@ pub async fn run_cmd_list_albums(
     csv: bool,
     alphabetically: bool,
     id_sorted: bool,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -266,7 +266,7 @@ pub async fn run_cmd_list_albums(
                 Some(filter_list) => {
                     albums = original_albums_list
                         .into_iter()
-                        .filter(|a| return filter_list.contains(&a.id))
+                        .filter(|a| filter_list.contains(&a.id))
                         .collect();
                 }
                 None => {
@@ -289,7 +289,7 @@ pub async fn run_cmd_list_albums(
             println!("total: {total}");
 
             if csv {
-                println!("");
+                println!();
                 println!("\"Album Id\",\"Album Name\",\"Size\",\"Last Modified\"");
 
                 for album in albums {
@@ -343,7 +343,7 @@ pub async fn run_cmd_get_album(
     album: String,
     csv: bool,
     extended: bool,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -374,12 +374,8 @@ pub async fn run_cmd_get_album(
     // Params
 
     let album_id_res = parse_identifier(&album);
-    let album_id: u64;
-
-    match album_id_res {
-        Ok(id) => {
-            album_id = id;
-        }
+    let album_id: u64 = match album_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -394,7 +390,7 @@ pub async fn run_cmd_get_album(
             eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Get tags
 
@@ -443,14 +439,14 @@ pub async fn run_cmd_get_album(
             println!("size: {album_size}");
 
             if csv {
-                println!("");
+                println!();
                 if !extended {
                     println!("\"Pos\",\"Id\",\"Type\",\"Title\"");
 
                     for (i, item) in album_data.list.iter().enumerate() {
                         let row_pos = i + 1;
                         let row_id = item.id.to_string();
-                        let row_type = to_csv_string(&item.media_type.to_string());
+                        let row_type = to_csv_string(&item.media_type.to_type_string());
                         let row_title = to_csv_string(&item.title);
                         println!("{row_pos},{row_id},{row_type},{row_title}");
                     }
@@ -462,7 +458,7 @@ pub async fn run_cmd_get_album(
                     for (i, item) in album_data.list.iter().enumerate() {
                         let row_pos = i + 1;
                         let row_id = item.id.to_string();
-                        let row_type = to_csv_string(&item.media_type.to_string());
+                        let row_type = to_csv_string(&item.media_type.to_type_string());
                         let row_title = to_csv_string(&item.title);
                         let row_description = to_csv_string(&item.description);
                         let row_tags =
@@ -473,52 +469,50 @@ pub async fn run_cmd_get_album(
                         println!("{row_pos},{row_id},{row_type},{row_title},{row_description},{row_tags},{row_duration}");
                     }
                 }
-            } else {
-                if !extended {
-                    let table_head: Vec<String> = vec![
-                        "Pos".to_string(),
-                        "Id".to_string(),
-                        "Type".to_string(),
-                        "Title".to_string(),
-                    ];
-                    let mut table_body: Vec<Vec<String>> = Vec::with_capacity(album_size);
+            } else if !extended {
+                let table_head: Vec<String> = vec![
+                    "Pos".to_string(),
+                    "Id".to_string(),
+                    "Type".to_string(),
+                    "Title".to_string(),
+                ];
+                let mut table_body: Vec<Vec<String>> = Vec::with_capacity(album_size);
 
-                    for (i, item) in album_data.list.iter().enumerate() {
-                        table_body.push(vec![
-                            (i + 1).to_string(),
-                            identifier_to_string(item.id).clone(),
-                            item.media_type.to_string(),
-                            to_csv_string(&item.title),
-                        ]);
-                    }
-
-                    print_table(&table_head, &table_body, false);
-                } else {
-                    let table_head: Vec<String> = vec![
-                        "Pos".to_string(),
-                        "Id".to_string(),
-                        "Type".to_string(),
-                        "Title".to_string(),
-                        "Description".to_string(),
-                        "Tags".to_string(),
-                        "Duration".to_string(),
-                    ];
-                    let mut table_body: Vec<Vec<String>> = Vec::with_capacity(album_size);
-
-                    for (i, item) in album_data.list.iter().enumerate() {
-                        table_body.push(vec![
-                            (i + 1).to_string(),
-                            identifier_to_string(item.id).clone(),
-                            item.media_type.to_string(),
-                            to_csv_string(&item.title),
-                            to_csv_string(&item.description),
-                            to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" ")),
-                            render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
-                        ]);
-                    }
-
-                    print_table(&table_head, &table_body, false);
+                for (i, item) in album_data.list.iter().enumerate() {
+                    table_body.push(vec![
+                        (i + 1).to_string(),
+                        identifier_to_string(item.id).clone(),
+                        item.media_type.to_type_string(),
+                        to_csv_string(&item.title),
+                    ]);
                 }
+
+                print_table(&table_head, &table_body, false);
+            } else {
+                let table_head: Vec<String> = vec![
+                    "Pos".to_string(),
+                    "Id".to_string(),
+                    "Type".to_string(),
+                    "Title".to_string(),
+                    "Description".to_string(),
+                    "Tags".to_string(),
+                    "Duration".to_string(),
+                ];
+                let mut table_body: Vec<Vec<String>> = Vec::with_capacity(album_size);
+
+                for (i, item) in album_data.list.iter().enumerate() {
+                    table_body.push(vec![
+                        (i + 1).to_string(),
+                        identifier_to_string(item.id).clone(),
+                        item.media_type.to_type_string(),
+                        to_csv_string(&item.title),
+                        to_csv_string(&item.description),
+                        to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" ")),
+                        render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
+                    ]);
+                }
+
+                print_table(&table_head, &table_body, false);
             }
         }
         Err(e) => {
@@ -538,7 +532,7 @@ pub async fn run_cmd_get_album(
     }
 }
 
-pub async fn run_cmd_album_create(global_opts: CommandGlobalOptions, name: String) -> () {
+pub async fn run_cmd_album_create(global_opts: CommandGlobalOptions, name: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -609,11 +603,7 @@ pub async fn run_cmd_album_create(global_opts: CommandGlobalOptions, name: Strin
     }
 }
 
-pub async fn run_cmd_album_rename(
-    global_opts: CommandGlobalOptions,
-    album: String,
-    name: String,
-) -> () {
+pub async fn run_cmd_album_rename(global_opts: CommandGlobalOptions, album: String, name: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -644,12 +634,8 @@ pub async fn run_cmd_album_rename(
     // Params
 
     let album_id_res = parse_identifier(&album);
-    let album_id: u64;
-
-    match album_id_res {
-        Ok(id) => {
-            album_id = id;
-        }
+    let album_id: u64 = match album_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -664,7 +650,7 @@ pub async fn run_cmd_album_rename(
             eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Call API
 
@@ -708,7 +694,7 @@ pub async fn run_cmd_album_rename(
     }
 }
 
-pub async fn run_cmd_album_delete(global_opts: CommandGlobalOptions, album: String) -> () {
+pub async fn run_cmd_album_delete(global_opts: CommandGlobalOptions, album: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -739,12 +725,8 @@ pub async fn run_cmd_album_delete(global_opts: CommandGlobalOptions, album: Stri
     // Params
 
     let album_id_res = parse_identifier(&album);
-    let album_id: u64;
-
-    match album_id_res {
-        Ok(id) => {
-            album_id = id;
-        }
+    let album_id: u64 = match album_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -759,18 +741,14 @@ pub async fn run_cmd_album_delete(global_opts: CommandGlobalOptions, album: Stri
             eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Get album
 
     let api_get_res = api_call_get_album(vault_url.clone(), album_id, global_opts.debug).await;
 
-    let album_name: String;
-
-    match api_get_res {
-        Ok(album_data) => {
-            album_name = album_data.name;
-        }
+    let album_name: String = match api_get_res {
+        Ok(album_data) => album_data.name,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -785,7 +763,7 @@ pub async fn run_cmd_album_delete(global_opts: CommandGlobalOptions, album: Stri
             }
             process::exit(1);
         }
-    }
+    };
 
     // Ask confirmation
 
@@ -848,7 +826,7 @@ pub async fn run_cmd_album_add_media(
     global_opts: CommandGlobalOptions,
     album: String,
     media: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -879,12 +857,8 @@ pub async fn run_cmd_album_add_media(
     // Params
 
     let album_id_res = parse_identifier(&album);
-    let album_id: u64;
-
-    match album_id_res {
-        Ok(id) => {
-            album_id = id;
-        }
+    let album_id: u64 = match album_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -899,7 +873,7 @@ pub async fn run_cmd_album_add_media(
             eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Media ID
 
@@ -918,16 +892,16 @@ pub async fn run_cmd_album_add_media(
                 }
                 Err(e) => {
                     match e {
-                        crate::tools::RequestError::StatusCodeError(_)
-                        | crate::tools::RequestError::HyperError(_)
-                        | crate::tools::RequestError::FileSystemError(_)
-                        | crate::tools::RequestError::JSONError {
+                        crate::tools::RequestError::StatusCode(_)
+                        | crate::tools::RequestError::Hyper(_)
+                        | crate::tools::RequestError::FileSystem(_)
+                        | crate::tools::RequestError::Json {
                             message: _,
                             body: _,
                         } => {
                             print_request_error(e);
                         }
-                        crate::tools::RequestError::ApiError {
+                        crate::tools::RequestError::Api {
                             status,
                             code: _,
                             message: _,
@@ -1068,7 +1042,7 @@ pub async fn run_cmd_album_remove_media(
     global_opts: CommandGlobalOptions,
     album: String,
     media: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -1099,12 +1073,8 @@ pub async fn run_cmd_album_remove_media(
     // Params
 
     let album_id_res = parse_identifier(&album);
-    let album_id: u64;
-
-    match album_id_res {
-        Ok(id) => {
-            album_id = id;
-        }
+    let album_id: u64 = match album_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -1119,18 +1089,14 @@ pub async fn run_cmd_album_remove_media(
             eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Media ID
 
     let media_id_res = parse_identifier(&media);
 
-    let media_id_param: u64;
-
-    match media_id_res {
-        Ok(media_id) => {
-            media_id_param = media_id;
-        }
+    let media_id_param: u64 = match media_id_res {
+        Ok(media_id) => media_id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -1145,7 +1111,7 @@ pub async fn run_cmd_album_remove_media(
             eprintln!("Invalid media asset identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Get album
 
@@ -1246,7 +1212,7 @@ pub async fn run_cmd_album_media_change_position(
     album: String,
     media: String,
     position: u32,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -1277,12 +1243,8 @@ pub async fn run_cmd_album_media_change_position(
     // Params
 
     let album_id_res = parse_identifier(&album);
-    let album_id: u64;
-
-    match album_id_res {
-        Ok(id) => {
-            album_id = id;
-        }
+    let album_id: u64 = match album_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -1297,7 +1259,7 @@ pub async fn run_cmd_album_media_change_position(
             eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Media ID
 
@@ -1316,16 +1278,16 @@ pub async fn run_cmd_album_media_change_position(
                 }
                 Err(e) => {
                     match e {
-                        crate::tools::RequestError::StatusCodeError(_)
-                        | crate::tools::RequestError::HyperError(_)
-                        | crate::tools::RequestError::FileSystemError(_)
-                        | crate::tools::RequestError::JSONError {
+                        crate::tools::RequestError::StatusCode(_)
+                        | crate::tools::RequestError::Hyper(_)
+                        | crate::tools::RequestError::FileSystem(_)
+                        | crate::tools::RequestError::Json {
                             message: _,
                             body: _,
                         } => {
                             print_request_error(e);
                         }
-                        crate::tools::RequestError::ApiError {
+                        crate::tools::RequestError::Api {
                             status,
                             code: _,
                             message: _,

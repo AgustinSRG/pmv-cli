@@ -10,18 +10,24 @@ pub const SESSION_HEADER_NAME: &str = "x-session-token";
 
 #[derive(Debug)]
 pub enum RequestError {
-    StatusCodeError(hyper::StatusCode),
-    ApiError {
+    StatusCode(hyper::StatusCode),
+    Api {
         status: hyper::StatusCode,
         code: String,
         message: String,
     },
-    HyperError(hyper::Error),
-    JSONError {
+    Hyper(hyper::Error),
+    Json {
         message: String,
         body: String,
     },
-    FileSystemError(String),
+    FileSystem(String),
+}
+
+impl From<hyper::Error> for RequestError {
+    fn from(value: hyper::Error) -> Self {
+        RequestError::Hyper(value)
+    }
 }
 
 pub fn resolve_vault_api_uri(uri: VaultURI, path: String) -> String {
@@ -30,15 +36,11 @@ pub fn resolve_vault_api_uri(uri: VaultURI, path: String) -> String {
             base_url,
             username: _,
             password: _,
-        } => {
-            return base_url.join(&path).unwrap().to_string();
-        }
+        } => base_url.join(&path).unwrap().to_string(),
         VaultURI::SessionURI {
             base_url,
             session: _,
-        } => {
-            return base_url.join(&path).unwrap().to_string();
-        }
+        } => base_url.join(&path).unwrap().to_string(),
     }
 }
 
@@ -48,15 +50,11 @@ pub fn get_session_from_uri(uri: VaultURI) -> Option<String> {
             base_url: _,
             username: _,
             password: _,
-        } => {
-            return None;
-        }
+        } => None,
         VaultURI::SessionURI {
             base_url: _,
             session,
-        } => {
-            return Some(session.clone());
-        }
+        } => Some(session),
     }
 }
 
@@ -84,16 +82,9 @@ pub async fn do_get_request(
     let https = HttpsConnector::new();
     let client = Client::builder().build::<_, hyper::Body>(https);
 
-    let result = client.request(request).await;
-
-    if result.is_err() {
-        // Network error
-        return Err(RequestError::HyperError(result.err().unwrap()));
-    }
-
     // Response received
 
-    let response = result.unwrap();
+    let response = client.request(request).await?;
 
     let res_status = response.status();
 
@@ -103,7 +94,7 @@ pub async fn do_get_request(
 
     if res_body_bytes.is_err() {
         // Connection error receiving the body
-        return Err(RequestError::HyperError(res_body_bytes.err().unwrap()));
+        return Err(RequestError::Hyper(res_body_bytes.err().unwrap()));
     }
 
     let res_body = String::from_utf8(res_body_bytes.unwrap().to_vec()).unwrap_or("".to_string());
@@ -114,22 +105,22 @@ pub async fn do_get_request(
 
             match parsed_body {
                 Ok(r) => {
-                    return Err(RequestError::ApiError {
+                    return Err(RequestError::Api {
                         status: res_status,
                         code: r.code,
                         message: r.message,
                     });
                 }
                 Err(_) => {
-                    return Err(RequestError::StatusCodeError(res_status));
+                    return Err(RequestError::StatusCode(res_status));
                 }
             }
         }
 
-        return Err(RequestError::StatusCodeError(res_status));
+        return Err(RequestError::StatusCode(res_status));
     }
 
-    return Ok(res_body);
+    Ok(res_body)
 }
 
 pub async fn do_post_request(
@@ -164,7 +155,7 @@ pub async fn do_post_request(
 
     if result.is_err() {
         // Network error
-        return Err(RequestError::HyperError(result.err().unwrap()));
+        return Err(RequestError::Hyper(result.err().unwrap()));
     }
 
     // Response received
@@ -179,7 +170,7 @@ pub async fn do_post_request(
 
     if res_body_bytes.is_err() {
         // Connection error receiving the body
-        return Err(RequestError::HyperError(res_body_bytes.err().unwrap()));
+        return Err(RequestError::Hyper(res_body_bytes.err().unwrap()));
     }
 
     let res_body = String::from_utf8(res_body_bytes.unwrap().to_vec()).unwrap_or("".to_string());
@@ -190,20 +181,20 @@ pub async fn do_post_request(
 
             match parsed_body {
                 Ok(r) => {
-                    return Err(RequestError::ApiError {
+                    return Err(RequestError::Api {
                         status: res_status,
                         code: r.code,
                         message: r.message,
                     });
                 }
                 Err(_) => {
-                    return Err(RequestError::StatusCodeError(res_status));
+                    return Err(RequestError::StatusCode(res_status));
                 }
             }
         }
 
-        return Err(RequestError::StatusCodeError(res_status));
+        return Err(RequestError::StatusCode(res_status));
     }
 
-    return Ok(res_body);
+    Ok(res_body)
 }

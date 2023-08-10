@@ -25,13 +25,16 @@ use super::{
     get_vault_url,
     media_audio_tracks::{run_cmd_delete_media_audio_track, run_cmd_upload_media_audio_track},
     media_download::run_cmd_download_media,
+    media_export::run_cmd_export_media,
+    media_extended_description::run_cmd_set_media_extended_description,
     media_image_notes::run_cmd_set_media_image_notes,
+    media_import::run_cmd_import_media,
     media_resolutions::{run_cmd_media_add_resolution, run_cmd_media_remove_resolution},
     media_subtitles::{run_cmd_delete_media_subtitle, run_cmd_upload_media_subtitle},
     media_thumbnail::run_cmd_upload_media_thumbnail,
     media_time_slices::{run_cmd_get_media_time_slices, run_cmd_set_media_time_slices},
     media_upload::run_cmd_upload_media,
-    print_request_error, CommandGlobalOptions, media_extended_description::run_cmd_set_media_extended_description, media_export::run_cmd_export_media, media_import::run_cmd_import_media,
+    print_request_error, CommandGlobalOptions,
 };
 
 #[derive(Subcommand)]
@@ -257,7 +260,7 @@ pub enum MediaCommand {
     },
 }
 
-pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand) -> () {
+pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand) {
     match cmd {
         MediaCommand::Get { media } => {
             run_cmd_get_media(global_opts, media).await;
@@ -353,7 +356,7 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
     }
 }
 
-pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String) -> () {
+pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -384,12 +387,8 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
     // Params
 
     let media_id_res = parse_identifier(&media);
-    let media_id: u64;
-
-    match media_id_res {
-        Ok(id) => {
-            media_id = id;
-        }
+    let media_id: u64 = match media_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -404,7 +403,7 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
             eprintln!("Invalid media identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Get tags
 
@@ -447,7 +446,7 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
             let out_id = identifier_to_string(media_data.id);
             println!("ID: {out_id}");
 
-            let out_type = media_data.media_type.to_string();
+            let out_type = media_data.media_type.to_type_string();
             println!("Type: {out_type}");
 
             match media_data.media_type {
@@ -479,13 +478,10 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
                 }
             }
 
-            match media_data.force_start_beginning {
-                Some(force_start_beginning) => {
-                    if force_start_beginning {
-                        println!("Force start beginning: ENABLED");
-                    }
+            if let Some(force_start_beginning) = media_data.force_start_beginning {
+                if force_start_beginning {
+                    println!("Force start beginning: ENABLED");
                 }
-                None => {}
             }
 
             let out_upload_date = format_date(media_data.upload_time);
@@ -512,11 +508,8 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
             if media_data.ready {
                 if media_data.encoded {
                     println!("Status: Encoded and ready");
-                    match media_data.url {
-                        Some(original_url) => {
-                            println!("Original: {original_url}");
-                        }
-                        None => {}
+                    if let Some(original_url) = media_data.url {
+                        println!("Original: {original_url}");
                     }
                 } else {
                     println!("Status: Not encoded yet");
@@ -535,127 +528,101 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
                 println!("Status: Not ready");
             }
 
-            match media_data.resolutions {
-                Some(resolutions) => {
-                    if !resolutions.is_empty() {
-                        println!("Extra resolutions:");
+            if let Some(resolutions) = media_data.resolutions {
+                if !resolutions.is_empty() {
+                    println!("Extra resolutions:");
 
-                        for resolution in resolutions {
-                            let res_str = resolution.to_string();
-                            println!("\t- Resolution: {res_str}");
+                    for resolution in resolutions {
+                        let res_str = resolution.to_resolution_string();
+                        println!("\t- Resolution: {res_str}");
 
-                            if resolution.ready {
-                                println!("\t  Status: Ready");
-                                match resolution.url {
-                                    Some(resolution_url) => {
-                                        println!("\t  File: {resolution_url}");
-                                    }
-                                    None => {}
+                        if resolution.ready {
+                            println!("\t  Status: Ready");
+                            if let Some(resolution_url) = resolution.url {
+                                println!("\t  File: {resolution_url}");
+                            }
+                        } else {
+                            println!("\t  Status: Not ready yet");
+                            match resolution.task {
+                                Some(t) => {
+                                    let task_id = identifier_to_string(t);
+
+                                    println!("\t  Task (Encode): {task_id}");
                                 }
-                            } else {
-                                println!("\t  Status: Not ready yet");
-                                match resolution.task {
-                                    Some(t) => {
-                                        let task_id = identifier_to_string(t);
-
-                                        println!("\t  Task (Encode): {task_id}");
-                                    }
-                                    None => {
-                                        println!(
-                                            "\t  No task set to encode. Re-encoding may be needed."
-                                        );
-                                    }
+                                None => {
+                                    println!(
+                                        "\t  No task set to encode. Re-encoding may be needed."
+                                    );
                                 }
                             }
                         }
                     }
                 }
-                None => {}
             }
 
-            match media_data.audios {
-                Some(audios) => {
-                    if !audios.is_empty() {
-                        println!("Audio tracks:");
+            if let Some(audios) = media_data.audios {
+                if !audios.is_empty() {
+                    println!("Audio tracks:");
 
-                        for audio in audios {
-                            let audio_id = to_csv_string(&audio.id);
-                            println!("\t- Audio ID: {audio_id}");
-                            let audio_name = to_csv_string(&audio.name);
-                            println!("\t  Name: {audio_name}");
-                            let url = audio.url;
-                            println!("\t  File: {url}");
-                        }
+                    for audio in audios {
+                        let audio_id = to_csv_string(&audio.id);
+                        println!("\t- Audio ID: {audio_id}");
+                        let audio_name = to_csv_string(&audio.name);
+                        println!("\t  Name: {audio_name}");
+                        let url = audio.url;
+                        println!("\t  File: {url}");
                     }
                 }
-                None => {}
             }
 
-            match media_data.subtitles {
-                Some(subtitles) => {
-                    if !subtitles.is_empty() {
-                        println!("Subtitles:");
+            if let Some(subtitles) = media_data.subtitles {
+                if !subtitles.is_empty() {
+                    println!("Subtitles:");
 
-                        for sub in subtitles {
-                            let sub_id = to_csv_string(&sub.id);
-                            println!("\t- Subtitle ID: {sub_id}");
-                            let sub_name = to_csv_string(&sub.name);
-                            println!("\t  Name: {sub_name}");
-                            let url = sub.url;
-                            println!("\t  File: {url}");
-                        }
+                    for sub in subtitles {
+                        let sub_id = to_csv_string(&sub.id);
+                        println!("\t- Subtitle ID: {sub_id}");
+                        let sub_name = to_csv_string(&sub.name);
+                        println!("\t  Name: {sub_name}");
+                        let url = sub.url;
+                        println!("\t  File: {url}");
                     }
                 }
-                None => {}
             }
 
-            match media_data.img_notes {
-                Some(_) => match media_data.img_notes_url {
-                    Some(img_notes_url) => {
-                        if !img_notes_url.is_empty() {
-                            println!("Image notes: {img_notes_url}");
-                        }
-                    }
-                    None => {}
-                },
-                None => {}
-            }
-
-            match media_data.ext_desc_url {
-                Some(ext_desc_url) => {
-                    println!("Extended description: {ext_desc_url}");
-                },
-                None => {}
-            }
-
-            match media_data.time_slices {
-                Some(time_slices) => {
-                    if !time_slices.is_empty() {
-                        println!("Time slices:");
-
-                        for time_slice in time_slices {
-                            let time_slice_str = duration_to_string(time_slice.time);
-                            let time_slice_name = time_slice.name;
-
-                            println!("\t- {time_slice_str} - {time_slice_name}");
-                        }
+            if let Some(true) = media_data.img_notes {
+                if let Some(img_notes_url) = media_data.img_notes_url {
+                    if !img_notes_url.is_empty() {
+                        println!("Image notes: {img_notes_url}");
                     }
                 }
-                None => {}
             }
 
-            match media_data.video_previews {
-                Some(video_previews_uri) => match media_data.video_previews_interval {
-                    Some(video_previews_interval) => {
-                        if !video_previews_uri.is_empty() {
-                            let video_previews_interval_str =
-                                duration_to_string(video_previews_interval);
-                            println!("Video previews (Interval: {video_previews_interval_str}): {video_previews_uri}");
-                        }
+            if let Some(ext_desc_url) = media_data.ext_desc_url {
+                println!("Extended description: {ext_desc_url}");
+            }
+
+            if let Some(time_slices) = media_data.time_slices {
+                if !time_slices.is_empty() {
+                    println!("Time slices:");
+
+                    for time_slice in time_slices {
+                        let time_slice_str = duration_to_string(time_slice.time);
+                        let time_slice_name = time_slice.name;
+
+                        println!("\t- {time_slice_str} - {time_slice_name}");
                     }
-                    None => {}
-                },
-                None => {}
+                }
+            }
+
+            if let Some(video_previews_uri) = media_data.video_previews {
+                if let Some(video_previews_interval) = media_data.video_previews_interval {
+                    if !video_previews_uri.is_empty() {
+                        let video_previews_interval_str =
+                            duration_to_string(video_previews_interval);
+                        println!("Video previews (Interval: {video_previews_interval_str}): {video_previews_uri}");
+                    }
+                }
             }
         }
         Err(e) => {
@@ -675,7 +642,7 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
     }
 }
 
-pub async fn run_cmd_get_media_stats(global_opts: CommandGlobalOptions, media: String) -> () {
+pub async fn run_cmd_get_media_stats(global_opts: CommandGlobalOptions, media: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -706,12 +673,8 @@ pub async fn run_cmd_get_media_stats(global_opts: CommandGlobalOptions, media: S
     // Params
 
     let media_id_res = parse_identifier(&media);
-    let media_id: u64;
-
-    match media_id_res {
-        Ok(id) => {
-            media_id = id;
-        }
+    let media_id: u64 = match media_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -726,7 +689,7 @@ pub async fn run_cmd_get_media_stats(global_opts: CommandGlobalOptions, media: S
             eprintln!("Invalid media identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Call API
 
@@ -777,7 +740,7 @@ pub async fn run_cmd_media_set_title(
     global_opts: CommandGlobalOptions,
     media: String,
     title: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -903,7 +866,7 @@ pub async fn run_cmd_media_set_description(
     global_opts: CommandGlobalOptions,
     media: String,
     description: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -1031,7 +994,7 @@ pub async fn run_cmd_media_set_force_start_beginning(
     global_opts: CommandGlobalOptions,
     media: String,
     force_start_beginning: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -1181,7 +1144,7 @@ pub async fn run_cmd_media_set_force_start_beginning(
     }
 }
 
-pub async fn run_cmd_media_re_encode(global_opts: CommandGlobalOptions, media: String) -> () {
+pub async fn run_cmd_media_re_encode(global_opts: CommandGlobalOptions, media: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -1315,7 +1278,7 @@ pub async fn run_cmd_media_re_encode(global_opts: CommandGlobalOptions, media: S
     }
 }
 
-pub async fn run_cmd_media_delete(global_opts: CommandGlobalOptions, media: String) -> () {
+pub async fn run_cmd_media_delete(global_opts: CommandGlobalOptions, media: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {

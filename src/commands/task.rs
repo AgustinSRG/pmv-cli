@@ -47,7 +47,7 @@ pub enum TaskCommand {
     },
 }
 
-pub async fn run_task_cmd(global_opts: CommandGlobalOptions, cmd: TaskCommand) -> () {
+pub async fn run_task_cmd(global_opts: CommandGlobalOptions, cmd: TaskCommand) {
     match cmd {
         TaskCommand::List { csv } => {
             run_cmd_list_tasks(global_opts, csv).await;
@@ -64,7 +64,7 @@ pub async fn run_task_cmd(global_opts: CommandGlobalOptions, cmd: TaskCommand) -
     }
 }
 
-pub async fn run_cmd_list_tasks(global_opts: CommandGlobalOptions, csv: bool) -> () {
+pub async fn run_cmd_list_tasks(global_opts: CommandGlobalOptions, csv: bool) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -116,7 +116,7 @@ pub async fn run_cmd_list_tasks(global_opts: CommandGlobalOptions, csv: bool) ->
             println!("total: {total}, running: {running}, pending: {pending}");
 
             if csv {
-                println!("");
+                println!();
                 println!(
                     "\"Task ID\",\"Type\",\"Media\",\"Status\",\"Remaining time (Estimated)\""
                 );
@@ -170,7 +170,7 @@ pub async fn run_cmd_list_tasks(global_opts: CommandGlobalOptions, csv: bool) ->
     }
 }
 
-pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) -> () {
+pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -201,12 +201,8 @@ pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) -
     // Params
 
     let task_id_res = parse_identifier(&task);
-    let task_id: u64;
-
-    match task_id_res {
-        Ok(id) => {
-            task_id = id;
-        }
+    let task_id: u64 = match task_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -221,7 +217,7 @@ pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) -
             eprintln!("Invalid task identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Call API
 
@@ -277,7 +273,7 @@ pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) -
     }
 }
 
-pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) -> () {
+pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -354,9 +350,7 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) -> () {
 
                 let mut table_body: Vec<Vec<String>> = Vec::with_capacity(allowed_rows);
 
-                let mut i: usize = 0;
-
-                for task in tasks {
+                for (i, task) in tasks.into_iter().enumerate() {
                     if i >= allowed_rows {
                         break;
                     }
@@ -368,26 +362,21 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) -> () {
                         get_task_status_string(&task),
                         get_task_remaining_time_string(&task),
                     ]);
-
-                    i += 1;
                 }
 
                 print_table(&table_head, &table_body, true);
             }
             Err(e) => match e {
-                crate::tools::RequestError::ApiError {
+                crate::tools::RequestError::Api {
                     status,
                     code: _,
                     message: _,
                 } => {
                     if status == StatusCode::UNAUTHORIZED && monitoring_started {
                         if logout_after_operation {
-                            let logout_res = do_logout(global_opts, vault_url.clone()).await;
-
-                            match logout_res {
-                                Ok(_) => {}
-                                Err(_) => {}
-                            }
+                            do_logout(global_opts, vault_url.clone())
+                                .await
+                                .unwrap_or(());
                         }
                         process::exit(0);
                     } else {
@@ -405,13 +394,13 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) -> () {
                         process::exit(1);
                     }
                 }
-                crate::tools::RequestError::StatusCodeError(_)
-                | crate::tools::RequestError::JSONError {
+                crate::tools::RequestError::StatusCode(_)
+                | crate::tools::RequestError::Json {
                     message: _,
                     body: _,
                 }
-                | crate::tools::RequestError::HyperError(_)
-                | crate::tools::RequestError::FileSystemError(_) => {
+                | crate::tools::RequestError::Hyper(_)
+                | crate::tools::RequestError::FileSystem(_) => {
                     print_request_error(e);
                     if logout_after_operation {
                         let logout_res = do_logout(global_opts, vault_url.clone()).await;
@@ -437,7 +426,7 @@ pub fn spawn_termination_thread(
     global_opts: CommandGlobalOptions,
     logout_after_operation: bool,
     vault_url: VaultURI,
-) -> () {
+) {
     task::spawn(async move {
         let mut stdin = io::stdin();
 
@@ -467,7 +456,7 @@ pub fn spawn_termination_thread(
     });
 }
 
-pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: String) -> () {
+pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -498,12 +487,8 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
     // Params
 
     let task_id_res = parse_identifier(&task);
-    let task_id: u64;
-
-    match task_id_res {
-        Ok(id) => {
-            task_id = id;
-        }
+    let task_id: u64 = match task_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -518,7 +503,7 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
             eprintln!("Invalid task identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     let task_id_str = identifier_to_string(task_id);
 
@@ -544,7 +529,7 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
 
                 let formatted_str = format!("Task {task_id} | Type: {task_type} | Media: {media_id} | Status: {status} | Remaining time (Estimated): {estimated_time}");
 
-                clear_line_str = std::iter::repeat(" ").take(formatted_str.width()).collect();
+                clear_line_str = " ".repeat(formatted_str.width());
 
                 eprint!("\r{formatted_str}");
             }
@@ -560,10 +545,10 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
                     }
                 }
                 match &e {
-                    crate::tools::RequestError::StatusCodeError(_) => {
+                    crate::tools::RequestError::StatusCode(_) => {
                         print_request_error(e);
                     }
-                    crate::tools::RequestError::ApiError {
+                    crate::tools::RequestError::Api {
                         status,
                         code: _,
                         message: _,
@@ -580,11 +565,11 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
                             print_request_error(e);
                         }
                     }
-                    crate::tools::RequestError::HyperError(_)
-                    | crate::tools::RequestError::FileSystemError(_) => {
+                    crate::tools::RequestError::Hyper(_)
+                    | crate::tools::RequestError::FileSystem(_) => {
                         print_request_error(e);
                     }
-                    crate::tools::RequestError::JSONError {
+                    crate::tools::RequestError::Json {
                         message: _,
                         body: _,
                     } => {

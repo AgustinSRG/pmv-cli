@@ -20,7 +20,7 @@ pub async fn run_cmd_export_media(
     global_opts: CommandGlobalOptions,
     media: String,
     output: Option<String>,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -51,12 +51,8 @@ pub async fn run_cmd_export_media(
     // Params
 
     let media_id_res = parse_identifier(&media);
-    let media_id: u64;
-
-    match media_id_res {
-        Ok(id) => {
-            media_id = id;
-        }
+    let media_id: u64 = match media_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -71,7 +67,7 @@ pub async fn run_cmd_export_media(
             eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Get tags
 
@@ -98,14 +94,11 @@ pub async fn run_cmd_export_media(
 
     // Get media metadata
 
-    let media_metadata: MediaMetadata;
     let api_get_media_res =
         api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
 
-    match api_get_media_res {
-        Ok(meta) => {
-            media_metadata = meta;
-        }
+    let media_metadata: MediaMetadata = match api_get_media_res {
+        Ok(meta) => meta,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -120,20 +113,16 @@ pub async fn run_cmd_export_media(
             }
             process::exit(1);
         }
-    }
+    };
 
     // Output folder
 
-    let out_folder: String;
-
-    match output {
-        Some(o) => {
-            out_folder = o;
-        }
+    let out_folder: String = match output {
+        Some(o) => o,
         None => {
-            out_folder = format!("media_{media_id}");
+            format!("media_{media_id}")
         }
-    }
+    };
 
     let out_exists = std::path::Path::new(&out_folder).exists();
 
@@ -199,7 +188,7 @@ pub async fn run_cmd_export_media(
 
     out_metadata.title = Some(media_metadata.title.clone());
     out_metadata.description = Some(media_metadata.description.clone());
-    out_metadata.force_start_beginning = media_metadata.force_start_beginning.clone();
+    out_metadata.force_start_beginning = media_metadata.force_start_beginning;
     out_metadata.time_slices = media_metadata.time_slices.clone();
 
     let mut tag_names_list: Vec<String> = Vec::new();
@@ -240,22 +229,12 @@ pub async fn run_cmd_export_media(
                 process::exit(1);
             }
 
-            let default_ext: String;
-
-            match media_metadata.media_type {
-                crate::models::MediaType::Deleted => {
-                    default_ext = "bin".to_string();
-                }
-                crate::models::MediaType::Image => {
-                    default_ext = "png".to_string();
-                }
-                crate::models::MediaType::Video => {
-                    default_ext = "mp4".to_string();
-                }
-                crate::models::MediaType::Audio => {
-                    default_ext = "mp3".to_string();
-                }
-            }
+            let default_ext: String = match media_metadata.media_type {
+                crate::models::MediaType::Deleted => "bin".to_string(),
+                crate::models::MediaType::Image => "png".to_string(),
+                crate::models::MediaType::Video => "mp4".to_string(),
+                crate::models::MediaType::Audio => "mp3".to_string(),
+            };
 
             let ext = get_extension_from_url(&original_asset_url, &default_ext);
             let out_file_name = "original".to_owned() + "." + &ext;
@@ -321,144 +300,132 @@ pub async fn run_cmd_export_media(
 
     // Extended description
 
-    match media_metadata.ext_desc_url {
-        Some(ext_desc_url) => {
-            if !ext_desc_url.is_empty() {
-                let ext = get_extension_from_url(&ext_desc_url, "txt");
-                let out_file_name = "ext_desc".to_owned() + "." + &ext;
+    if let Some(ext_desc_url) = media_metadata.ext_desc_url {
+        if !ext_desc_url.is_empty() {
+            let ext = get_extension_from_url(&ext_desc_url, "txt");
+            let out_file_name = "ext_desc".to_owned() + "." + &ext;
 
-                let ext_desc_out_path = std::path::Path::new(&out_folder)
-                    .join(&out_file_name)
-                    .to_str()
-                    .unwrap()
-                    .to_string();
+            let ext_desc_out_path = std::path::Path::new(&out_folder)
+                .join(&out_file_name)
+                .to_str()
+                .unwrap()
+                .to_string();
 
-                download_media_asset(
-                    global_opts.clone(),
-                    vault_url.clone(),
-                    "extended description",
-                    ext_desc_url,
-                    ext_desc_out_path,
-                    logout_after_operation,
-                )
-                .await;
+            download_media_asset(
+                global_opts.clone(),
+                vault_url.clone(),
+                "extended description",
+                ext_desc_url,
+                ext_desc_out_path,
+                logout_after_operation,
+            )
+            .await;
 
-                out_metadata.ext_desc = Some(out_file_name);
-            }
+            out_metadata.ext_desc = Some(out_file_name);
         }
-        None => {}
     }
 
     // Image notes
 
-    match media_metadata.img_notes_url {
-        Some(img_notes_url) => {
-            if !img_notes_url.is_empty() {
-                let ext = get_extension_from_url(&img_notes_url, "json");
-                let out_file_name = "notes".to_owned() + "." + &ext;
+    if let Some(img_notes_url) = media_metadata.img_notes_url {
+        if !img_notes_url.is_empty() {
+            let ext = get_extension_from_url(&img_notes_url, "json");
+            let out_file_name = "notes".to_owned() + "." + &ext;
 
-                let notes_out_path = std::path::Path::new(&out_folder)
-                    .join(&out_file_name)
-                    .to_str()
-                    .unwrap()
-                    .to_string();
+            let notes_out_path = std::path::Path::new(&out_folder)
+                .join(&out_file_name)
+                .to_str()
+                .unwrap()
+                .to_string();
 
-                download_media_asset(
-                    global_opts.clone(),
-                    vault_url.clone(),
-                    "image notes",
-                    img_notes_url,
-                    notes_out_path,
-                    logout_after_operation,
-                )
-                .await;
+            download_media_asset(
+                global_opts.clone(),
+                vault_url.clone(),
+                "image notes",
+                img_notes_url,
+                notes_out_path,
+                logout_after_operation,
+            )
+            .await;
 
-                out_metadata.notes = Some(out_file_name);
-            }
+            out_metadata.notes = Some(out_file_name);
         }
-        None => {}
     }
 
     // Subtitles
 
-    match media_metadata.subtitles {
-        Some(subtitles) => {
-            let mut sub_counter = 0;
-            let mut subtitles_export: Vec<MediaSubtitleOrAudioExport> = Vec::new();
-            for subtitle in subtitles {
-                sub_counter += 1;
-                let sub_id = subtitle.id.clone();
-                let d_name = format!("subtitle {sub_id}");
-                let ext = get_extension_from_url(&subtitle.url, "srt");
-                let out_file_name = format!("subtitle_{sub_counter}.{ext}");
+    if let Some(subtitles) = media_metadata.subtitles {
+        let mut sub_counter = 0;
+        let mut subtitles_export: Vec<MediaSubtitleOrAudioExport> = Vec::new();
+        for subtitle in subtitles {
+            sub_counter += 1;
+            let sub_id = subtitle.id.clone();
+            let d_name = format!("subtitle {sub_id}");
+            let ext = get_extension_from_url(&subtitle.url, "srt");
+            let out_file_name = format!("subtitle_{sub_counter}.{ext}");
 
-                let sub_out_path = std::path::Path::new(&out_folder)
-                    .join(&out_file_name)
-                    .to_str()
-                    .unwrap()
-                    .to_string();
+            let sub_out_path = std::path::Path::new(&out_folder)
+                .join(&out_file_name)
+                .to_str()
+                .unwrap()
+                .to_string();
 
-                download_media_asset(
-                    global_opts.clone(),
-                    vault_url.clone(),
-                    &d_name,
-                    subtitle.url,
-                    sub_out_path,
-                    logout_after_operation,
-                )
-                .await;
+            download_media_asset(
+                global_opts.clone(),
+                vault_url.clone(),
+                &d_name,
+                subtitle.url,
+                sub_out_path,
+                logout_after_operation,
+            )
+            .await;
 
-                subtitles_export.push(MediaSubtitleOrAudioExport {
-                    id: subtitle.id.clone(),
-                    name: subtitle.name.clone(),
-                    file: out_file_name,
-                });
-            }
-
-            out_metadata.subtitles = Some(subtitles_export);
+            subtitles_export.push(MediaSubtitleOrAudioExport {
+                id: subtitle.id.clone(),
+                name: subtitle.name.clone(),
+                file: out_file_name,
+            });
         }
-        None => {}
+
+        out_metadata.subtitles = Some(subtitles_export);
     }
 
     // Audio tracks
 
-    match media_metadata.audios {
-        Some(audios) => {
-            let mut audio_counter = 0;
-            let mut audios_export: Vec<MediaSubtitleOrAudioExport> = Vec::new();
-            for audio in audios {
-                audio_counter += 1;
-                let audio_id = audio.id.clone();
-                let d_name = format!("audio track {audio_id}");
-                let ext = get_extension_from_url(&audio.url, "mp3");
-                let out_file_name = format!("audio_track_{audio_counter}.{ext}");
+    if let Some(audios) = media_metadata.audios {
+        let mut audio_counter = 0;
+        let mut audios_export: Vec<MediaSubtitleOrAudioExport> = Vec::new();
+        for audio in audios {
+            audio_counter += 1;
+            let audio_id = audio.id.clone();
+            let d_name = format!("audio track {audio_id}");
+            let ext = get_extension_from_url(&audio.url, "mp3");
+            let out_file_name = format!("audio_track_{audio_counter}.{ext}");
 
-                let audio_out_path = std::path::Path::new(&out_folder)
-                    .join(&out_file_name)
-                    .to_str()
-                    .unwrap()
-                    .to_string();
+            let audio_out_path = std::path::Path::new(&out_folder)
+                .join(&out_file_name)
+                .to_str()
+                .unwrap()
+                .to_string();
 
-                download_media_asset(
-                    global_opts.clone(),
-                    vault_url.clone(),
-                    &d_name,
-                    audio.url,
-                    audio_out_path,
-                    logout_after_operation,
-                )
-                .await;
+            download_media_asset(
+                global_opts.clone(),
+                vault_url.clone(),
+                &d_name,
+                audio.url,
+                audio_out_path,
+                logout_after_operation,
+            )
+            .await;
 
-                audios_export.push(MediaSubtitleOrAudioExport {
-                    id: audio.id.clone(),
-                    name: audio.name.clone(),
-                    file: out_file_name,
-                });
-            }
-
-            out_metadata.audios = Some(audios_export);
+            audios_export.push(MediaSubtitleOrAudioExport {
+                id: audio.id.clone(),
+                name: audio.name.clone(),
+                file: out_file_name,
+            });
         }
-        None => {}
+
+        out_metadata.audios = Some(audios_export);
     }
 
     // After everything is downloaded, write metadata
@@ -553,26 +520,26 @@ struct DownloaderProgressPrinter {
 
 impl DownloaderProgressPrinter {
     fn new(name: &str) -> DownloaderProgressPrinter {
-        return DownloaderProgressPrinter {
+        DownloaderProgressPrinter {
             last_line_width: 0,
             name: name.to_string(),
-        };
+        }
     }
 }
 
 impl ProgressReceiver for DownloaderProgressPrinter {
-    fn progress_start(self: &mut Self) -> () {
+    fn progress_start(&mut self) {
         let name = &self.name;
         let line = format!("Downloading {name}...");
         eprint!("{line}");
         self.last_line_width = line.width();
     }
 
-    fn progress_finish(self: &mut Self) -> () {
-        eprint!("\n")
+    fn progress_finish(&mut self) {
+        eprintln!()
     }
 
-    fn progress_update(self: &mut Self, loaded: u64, total: u64) -> () {
+    fn progress_update(&mut self, loaded: u64, total: u64) {
         let mut line: String;
         let name = &self.name;
         if total > 0 {
@@ -599,21 +566,19 @@ impl ProgressReceiver for DownloaderProgressPrinter {
 }
 
 fn get_extension_from_url(download_path: &str, default_ext: &str) -> String {
-    let path_parts: Vec<&str> = download_path.split("/").collect();
+    let path_parts: Vec<&str> = download_path.split('/').collect();
 
     if path_parts.is_empty() {
-        return default_ext.to_string();
+        default_ext.to_string()
     } else {
         let last_part = path_parts.into_iter().last().unwrap_or("download");
         let file_name = last_part
-            .split("?")
-            .into_iter()
-            .nth(0)
+            .split('?')
+            .next()
             .unwrap_or("download")
             .to_string();
         return file_name
-            .split(".")
-            .into_iter()
+            .split('.')
             .last()
             .unwrap_or(default_ext)
             .to_string();

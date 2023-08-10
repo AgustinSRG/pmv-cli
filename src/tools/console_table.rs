@@ -7,10 +7,10 @@ use unicode_width::{UnicodeWidthStr, UnicodeWidthChar};
 const MIN_ALLOWED_COL_LENGTH: usize = 8;
 
 pub fn to_csv_string(s: &str) -> String {
-    return serde_json::to_string(s).unwrap();
+    serde_json::to_string(s).unwrap()
 }
 
-pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>, std_err: bool) -> () {
+pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>, std_err: bool) {
     let len = head.len();
 
     // Get term size
@@ -101,21 +101,21 @@ pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>, std_err: bool) -
     }
 }
 
-fn print_table_with_sizes(head: &Vec<String>, body: &Vec<Vec<String>>, sizes: &Vec<usize>, std_err: bool) -> () {
-    print_table_separator(&sizes, std_err);
+fn print_table_with_sizes(head: &Vec<String>, body: &Vec<Vec<String>>, sizes: &Vec<usize>, std_err: bool) {
+    print_table_separator(sizes, std_err);
 
     print_table_line(head, sizes, std_err);
 
-    print_table_separator(&sizes, std_err);
+    print_table_separator(sizes, std_err);
 
     for body_row in body {
         print_table_line(body_row, sizes, std_err);
     }
 
-    print_table_separator(&sizes, std_err);
+    print_table_separator(sizes, std_err);
 }
 
-fn print_table_line(col: &Vec<String>, sizes: &Vec<usize>, std_err: bool) {
+fn print_table_line(col: &Vec<String>, sizes: &[usize], std_err: bool) {
     let mut more_lines = true;
     let mut line = 0;
 
@@ -162,7 +162,7 @@ fn sub_string(original_str: &str, skip: usize, limit: usize) -> String {
         return "".to_string();
     }
     if skip >= original_str.width() {
-        return "".to_string();
+        "".to_string()
     } else if skip == 0 {
         if limit >= original_str.width() {
             return original_str.to_string();
@@ -222,7 +222,7 @@ fn sub_string(original_str: &str, skip: usize, limit: usize) -> String {
     }
 }
 
-fn print_table_separator(sizes: &Vec<usize>, std_err: bool) -> () {
+fn print_table_separator(sizes: &Vec<usize>, std_err: bool) {
     let mut line = "".to_string();
 
     line.push('|');
@@ -256,5 +256,5 @@ fn pad_str(str: &str, s: usize) -> String {
         }
     }
 
-    return res;
+    res
 }

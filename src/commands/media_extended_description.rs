@@ -93,25 +93,21 @@ pub async fn run_cmd_set_media_extended_description(
 
     let ext_desc_read_res = tokio::fs::read_to_string(&path).await;
 
-    let ext_desc: String;
-
-    match ext_desc_read_res {
-        Ok(ext_desc_str) => {
-            ext_desc = ext_desc_str;
-        }
+    let ext_desc: String = match ext_desc_read_res {
+        Ok(ext_desc_str) => ext_desc_str,
         Err(e) => {
             let e_str = e.to_string();
             eprintln!("Error reading the file {path}: {e_str}");
             process::exit(1);
         }
-    }
+    };
 
     // Call API
 
     let api_res = api_call_media_change_extended_description(
         vault_url.clone(),
         media_id_param,
-        MediaUpdateExtendedDescriptionBody { ext_desc: ext_desc },
+        MediaUpdateExtendedDescriptionBody { ext_desc },
         global_opts.debug,
     )
     .await;

@@ -20,7 +20,7 @@ pub fn tags_map_from_list(list: &Vec<MediaTag>) -> HashMap<u64, String> {
         res.insert(tag.id, tag.name.clone());
     }
 
-    return res;
+    res
 }
 
 pub fn tags_reverse_map_from_list(list: &Vec<MediaTag>) -> HashMap<String, u64> {
@@ -30,11 +30,11 @@ pub fn tags_reverse_map_from_list(list: &Vec<MediaTag>) -> HashMap<String, u64> 
         res.insert(tag.name.clone(), tag.id);
     }
 
-    return res;
+    res
 }
 
 pub fn tags_names_from_ids(ids: &Vec<u64>, tags_map: &HashMap<u64, String>) -> Vec<String> {
-    let mut res:  Vec<String> = Vec::with_capacity(ids.len());
+    let mut res: Vec<String> = Vec::with_capacity(ids.len());
 
     for id in ids {
         let default_name = "#".to_string() + &id.to_string();
@@ -42,11 +42,15 @@ pub fn tags_names_from_ids(ids: &Vec<u64>, tags_map: &HashMap<u64, String>) -> V
         res.push((*tag_name).clone());
     }
 
-    return res;
+    res
 }
 
 pub fn parse_tag_name(name: &str) -> String {
-    return name.replace("\n", " ").replace("\r", "").trim().replace(" ", "_");
+    return name
+        .replace('\n', " ")
+        .replace('\r', "")
+        .trim()
+        .replace(' ', "_");
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -79,14 +83,14 @@ pub fn parse_tag_search_mode(s: &str) -> Result<TagSearchMode, ()> {
     let s_lower = s.to_lowercase();
 
     if s_lower == "all" {
-        return Ok(TagSearchMode::All);
+        Ok(TagSearchMode::All)
     } else if s_lower == "any" {
-        return Ok(TagSearchMode::Any);
+        Ok(TagSearchMode::Any)
     } else if s_lower == "none" {
-        return Ok(TagSearchMode::None);
+        Ok(TagSearchMode::None)
     } else if s_lower == "untagged" {
-        return Ok(TagSearchMode::Untagged);
+        Ok(TagSearchMode::Untagged)
     } else {
-        return Err(());
+        Err(())
     }
 }

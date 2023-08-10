@@ -244,7 +244,7 @@ pub enum Commands {
     },
 }
 
-pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
+pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
     match cmd {
         Commands::Login { username } => {
             run_cmd_login(global_opts, username).await;
@@ -318,57 +318,69 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) -> () {
         Commands::Task { task_cmd } => {
             run_task_cmd(global_opts, task_cmd).await;
         }
-        Commands::Batch { title, description, media_type, tags, tags_mode, album, everything, batch_command } => {
-            run_cmd_batch_operation(global_opts, title, description, media_type, tags, tags_mode, album, everything, batch_command).await;
+        Commands::Batch {
+            title,
+            description,
+            media_type,
+            tags,
+            tags_mode,
+            album,
+            everything,
+            batch_command,
+        } => {
+            run_cmd_batch_operation(
+                global_opts,
+                title,
+                description,
+                media_type,
+                tags,
+                tags_mode,
+                album,
+                everything,
+                batch_command,
+            )
+            .await;
         }
     }
 }
 
 pub fn get_vault_url(global_opts_url: Option<String>) -> String {
     match global_opts_url {
-        Some(u) => {
-            return u;
-        }
+        Some(u) => u,
         None => {
             let env_val = std::env::var("PMV_URL");
 
             match env_val {
-                Ok(u) => {
-                    return u;
-                }
-                Err(_) => {
-                    return "http://localhost".to_string();
-                }
+                Ok(u) => u,
+                Err(_) => "http://localhost".to_string(),
             }
         }
     }
 }
 
-pub fn print_request_error(e: RequestError) -> () {
+pub fn print_request_error(e: RequestError) {
     match e {
-        RequestError::StatusCodeError(s) => {
+        RequestError::StatusCode(s) => {
             if s == 401 {
                 eprintln!("Error: The session URL you provided was invalid or expired.");
             } else {
                 eprintln!("Error: API ended with unexpected status code: {s}");
             }
         }
-        RequestError::ApiError {
+        RequestError::Api {
             status,
             code,
             message,
         } => {
             eprintln!("API Error | Status: {status} | Code: {code} | Message: {message}");
         }
-        RequestError::HyperError(e) => {
-            let e_str = e.to_string();
-            eprintln!("Error: {e_str}");
+        RequestError::Hyper(e) => {
+            eprintln!("Error: {e}");
         }
-        RequestError::FileSystemError(e) => {
-            let e_str = e.to_string();
-            eprintln!("Error: {e_str}");
+        RequestError::FileSystem(e) => {
+            eprintln!("Error: {e}");
         }
-        RequestError::JSONError { message, body } => {
+        RequestError::Json { message, body } => {
             eprintln!("Body received: {body}");
             eprintln!("Error parsing the body: {message}");
             eprintln!("This may be caused due to incompatibilities between the PersonalMediaVault backend and this tool.");

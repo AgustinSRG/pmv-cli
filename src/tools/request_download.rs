@@ -2,18 +2,18 @@
 
 use std::time::Instant;
 
-use crate::tools::{resolve_vault_api_uri, get_session_from_uri, SESSION_HEADER_NAME};
+use crate::tools::{get_session_from_uri, resolve_vault_api_uri, SESSION_HEADER_NAME};
 
-use super::{VaultURI, RequestError};
-use hyper::{http::Request, Body, Client, Method, body::HttpBody};
+use super::{RequestError, VaultURI};
+use hyper::{body::HttpBody, http::Request, Body, Client, Method};
 use hyper_tls::HttpsConnector;
 use tokio::{fs::File, io::AsyncWriteExt};
 
 pub trait ProgressReceiver {
-    fn progress_start(self: &mut Self) -> ();
-    fn progress_finish(self: &mut Self) -> ();
+    fn progress_start(&mut self);
+    fn progress_finish(&mut self);
 
-    fn progress_update(self: &mut Self, loaded: u64, total: u64) -> ();
+    fn progress_update(&mut self, loaded: u64, total: u64);
 }
 
 pub async fn do_get_download_request(
@@ -21,7 +21,7 @@ pub async fn do_get_download_request(
     path: String,
     file_path: String,
     debug: bool,
-    progress_receiver: &mut dyn ProgressReceiver
+    progress_receiver: &mut dyn ProgressReceiver,
 ) -> Result<(), RequestError> {
     let final_uri = resolve_vault_api_uri(uri.clone(), path);
 
@@ -46,7 +46,7 @@ pub async fn do_get_download_request(
 
     if result.is_err() {
         // Network error
-        return Err(RequestError::HyperError(result.err().unwrap()));
+        return Err(RequestError::Hyper(result.err().unwrap()));
     }
 
     // Response received
@@ -56,7 +56,7 @@ pub async fn do_get_download_request(
     let res_status = response.status();
 
     if res_status != 200 {
-        return Err(RequestError::StatusCodeError(res_status));
+        return Err(RequestError::StatusCode(res_status));
     }
 
     // Write body into a file
@@ -64,7 +64,7 @@ pub async fn do_get_download_request(
     let file_open_res = File::create(file_path).await;
 
     if file_open_res.is_err() {
-        return Err(RequestError::FileSystemError(
+        return Err(RequestError::FileSystem(
             file_open_res.err().unwrap().to_string(),
         ));
     }
@@ -75,25 +75,16 @@ pub async fn do_get_download_request(
 
     let content_length_opt = response.headers().get("Content-Length");
 
-    match content_length_opt {
-        Some(content_length_header) => {
-            let content_length_str_res = content_length_header.to_str();
+    if let Some(content_length_header) = content_length_opt {
+        let content_length_str_res = content_length_header.to_str();
 
-            match content_length_str_res {
-                Ok(content_length_str) => {
-                    let content_length_parsed = content_length_str.parse::<u64>();
+        if let Ok(content_length_str) = content_length_str_res {
+            let content_length_parsed = content_length_str.parse::<u64>();
 
-                    match content_length_parsed {
-                        Ok(content_length) => {
-                            body_length = content_length;
-                        }
-                        Err(_) => {}
-                    }
-                }
-                Err(_) => {}
+            if let Ok(content_length) = content_length_parsed {
+                body_length = content_length;
             }
         }
-        None => {}
     }
 
     progress_receiver.progress_start();
@@ -125,18 +116,18 @@ pub async fn do_get_download_request(
                     }
                     Err(e) => {
                         progress_receiver.progress_finish();
-                        return Err(RequestError::FileSystemError(e.to_string()));
+                        return Err(RequestError::FileSystem(e.to_string()));
                     }
                 }
             }
             Err(e) => {
                 progress_receiver.progress_finish();
-                return Err(RequestError::HyperError(e));
+                return Err(RequestError::Hyper(e));
             }
         }
     }
 
     progress_receiver.progress_update(downloaded_bytes, body_length);
     progress_receiver.progress_finish();
-    return Ok(());
+    Ok(())
 }

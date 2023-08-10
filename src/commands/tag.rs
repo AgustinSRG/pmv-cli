@@ -52,7 +52,7 @@ pub enum TagCommand {
     },
 }
 
-pub async fn run_tag_cmd(global_opts: CommandGlobalOptions, cmd: TagCommand) -> () {
+pub async fn run_tag_cmd(global_opts: CommandGlobalOptions, cmd: TagCommand) {
     match cmd {
         TagCommand::List {
             csv,
@@ -73,7 +73,7 @@ pub async fn run_cmd_list_tags(
     global_opts: CommandGlobalOptions,
     csv: bool,
     alphabetically: bool,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -131,7 +131,7 @@ pub async fn run_cmd_list_tags(
             println!("total: {total}");
 
             if csv {
-                println!("");
+                println!();
                 println!("\"Tag Id\",\"Tag Name\"");
 
                 for tag in tags {
@@ -168,7 +168,7 @@ pub async fn run_cmd_list_tags(
     }
 }
 
-pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, media: String) -> () {
+pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, media: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -213,16 +213,16 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
                 }
                 Err(e) => {
                     match e {
-                        crate::tools::RequestError::StatusCodeError(_)
-                        | crate::tools::RequestError::HyperError(_)
-                        | crate::tools::RequestError::FileSystemError(_)
-                        | crate::tools::RequestError::JSONError {
+                        crate::tools::RequestError::StatusCode(_)
+                        | crate::tools::RequestError::Hyper(_)
+                        | crate::tools::RequestError::FileSystem(_)
+                        | crate::tools::RequestError::Json {
                             message: _,
                             body: _,
                         } => {
                             print_request_error(e);
                         }
-                        crate::tools::RequestError::ApiError {
+                        crate::tools::RequestError::Api {
                             status,
                             code: _,
                             message: _,
@@ -362,7 +362,7 @@ pub async fn run_cmd_tag_remove(
     global_opts: CommandGlobalOptions,
     tag: String,
     media: String,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -394,12 +394,8 @@ pub async fn run_cmd_tag_remove(
 
     let media_id_res = parse_identifier(&media);
 
-    let media_id_param: u64;
-
-    match media_id_res {
-        Ok(media_id) => {
-            media_id_param = media_id;
-        }
+    let media_id_param: u64 = match media_id_res {
+        Ok(media_id) => media_id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -414,7 +410,7 @@ pub async fn run_cmd_tag_remove(
             eprintln!("Invalid media asset identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Get tags
 

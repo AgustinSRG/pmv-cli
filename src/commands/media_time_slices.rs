@@ -11,7 +11,7 @@ use crate::{
 
 use super::{get_vault_url, print_request_error, CommandGlobalOptions};
 
-pub async fn run_cmd_get_media_time_slices(global_opts: CommandGlobalOptions, media: String) -> () {
+pub async fn run_cmd_get_media_time_slices(global_opts: CommandGlobalOptions, media: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -42,12 +42,8 @@ pub async fn run_cmd_get_media_time_slices(global_opts: CommandGlobalOptions, me
     // Params
 
     let media_id_res = parse_identifier(&media);
-    let media_id: u64;
-
-    match media_id_res {
-        Ok(id) => {
-            media_id = id;
-        }
+    let media_id: u64 = match media_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -62,7 +58,7 @@ pub async fn run_cmd_get_media_time_slices(global_opts: CommandGlobalOptions, me
             eprintln!("Invalid media identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     // Call API
 

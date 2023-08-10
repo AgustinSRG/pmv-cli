@@ -12,7 +12,7 @@ use crate::{
 
 use super::CommandGlobalOptions;
 
-pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<String>) -> () {
+pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<String>) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url));
 
     if url_parse_res.is_err() {
@@ -39,7 +39,7 @@ pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<S
             Ok(_) => {}
             Err(e) => {
                 match e {
-                    crate::tools::RequestError::StatusCodeError(status) => {
+                    crate::tools::RequestError::StatusCode(status) => {
                         if status == StatusCode::UNAUTHORIZED {
                             vault_url = VaultURI::LoginURI {
                                 base_url: vault_url.get_base_url(),
@@ -51,7 +51,7 @@ pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<S
                             process::exit(1);
                         }
                     }
-                    crate::tools::RequestError::ApiError {
+                    crate::tools::RequestError::Api {
                         status,
                         code,
                         message,
@@ -69,17 +69,15 @@ pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<S
                             process::exit(1);
                         }
                     }
-                    crate::tools::RequestError::HyperError(e) => {
-                        let e_str = e.to_string();
-                        eprintln!("Error: {e_str}");
+                    crate::tools::RequestError::Hyper(e) => {
+                        eprintln!("Error: {e}");
                         process::exit(1);
                     }
-                    crate::tools::RequestError::FileSystemError(e) => {
-                        let e_str = e.to_string();
-                        eprintln!("Error: {e_str}");
+                    crate::tools::RequestError::FileSystem(e) => {
+                        eprintln!("Error: {e}");
                         process::exit(1);
                     }
-                    crate::tools::RequestError::JSONError { message, body } => {
+                    crate::tools::RequestError::Json { message, body } => {
                         eprintln!("Body received: {body}");
                         eprintln!("Error parsing the body: {message}");
                         eprintln!("This may be caused due to incompatibilities between the PersonalMediaVault backend and this tool.");
@@ -102,7 +100,7 @@ pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<S
 
     vault_url = login_result.unwrap();
 
-    let vault_url_str = vault_url.to_string();
+    let vault_url_str = vault_url.to_url_string();
 
     eprintln!("Vault session opened.");
 

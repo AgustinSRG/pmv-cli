@@ -29,7 +29,7 @@ pub enum DownloadAssetType {
 }
 
 pub fn parse_asset_type(s: &str) -> Result<DownloadAssetType, ()> {
-    let parts: Vec<&str> = s.split(":").collect();
+    let parts: Vec<&str> = s.split(':').collect();
     if parts.is_empty() {
         return Err(());
     }
@@ -39,67 +39,57 @@ pub fn parse_asset_type(s: &str) -> Result<DownloadAssetType, ()> {
     let val = parts_value.join(":");
 
     if parts_type == "original" {
-        return Ok(DownloadAssetType::Original);
+        Ok(DownloadAssetType::Original)
     } else if parts_type == "thumbnail" {
-        return Ok(DownloadAssetType::Thumbnail);
+        Ok(DownloadAssetType::Thumbnail)
     } else if parts_type == "notes" {
-        return Ok(DownloadAssetType::Notes);
+        Ok(DownloadAssetType::Notes)
     } else if parts_type == "ext_desc" {
-        return Ok(DownloadAssetType::ExtendedDescription);
+        Ok(DownloadAssetType::ExtendedDescription)
     } else if parts_type == "resolution" || parts_type == "res" || parts_type == "r" {
         // Try video resolution
         let video_res = ConfigVideoResolution::from_str(&val);
 
         match video_res {
-            Ok(r) => {
-                return Ok(DownloadAssetType::Resolution {
-                    width: r.width,
-                    height: r.height,
-                    fps: r.fps,
-                });
-            }
+            Ok(r) => Ok(DownloadAssetType::Resolution {
+                width: r.width,
+                height: r.height,
+                fps: r.fps,
+            }),
             Err(_) => {
                 // Try image resolution
                 let image_res = ConfigImageResolution::from_str(&val);
 
                 match image_res {
-                    Ok(r) => {
-                        return Ok(DownloadAssetType::Resolution {
-                            width: r.width,
-                            height: r.height,
-                            fps: 0,
-                        });
-                    }
-                    Err(_) => {
-                        return Err(());
-                    }
+                    Ok(r) => Ok(DownloadAssetType::Resolution {
+                        width: r.width,
+                        height: r.height,
+                        fps: 0,
+                    }),
+                    Err(_) => Err(()),
                 }
             }
         }
     } else if parts_type == "subtitle" || parts_type == "sub" || parts_type == "s" {
         if val.is_empty() {
-            return Err(());
+            Err(())
         } else {
-            return Ok(DownloadAssetType::Subtitle(val.clone()));
+            Ok(DownloadAssetType::Subtitle(val))
         }
     } else if parts_type == "audio" || parts_type == "a" {
         if val.is_empty() {
-            return Err(());
+            Err(())
         } else {
-            return Ok(DownloadAssetType::Audio(val.clone()));
+            Ok(DownloadAssetType::Audio(val))
         }
     } else if parts_type == "preview" || parts_type == "pre" || parts_type == "p" {
         let i_res = val.parse::<u32>();
         match i_res {
-            Ok(i) => {
-                return Ok(DownloadAssetType::VideoPreview(i));
-            }
-            Err(_) => {
-                return Err(());
-            }
+            Ok(i) => Ok(DownloadAssetType::VideoPreview(i)),
+            Err(_) => Err(()),
         }
     } else {
-        return Err(());
+        Err(())
     }
 }
 
@@ -109,7 +99,7 @@ pub async fn run_cmd_download_media(
     asset: Option<String>,
     output: Option<String>,
     print_link: bool,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -140,12 +130,8 @@ pub async fn run_cmd_download_media(
     // Params
 
     let media_id_res = parse_identifier(&media);
-    let media_id: u64;
-
-    match media_id_res {
-        Ok(id) => {
-            media_id = id;
-        }
+    let media_id: u64 = match media_id_res {
+        Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -160,7 +146,7 @@ pub async fn run_cmd_download_media(
             eprintln!("Invalid album identifier specified.");
             process::exit(1);
         }
-    }
+    };
 
     let asset_type;
 
@@ -312,12 +298,9 @@ pub async fn run_cmd_download_media(
                                                     }
                                                 }
                                             }
-                                            let task_res = TaskEncodeResolution {
-                                                width: width,
-                                                height: height,
-                                                fps: fps,
-                                            };
-                                            let task_res_str = task_res.to_string();
+                                            let task_res =
+                                                TaskEncodeResolution { width, height, fps };
+                                            let task_res_str = task_res.to_resolution_string();
                                             eprintln!(
                                                 "No resolution {task_res_str} is not ready yet"
                                             );
@@ -340,12 +323,8 @@ pub async fn run_cmd_download_media(
                                                 }
                                             }
                                         }
-                                        let task_res = TaskEncodeResolution {
-                                            width: width,
-                                            height: height,
-                                            fps: fps,
-                                        };
-                                        let task_res_str = task_res.to_string();
+                                        let task_res = TaskEncodeResolution { width, height, fps };
+                                        let task_res_str = task_res.to_resolution_string();
                                         eprintln!("No resolution {task_res_str} is not ready yet");
                                         process::exit(1);
                                     }
@@ -366,12 +345,8 @@ pub async fn run_cmd_download_media(
                                         }
                                     }
                                 }
-                                let task_res = TaskEncodeResolution {
-                                    width: width,
-                                    height: height,
-                                    fps: fps,
-                                };
-                                let task_res_str = task_res.to_string();
+                                let task_res = TaskEncodeResolution { width, height, fps };
+                                let task_res_str = task_res.to_resolution_string();
                                 eprintln!("No resolution found matching {task_res_str}");
                                 process::exit(1);
                             }
@@ -623,32 +598,13 @@ pub async fn run_cmd_download_media(
                         process::exit(1);
                     }
                 },
-                DownloadAssetType::ExtendedDescription => {
-                    match media_data.ext_desc_url {
-                        Some(u) => {
-                            if u.is_empty() {
-                                if logout_after_operation {
-                                    let logout_res =
-                                        do_logout(global_opts.clone(), vault_url.clone()).await;
-        
-                                    match logout_res {
-                                        Ok(_) => {}
-                                        Err(_) => {
-                                            process::exit(1);
-                                        }
-                                    }
-                                }
-                                eprintln!("This media asset has no extended description");
-                                process::exit(1);
-                            }
-
-                            download_path = u;
-                        }
-                        None => {
+                DownloadAssetType::ExtendedDescription => match media_data.ext_desc_url {
+                    Some(u) => {
+                        if u.is_empty() {
                             if logout_after_operation {
                                 let logout_res =
                                     do_logout(global_opts.clone(), vault_url.clone()).await;
-    
+
                                 match logout_res {
                                     Ok(_) => {}
                                     Err(_) => {
@@ -659,8 +615,25 @@ pub async fn run_cmd_download_media(
                             eprintln!("This media asset has no extended description");
                             process::exit(1);
                         }
+
+                        download_path = u;
                     }
-                }
+                    None => {
+                        if logout_after_operation {
+                            let logout_res =
+                                do_logout(global_opts.clone(), vault_url.clone()).await;
+
+                            match logout_res {
+                                Ok(_) => {}
+                                Err(_) => {
+                                    process::exit(1);
+                                }
+                            }
+                        }
+                        eprintln!("This media asset has no extended description");
+                        process::exit(1);
+                    }
+                },
             }
 
             if download_path.is_empty() {
@@ -734,16 +707,15 @@ async fn download_media_asset(
     match output {
         Some(file) => {
             if file.is_empty() {
-                let path_parts: Vec<&str> = download_path.split("/").collect();
+                let path_parts: Vec<&str> = download_path.split('/').collect();
 
                 if path_parts.is_empty() {
                     out_file = "download".to_string();
                 } else {
                     let last_part = path_parts.into_iter().last().unwrap_or("download");
                     out_file = last_part
-                        .split("?")
-                        .into_iter()
-                        .nth(0)
+                        .split('?')
+                        .next()
                         .unwrap_or("download")
                         .to_string();
                 }
@@ -752,16 +724,15 @@ async fn download_media_asset(
             }
         }
         None => {
-            let path_parts: Vec<&str> = download_path.split("/").collect();
+            let path_parts: Vec<&str> = download_path.split('/').collect();
 
             if path_parts.is_empty() {
                 out_file = "download".to_string();
             } else {
                 let last_part = path_parts.into_iter().last().unwrap_or("download");
                 out_file = last_part
-                    .split("?")
-                    .into_iter()
-                    .nth(0)
+                    .split('?')
+                    .next()
                     .unwrap_or("download")
                     .to_string();
             }
@@ -830,24 +801,22 @@ struct DownloaderProgressPrinter {
 
 impl DownloaderProgressPrinter {
     fn new() -> DownloaderProgressPrinter {
-        return DownloaderProgressPrinter {
-            last_line_width: 0,
-        };
+        DownloaderProgressPrinter { last_line_width: 0 }
     }
 }
 
 impl ProgressReceiver for DownloaderProgressPrinter {
-    fn progress_start(self: &mut Self) -> () {
+    fn progress_start(&mut self) {
         let line = "Downloading...".to_string();
         eprint!("{line}");
         self.last_line_width = line.width();
     }
 
-    fn progress_finish(self: &mut Self) -> () {
-        eprint!("\n")
+    fn progress_finish(&mut self) {
+        eprintln!()
     }
 
-    fn progress_update(self: &mut Self, loaded: u64, total: u64) -> () {
+    fn progress_update(&mut self, loaded: u64, total: u64) {
         let mut line: String;
         if total > 0 {
             let progress_percent: f64 = (loaded as f64) * 100.0 / (total as f64);

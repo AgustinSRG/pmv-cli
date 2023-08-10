@@ -4,13 +4,28 @@ use std::process;
 
 use crate::api::api_call_search;
 use crate::tools::{render_media_duration, to_csv_string};
-use crate::{tools::{ensure_login, parse_vault_uri, print_table, is_identifier, parse_identifier, identifier_to_string}, api::{api_call_get_tags}, models::{tags_map_from_list, tags_names_from_ids}};
+use crate::{
+    api::api_call_get_tags,
+    models::{tags_map_from_list, tags_names_from_ids},
+    tools::{
+        ensure_login, identifier_to_string, is_identifier, parse_identifier, parse_vault_uri,
+        print_table,
+    },
+};
 
-use super::{CommandGlobalOptions, logout::do_logout, get_vault_url, print_request_error};
+use super::{get_vault_url, logout::do_logout, print_request_error, CommandGlobalOptions};
 
 const DEFAULT_PAGE_SIZE: u32 = 10;
 
-pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Option<u32>, page_size: Option<u32>, tag: Option<String>, reverse: bool, extended: bool, csv: bool) -> () {
+pub async fn run_cmd_search_basic(
+    global_opts: CommandGlobalOptions,
+    page: Option<u32>,
+    page_size: Option<u32>,
+    tag: Option<String>,
+    reverse: bool,
+    extended: bool,
+    csv: bool,
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -61,11 +76,7 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
 
     // Params
 
-    let mut page_param = page.unwrap_or(1);
-
-    if page_param > 0 {
-        page_param = page_param - 1;
-    }
+    let page_param = page.unwrap_or(1).saturating_sub(1);
 
     let page_size_param = page_size.unwrap_or(DEFAULT_PAGE_SIZE);
 
@@ -84,10 +95,10 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
                     } else {
                         tag_param = Some(tag_name);
                     }
-                },
+                }
                 Err(_) => {
                     tag_param = Some(tag_name);
-                },
+                }
             }
         } else {
             tag_param = Some(tag_name);
@@ -96,13 +107,21 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
 
     // Call API
 
-    let api_res = api_call_search(vault_url.clone(), tag_param, reverse, page_param, page_size_param, global_opts.debug).await;
+    let api_res = api_call_search(
+        vault_url.clone(),
+        tag_param,
+        reverse,
+        page_param,
+        page_size_param,
+        global_opts.debug,
+    )
+    .await;
 
     match api_res {
         Ok(search_result) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts, vault_url.clone()).await;
-        
+
                 match logout_res {
                     Ok(_) => {}
                     Err(_) => {
@@ -110,7 +129,7 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
                     }
                 }
             }
-            
+
             let page_size = search_result.page_size;
             let page = search_result.page_index + 1;
             let total_pages = search_result.page_count;
@@ -123,69 +142,76 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
             println!("items retrieved: {page_items}");
 
             if csv {
-                println!("");
+                println!();
                 if !extended {
                     println!("\"Id\",\"Type\",\"Title\"");
 
                     for item in search_result.page_items {
                         let row_id = item.id.to_string();
-                        let row_type = to_csv_string(&item.media_type.to_string());
+                        let row_type = to_csv_string(&item.media_type.to_type_string());
                         let row_title = to_csv_string(&item.title);
                         println!("{row_id},{row_type},{row_title}");
                     }
-
                 } else {
                     println!("\"Id\",\"Type\",\"Title\",\"Description\",\"Tags\",\"Duration\"");
 
                     for item in search_result.page_items {
                         let row_id = item.id.to_string();
-                        let row_type = to_csv_string(&item.media_type.to_string());
+                        let row_type = to_csv_string(&item.media_type.to_type_string());
                         let row_title = to_csv_string(&item.title);
                         let row_description = to_csv_string(&item.description);
-                        let row_tags = to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" "));
-                        let row_duration = render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
+                        let row_tags =
+                            to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" "));
+                        let row_duration =
+                            render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
 
                         println!("{row_id},{row_type},{row_title},{row_description},{row_tags},{row_duration}");
                     }
                 }
-            } else {
-                if !extended {
-                    let table_head: Vec<String> = vec!["Id".to_string(), "Type".to_string(), "Title".to_string()];
-                    let mut table_body: Vec<Vec<String>> = Vec::with_capacity(page_items);
-    
-                    for item in search_result.page_items {
-                        table_body.push(vec!(
-                            identifier_to_string(item.id).clone(),
-                            item.media_type.to_string(),
-                            to_csv_string(&item.title),
-                        ));
-                    }
-    
-                    print_table(&table_head, &table_body, false);
-                } else {
-                    let table_head: Vec<String> = vec!["Id".to_string(), "Type".to_string(), "Title".to_string(), "Description".to_string(), "Tags".to_string(), "Duration".to_string()];
-                    let mut table_body: Vec<Vec<String>> = Vec::with_capacity(page_items);
-    
-                    for item in search_result.page_items {
-                        table_body.push(vec!(
-                            identifier_to_string(item.id).clone(),
-                            item.media_type.to_string(),
-                            to_csv_string(&item.title),
-                            to_csv_string(&item.description),
-                            to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" ")),
-                            render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
-                        ));
-                    }
-    
-                    print_table(&table_head, &table_body, false);
+            } else if !extended {
+                let table_head: Vec<String> =
+                    vec!["Id".to_string(), "Type".to_string(), "Title".to_string()];
+                let mut table_body: Vec<Vec<String>> = Vec::with_capacity(page_items);
+
+                for item in search_result.page_items {
+                    table_body.push(vec![
+                        identifier_to_string(item.id).clone(),
+                        item.media_type.to_type_string(),
+                        to_csv_string(&item.title),
+                    ]);
                 }
+
+                print_table(&table_head, &table_body, false);
+            } else {
+                let table_head: Vec<String> = vec![
+                    "Id".to_string(),
+                    "Type".to_string(),
+                    "Title".to_string(),
+                    "Description".to_string(),
+                    "Tags".to_string(),
+                    "Duration".to_string(),
+                ];
+                let mut table_body: Vec<Vec<String>> = Vec::with_capacity(page_items);
+
+                for item in search_result.page_items {
+                    table_body.push(vec![
+                        identifier_to_string(item.id).clone(),
+                        item.media_type.to_type_string(),
+                        to_csv_string(&item.title),
+                        to_csv_string(&item.description),
+                        to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" ")),
+                        render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
+                    ]);
+                }
+
+                print_table(&table_head, &table_body, false);
             }
-        },
+        }
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
                 let logout_res = do_logout(global_opts, vault_url.clone()).await;
-        
+
                 match logout_res {
                     Ok(_) => {}
                     Err(_) => {
@@ -194,6 +220,6 @@ pub async fn run_cmd_search_basic(global_opts: CommandGlobalOptions, page: Optio
                 }
             }
             process::exit(1);
-        },
+        }
     }
 }

@@ -17,11 +17,11 @@ fn parse_resolution_param(param: &str) -> Result<TaskEncodeResolution, ()> {
 
     match video_res {
         Ok(r) => {
-            return Ok(TaskEncodeResolution {
+            Ok(TaskEncodeResolution {
                 width: r.width,
                 height: r.height,
                 fps: r.fps,
-            });
+            })
         }
         Err(_) => {
             // Try image resolution
@@ -29,14 +29,14 @@ fn parse_resolution_param(param: &str) -> Result<TaskEncodeResolution, ()> {
 
             match image_res {
                 Ok(r) => {
-                    return Ok(TaskEncodeResolution {
+                    Ok(TaskEncodeResolution {
                         width: r.width,
                         height: r.height,
                         fps: 0,
-                    });
+                    })
                 }
                 Err(_) => {
-                    return Err(());
+                    Err(())
                 }
             }
         }
@@ -127,12 +127,8 @@ pub async fn run_cmd_media_add_resolution(
 
     let resolution_param_res = parse_resolution_param(&resolution);
 
-    let resolution_param: TaskEncodeResolution;
-
-    match resolution_param_res {
-        Ok(r) => {
-            resolution_param = r;
-        }
+    let resolution_param: TaskEncodeResolution = match resolution_param_res {
+        Ok(r) => r,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -147,11 +143,11 @@ pub async fn run_cmd_media_add_resolution(
             eprintln!("Invalid resolution parameter specified");
             process::exit(1);
         }
-    }
+    };
 
     // Call API
 
-    let res_str = resolution_param.to_string();
+    let res_str = resolution_param.to_resolution_string();
 
     let api_res = api_call_media_add_resolution(
         vault_url.clone(),
@@ -277,12 +273,8 @@ pub async fn run_cmd_media_remove_resolution(
 
     let resolution_param_res = parse_resolution_param(&resolution);
 
-    let resolution_param: TaskEncodeResolution;
-
-    match resolution_param_res {
-        Ok(r) => {
-            resolution_param = r;
-        }
+    let resolution_param: TaskEncodeResolution = match resolution_param_res {
+        Ok(r) => r,
         Err(_) => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -297,11 +289,11 @@ pub async fn run_cmd_media_remove_resolution(
             eprintln!("Invalid resolution parameter specified");
             process::exit(1);
         }
-    }
+    };
 
     // Call API
 
-    let res_str = resolution_param.to_string();
+    let res_str = resolution_param.to_resolution_string();
 
     let api_res = api_call_media_remove_resolution(
         vault_url.clone(),

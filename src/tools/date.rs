@@ -1,6 +1,6 @@
 // Date utils
 
-use chrono::{NaiveDateTime, DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 
 pub fn format_date(timestamp: i64) -> String {
     if timestamp == 0 {
@@ -12,10 +12,8 @@ pub fn format_date(timestamp: i64) -> String {
     match naive {
         Some(n) => {
             let d: DateTime<Utc> = DateTime::from_utc(n, Utc);
-            return d.format("%Y-%m-%d %H:%M:%S").to_string();
+            d.format("%Y-%m-%d %H:%M:%S").to_string()
         }
-        None => {
-            return "???".to_string();
-        },
+        None => "???".to_string(),
     }
 }

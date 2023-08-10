@@ -34,7 +34,7 @@ pub async fn run_cmd_import_media(
     global_opts: CommandGlobalOptions,
     path: String,
     album: Option<String>,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -149,16 +149,12 @@ pub async fn run_cmd_import_media(
 
     // Upload
 
-    let original_file_path: String;
-
-    match import_metadata.original {
-        Some(original_file) => {
-            original_file_path = std::path::Path::new(&path)
-                .join(&original_file)
-                .to_str()
-                .unwrap()
-                .to_string();
-        }
+    let original_file_path: String = match import_metadata.original {
+        Some(original_file) => std::path::Path::new(&path)
+            .join(&original_file)
+            .to_str()
+            .unwrap()
+            .to_string(),
         None => {
             if logout_after_operation {
                 let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
@@ -173,7 +169,7 @@ pub async fn run_cmd_import_media(
             eprintln!("Invalid metadata: No original file specified.");
             process::exit(1);
         }
-    }
+    };
 
     let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
 
@@ -257,125 +253,53 @@ pub async fn run_cmd_import_media(
 
     // Add tags
 
-    match import_metadata.tags {
-        Some(tags) => {
-            for tag in tags {
-                if global_opts.debug {
-                    eprintln!("Adding tag {tag} to {media_id_str}...");
+    if let Some(tags) = import_metadata.tags {
+        for tag in tags {
+            if global_opts.debug {
+                eprintln!("Adding tag {tag} to {media_id_str}...");
+            }
+
+            let api_tag_res = api_call_tag_add(
+                vault_url.clone(),
+                AddTagBody {
+                    media_id,
+                    tag_name: tag.clone(),
+                },
+                global_opts.debug,
+            )
+            .await;
+
+            match api_tag_res {
+                Ok(_) => {
+                    eprintln!("Added tag {tag} to {media_id_str}");
                 }
-
-                let api_tag_res = api_call_tag_add(
-                    vault_url.clone(),
-                    AddTagBody {
-                        media_id: media_id,
-                        tag_name: tag.clone(),
-                    },
-                    global_opts.debug,
-                )
-                .await;
-
-                match api_tag_res {
-                    Ok(_) => {
-                        eprintln!("Added tag {tag} to {media_id_str}");
-                    }
-                    Err(e) => {
-                        print_request_error(e);
-                    }
+                Err(e) => {
+                    print_request_error(e);
                 }
             }
         }
-        None => {}
     }
 
     // Set description
 
-    match import_metadata.description {
-        Some(description) => {
-            if !description.is_empty() {
-                let api_res = api_call_media_change_description(
-                    vault_url.clone(),
-                    media_id,
-                    MediaUpdateDescriptionBody {
-                        description: description.clone(),
-                    },
-                    global_opts.debug,
-                )
-                .await;
-
-                match api_res {
-                    Ok(_) => {
-                        let description_csv = to_csv_string(&description);
-
-                        eprintln!(
-                            "Successfully updated the description of {media_id_str}: {description_csv}"
-                        );
-                    }
-                    Err(e) => {
-                        print_request_error(e);
-                    }
-                }
-            }
-        }
-        None => {}
-    }
-
-    // Set extra configuration
-
-    match import_metadata.force_start_beginning {
-        Some(force_start_beginning) => {
-            if force_start_beginning {
-                let api_res = api_call_media_change_extra(
-                    vault_url.clone(),
-                    media_id,
-                    MediaUpdateExtraBody {
-                        force_start_beginning: force_start_beginning,
-                    },
-                    global_opts.debug,
-                )
-                .await;
-
-                match api_res {
-                    Ok(_) => {
-                        eprintln!("Successfully updated the force-start-beginning param of {media_id_str}: {force_start_beginning}");
-                    }
-                    Err(e) => {
-                        print_request_error(e);
-                    }
-                }
-            }
-        }
-        None => {}
-    }
-
-    // Set thumbnail
-
-    match import_metadata.thumbnail {
-        Some(thumbnail_file) => {
-            let thumbnail_file_path = std::path::Path::new(&path)
-                .join(&thumbnail_file)
-                .to_str()
-                .unwrap()
-                .to_string();
-
-            let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
-
-            let api_res = api_call_media_change_thumbnail(
+    if let Some(description) = import_metadata.description {
+        if !description.is_empty() {
+            let api_res = api_call_media_change_description(
                 vault_url.clone(),
                 media_id,
-                thumbnail_file_path.clone(),
+                MediaUpdateDescriptionBody {
+                    description: description.clone(),
+                },
                 global_opts.debug,
-                progress_printer,
             )
             .await;
 
             match api_res {
-                Ok(upload_res) => {
-                    eprintln!("Upload completed: {thumbnail_file_path}");
-
-                    let thumb_new_url = upload_res.url;
+                Ok(_) => {
+                    let description_csv = to_csv_string(&description);
 
                     eprintln!(
-                        "Successfully updated the thumbnail of {media_id_str}: {thumb_new_url}"
+                        "Successfully updated the description of {media_id_str}: {description_csv}"
                     );
                 }
                 Err(e) => {
@@ -383,208 +307,251 @@ pub async fn run_cmd_import_media(
                 }
             }
         }
-        None => {}
+    }
+
+    // Set extra configuration
+
+    if let Some(force_start_beginning) = import_metadata.force_start_beginning {
+        if force_start_beginning {
+            let api_res = api_call_media_change_extra(
+                vault_url.clone(),
+                media_id,
+                MediaUpdateExtraBody {
+                    force_start_beginning,
+                },
+                global_opts.debug,
+            )
+            .await;
+
+            match api_res {
+                Ok(_) => {
+                    eprintln!("Successfully updated the force-start-beginning param of {media_id_str}: {force_start_beginning}");
+                }
+                Err(e) => {
+                    print_request_error(e);
+                }
+            }
+        }
+    }
+
+    // Set thumbnail
+
+    if let Some(thumbnail_file) = import_metadata.thumbnail {
+        let thumbnail_file_path = std::path::Path::new(&path)
+            .join(&thumbnail_file)
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
+
+        let api_res = api_call_media_change_thumbnail(
+            vault_url.clone(),
+            media_id,
+            thumbnail_file_path.clone(),
+            global_opts.debug,
+            progress_printer,
+        )
+        .await;
+
+        match api_res {
+            Ok(upload_res) => {
+                eprintln!("Upload completed: {thumbnail_file_path}");
+
+                let thumb_new_url = upload_res.url;
+
+                eprintln!("Successfully updated the thumbnail of {media_id_str}: {thumb_new_url}");
+            }
+            Err(e) => {
+                print_request_error(e);
+            }
+        }
     }
 
     // Set extended description
 
-    match import_metadata.ext_desc {
-        Some(ext_desc_file) => {
-            let ext_desc_file_path = std::path::Path::new(&path)
-                .join(&ext_desc_file)
-                .to_str()
-                .unwrap()
-                .to_string();
+    if let Some(ext_desc_file) = import_metadata.ext_desc {
+        let ext_desc_file_path = std::path::Path::new(&path)
+            .join(&ext_desc_file)
+            .to_str()
+            .unwrap()
+            .to_string();
 
-            let ext_desc_read_res = tokio::fs::read_to_string(&ext_desc_file_path).await;
+        let ext_desc_read_res = tokio::fs::read_to_string(&ext_desc_file_path).await;
 
-            match ext_desc_read_res {
-                Ok(ext_desc) => {
-                    let api_res = api_call_media_change_extended_description(
-                        vault_url.clone(),
-                        media_id,
-                        MediaUpdateExtendedDescriptionBody { ext_desc: ext_desc },
-                        global_opts.debug,
-                    )
-                    .await;
+        match ext_desc_read_res {
+            Ok(ext_desc) => {
+                let api_res = api_call_media_change_extended_description(
+                    vault_url.clone(),
+                    media_id,
+                    MediaUpdateExtendedDescriptionBody { ext_desc },
+                    global_opts.debug,
+                )
+                .await;
 
-                    match api_res {
-                        Ok(_) => {
-                            eprintln!(
-                                "Successfully updated the extended description of {media_id_str}"
-                            );
-                        }
-                        Err(e) => {
-                            print_request_error(e);
-                        }
+                match api_res {
+                    Ok(_) => {
+                        eprintln!(
+                            "Successfully updated the extended description of {media_id_str}"
+                        );
+                    }
+                    Err(e) => {
+                        print_request_error(e);
                     }
                 }
-                Err(e) => {
-                    let e_str = e.to_string();
-                    eprintln!("Error reading the file {path}: {e_str}");
-                }
+            }
+            Err(e) => {
+                let e_str = e.to_string();
+                eprintln!("Error reading the file {path}: {e_str}");
             }
         }
-        None => {}
     }
 
     // Set time slices
 
-    match import_metadata.time_slices {
-        Some(time_slices) => {
-            if !time_slices.is_empty() {
-                let api_res = api_call_media_change_time_slices(
-                    vault_url.clone(),
-                    media_id,
-                    time_slices,
-                    global_opts.debug,
-                )
-                .await;
+    if let Some(time_slices) = import_metadata.time_slices {
+        if !time_slices.is_empty() {
+            let api_res = api_call_media_change_time_slices(
+                vault_url.clone(),
+                media_id,
+                time_slices,
+                global_opts.debug,
+            )
+            .await;
 
-                match api_res {
-                    Ok(_) => {
-                        eprintln!("Successfully updated the time_slices of {media_id_str}");
-                    }
-                    Err(e) => {
-                        print_request_error(e);
-                    }
+            match api_res {
+                Ok(_) => {
+                    eprintln!("Successfully updated the time_slices of {media_id_str}");
+                }
+                Err(e) => {
+                    print_request_error(e);
                 }
             }
         }
-        None => {}
     }
 
     // Set image notes
 
-    match import_metadata.notes {
-        Some(notes_file) => {
-            let notes_file_path = std::path::Path::new(&path)
-                .join(&notes_file)
-                .to_str()
-                .unwrap()
-                .to_string();
+    if let Some(notes_file) = import_metadata.notes {
+        let notes_file_path = std::path::Path::new(&path)
+            .join(&notes_file)
+            .to_str()
+            .unwrap()
+            .to_string();
 
-            let image_notes_read_res = tokio::fs::read_to_string(&notes_file_path).await;
+        let image_notes_read_res = tokio::fs::read_to_string(&notes_file_path).await;
 
-            match image_notes_read_res {
-                Ok(image_notes_str) => {
-                    let parsed_notes_res: Result<Vec<ImageNote>, _> =
-                        serde_json::from_str(&image_notes_str);
+        match image_notes_read_res {
+            Ok(image_notes_str) => {
+                let parsed_notes_res: Result<Vec<ImageNote>, _> =
+                    serde_json::from_str(&image_notes_str);
 
-                    match parsed_notes_res {
-                        Ok(image_notes) => {
-                            let api_res = api_call_media_change_notes(
-                                vault_url.clone(),
-                                media_id,
-                                image_notes,
-                                global_opts.debug,
-                            )
-                            .await;
+                match parsed_notes_res {
+                    Ok(image_notes) => {
+                        let api_res = api_call_media_change_notes(
+                            vault_url.clone(),
+                            media_id,
+                            image_notes,
+                            global_opts.debug,
+                        )
+                        .await;
 
-                            match api_res {
-                                Ok(_) => {
-                                    eprintln!(
-                                        "Successfully updated the image notes of {media_id_str}"
-                                    );
-                                }
-                                Err(e) => {
-                                    print_request_error(e);
-                                }
+                        match api_res {
+                            Ok(_) => {
+                                eprintln!("Successfully updated the image notes of {media_id_str}");
+                            }
+                            Err(e) => {
+                                print_request_error(e);
                             }
                         }
-                        Err(_) => {
-                            eprintln!("Error: The file {path} does not contain a valid set of image notes");
-                        }
+                    }
+                    Err(_) => {
+                        eprintln!(
+                            "Error: The file {path} does not contain a valid set of image notes"
+                        );
                     }
                 }
-                Err(e) => {
-                    let e_str = e.to_string();
-                    eprintln!("Error reading the file {path}: {e_str}");
-                }
+            }
+            Err(e) => {
+                let e_str = e.to_string();
+                eprintln!("Error reading the file {path}: {e_str}");
             }
         }
-        None => {}
     }
 
     // Subtitles
 
-    match import_metadata.subtitles {
-        Some(subtitles) => {
-            for subtitle in subtitles {
-                let sub_id = subtitle.id.clone();
-                let subtitle_file_path = std::path::Path::new(&path)
-                    .join(&subtitle.file)
-                    .to_str()
-                    .unwrap()
-                    .to_string();
+    if let Some(subtitles) = import_metadata.subtitles {
+        for subtitle in subtitles {
+            let sub_id = subtitle.id.clone();
+            let subtitle_file_path = std::path::Path::new(&path)
+                .join(&subtitle.file)
+                .to_str()
+                .unwrap()
+                .to_string();
 
-                let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
+            let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
 
-                let api_res = api_call_media_set_subtitle(
-                    vault_url.clone(),
-                    media_id,
-                    sub_id.clone(),
-                    subtitle.name.clone(),
-                    subtitle_file_path.clone(),
-                    global_opts.debug,
-                    progress_printer,
-                )
-                .await;
+            let api_res = api_call_media_set_subtitle(
+                vault_url.clone(),
+                media_id,
+                sub_id.clone(),
+                subtitle.name.clone(),
+                subtitle_file_path.clone(),
+                global_opts.debug,
+                progress_printer,
+            )
+            .await;
 
-                match api_res {
-                    Ok(_) => {
-                        eprintln!("Upload completed: {subtitle_file_path}");
-                        eprintln!(
-                            "Successfully uploaded new subtitles file for {media_id_str}: {sub_id}"
-                        );
-                    }
-                    Err(e) => {
-                        print_request_error(e);
-                    }
+            match api_res {
+                Ok(_) => {
+                    eprintln!("Upload completed: {subtitle_file_path}");
+                    eprintln!(
+                        "Successfully uploaded new subtitles file for {media_id_str}: {sub_id}"
+                    );
+                }
+                Err(e) => {
+                    print_request_error(e);
                 }
             }
         }
-        None => {}
     }
 
     // Audios
 
-    match import_metadata.audios {
-        Some(audios) => {
-            for audio in audios {
-                let track_id = audio.id.clone();
-                let audio_file_path = std::path::Path::new(&path)
-                    .join(&audio.file)
-                    .to_str()
-                    .unwrap()
-                    .to_string();
+    if let Some(audios) = import_metadata.audios {
+        for audio in audios {
+            let track_id = audio.id.clone();
+            let audio_file_path = std::path::Path::new(&path)
+                .join(&audio.file)
+                .to_str()
+                .unwrap()
+                .to_string();
 
-                let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
+            let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
 
-                let api_res = api_call_media_set_audio(
-                    vault_url.clone(),
-                    media_id,
-                    track_id.clone(),
-                    audio.name.clone(),
-                    audio_file_path.clone(),
-                    global_opts.debug,
-                    progress_printer,
-                )
-                .await;
+            let api_res = api_call_media_set_audio(
+                vault_url.clone(),
+                media_id,
+                track_id.clone(),
+                audio.name.clone(),
+                audio_file_path.clone(),
+                global_opts.debug,
+                progress_printer,
+            )
+            .await;
 
-                match api_res {
-                    Ok(_) => {
-                        eprintln!("Upload completed: {audio_file_path}");
-                        eprintln!(
-                            "Successfully uploaded new audio track file for {media_id_str}: {track_id}"
-                        );
-                    }
-                    Err(e) => {
-                        print_request_error(e);
-                    }
+            match api_res {
+                Ok(_) => {
+                    eprintln!("Upload completed: {audio_file_path}");
+                    eprintln!(
+                        "Successfully uploaded new audio track file for {media_id_str}: {track_id}"
+                    );
+                }
+                Err(e) => {
+                    print_request_error(e);
                 }
             }
         }
-        None => {}
     }
 }

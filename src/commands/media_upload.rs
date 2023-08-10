@@ -8,7 +8,7 @@ use std::{
 use unicode_width::UnicodeWidthStr;
 
 use crate::{
-    api::{api_call_get_media, api_call_upload_media, api_call_tag_add},
+    api::{api_call_get_media, api_call_tag_add, api_call_upload_media},
     commands::logout::do_logout,
     models::{parse_tag_name, AddTagBody},
     tools::{
@@ -113,17 +113,21 @@ pub async fn run_cmd_upload_media(
                 let mut encryption_progress_printer = EncryptionProgressPrinter::new();
 
                 encryption_progress_printer.progress_start();
-    
+
                 let mut encryption_done = false;
-    
+
                 while !encryption_done {
-                    let api_get_res =
-                        api_call_get_media(vault_url.clone(), upload_res.media_id, global_opts.debug).await;
-    
+                    let api_get_res = api_call_get_media(
+                        vault_url.clone(),
+                        upload_res.media_id,
+                        global_opts.debug,
+                    )
+                    .await;
+
                     match api_get_res {
                         Ok(media_data) => {
                             encryption_done = media_data.ready;
-    
+
                             if !encryption_done {
                                 encryption_progress_printer
                                     .progress_update(media_data.ready_p.unwrap_or(0) as u64, 100);
@@ -136,7 +140,7 @@ pub async fn run_cmd_upload_media(
                             encryption_progress_printer.progress_finish();
                             if logout_after_operation {
                                 let logout_res = do_logout(global_opts, vault_url.clone()).await;
-    
+
                                 match logout_res {
                                     Ok(_) => {}
                                     Err(_) => {
@@ -155,8 +159,8 @@ pub async fn run_cmd_upload_media(
 
             let tags_param: Vec<String> = tags
                 .unwrap_or("".to_string())
-                .split(" ")
-                .map(|t| parse_tag_name(t))
+                .split(' ')
+                .map(parse_tag_name)
                 .filter(|t| !t.is_empty())
                 .collect();
 
@@ -223,22 +227,22 @@ pub struct UploaderProgressPrinter {
 
 impl UploaderProgressPrinter {
     pub fn new() -> UploaderProgressPrinter {
-        return UploaderProgressPrinter { last_line_width: 0 };
+        UploaderProgressPrinter { last_line_width: 0 }
     }
 }
 
 impl ProgressReceiver for UploaderProgressPrinter {
-    fn progress_start(self: &mut Self) -> () {
+    fn progress_start(&mut self) {
         let line = "Uploading...".to_string();
         eprint!("{line}");
         self.last_line_width = line.width();
     }
 
-    fn progress_finish(self: &mut Self) -> () {
-        eprint!("\n")
+    fn progress_finish(&mut self) {
+        eprintln!()
     }
 
-    fn progress_update(self: &mut Self, loaded: u64, total: u64) -> () {
+    fn progress_update(&mut self, loaded: u64, total: u64) {
         let mut line: String;
         if total > 0 {
             let progress_percent: f64 = (loaded as f64) * 100.0 / (total as f64);
@@ -267,28 +271,28 @@ pub struct EncryptionProgressPrinter {
 
 impl EncryptionProgressPrinter {
     pub fn new() -> EncryptionProgressPrinter {
-        return EncryptionProgressPrinter { last_line_width: 0 };
+        EncryptionProgressPrinter { last_line_width: 0 }
     }
 }
 
 impl ProgressReceiver for EncryptionProgressPrinter {
-    fn progress_start(self: &mut Self) -> () {
+    fn progress_start(&mut self) {
         let line = "Encrypting...".to_string();
         eprint!("{line}");
         self.last_line_width = line.width();
     }
 
-    fn progress_finish(self: &mut Self) -> () {
-        eprint!("\n")
+    fn progress_finish(&mut self) {
+        eprintln!()
     }
 
-    fn progress_update(self: &mut Self, loaded: u64, total: u64) -> () {
+    fn progress_update(&mut self, loaded: u64, total: u64) {
         let mut line: String;
         if total > 0 {
             let progress_percent: f64 = (loaded as f64) * 100.0 / (total as f64);
             line = format!("Encrypting... ({progress_percent:.2}%)");
         } else {
-            line = format!("Encrypting...");
+            line = "Encrypting...".to_string();
         }
 
         let line_width = line.width();

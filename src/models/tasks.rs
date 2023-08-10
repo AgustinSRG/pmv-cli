@@ -15,17 +15,11 @@ pub enum TaskType {
 }
 
 impl TaskType {
-    pub fn to_string(&self) -> String {
+    pub fn to_type_string(self) -> String {
         match self {
-            TaskType::EncodeOriginal => {
-                return "Encode original".to_string();
-            }
-            TaskType::EncodeResolution => {
-                return "Encode resolution".to_string();
-            }
-            TaskType::GenerateVideoPreviews => {
-                return "Generate video previews".to_string();
-            }
+            TaskType::EncodeOriginal => "Encode original".to_string(),
+            TaskType::EncodeResolution => "Encode resolution".to_string(),
+            TaskType::GenerateVideoPreviews => "Generate video previews".to_string(),
         }
     }
 }
@@ -43,14 +37,14 @@ pub struct TaskEncodeResolution {
 }
 
 impl TaskEncodeResolution {
-    pub fn to_string(&self) -> String {
+    pub fn to_resolution_string(&self) -> String {
         let w = self.width;
         let h = self.height;
         let fps = self.fps;
         if fps > 0 {
-            return format!("{w}x{h}:{fps}");
+            format!("{w}x{h}:{fps}")
         } else {
-            return format!("{w}x{h}");
+            format!("{w}x{h}")
         }
     }
 }
@@ -83,32 +77,16 @@ pub enum TaskStage {
 }
 
 impl TaskStage {
-    pub fn to_string(&self) -> String {
+    pub fn to_stage_string(&self) -> String {
         match self {
-            TaskStage::Pending => {
-                return "Pending".to_string();
-            }
-            TaskStage::Prepare => {
-                return "Prepare".to_string();
-            }
-            TaskStage::Copy => {
-                return "Copy".to_string();
-            }
-            TaskStage::Probe => {
-                return "Probe".to_string();
-            }
-            TaskStage::Encode => {
-                return "Encode".to_string();
-            }
-            TaskStage::Encrypt => {
-                return "Encrypt".to_string();
-            }
-            TaskStage::Update => {
-                return "Update".to_string();
-            }
-            TaskStage::Finish => {
-                return "Finish".to_string();
-            }
+            TaskStage::Pending => "Pending".to_string(),
+            TaskStage::Prepare => "Prepare".to_string(),
+            TaskStage::Copy => "Copy".to_string(),
+            TaskStage::Probe => "Probe".to_string(),
+            TaskStage::Encode => "Encode".to_string(),
+            TaskStage::Encrypt => "Encrypt".to_string(),
+            TaskStage::Update => "Update".to_string(),
+            TaskStage::Finish => "Finish".to_string(),
         }
     }
 
@@ -159,29 +137,23 @@ pub struct Task {
 pub fn get_task_type_string(task: &Task) -> String {
     match task.task_type {
         TaskType::EncodeOriginal | TaskType::GenerateVideoPreviews => {
-            return task.task_type.to_string();
+            task.task_type.to_type_string()
         }
-        TaskType::EncodeResolution => {
-            match &task.resolution {
-                Some(r) => {
-                    let task_type = task.task_type.to_string();
-                    let resolution = r.to_string();
-                    return format!("{task_type}: {resolution}")
-                }
-                None => {
-                    return task.task_type.to_string();
-                }
+        TaskType::EncodeResolution => match &task.resolution {
+            Some(r) => {
+                let task_type = task.task_type.to_type_string();
+                let resolution = r.to_resolution_string();
+                format!("{task_type}: {resolution}")
             }
-        }
+            None => task.task_type.to_type_string(),
+        },
     }
 }
 
 pub fn get_task_status_string(task: &Task) -> String {
     if task.running {
         match task.stage {
-            TaskStage::Pending => {
-                return "Pending".to_string();
-            }
+            TaskStage::Pending => "Pending".to_string(),
             TaskStage::Prepare
             | TaskStage::Copy
             | TaskStage::Probe
@@ -190,18 +162,18 @@ pub fn get_task_status_string(task: &Task) -> String {
             | TaskStage::Update
             | TaskStage::Finish => {
                 let stage_number = task.stage.to_stage_number() + 1;
-                let stage_name = task.stage.to_string();
+                let stage_name = task.stage.to_stage_string();
 
                 if task.stage_progress > 0.0 {
                     let p = task.stage_progress;
-                    return format!("Stage {stage_number}/7: {stage_name} ({p:.2}%)");
+                    format!("Stage {stage_number}/7: {stage_name} ({p:.2}%)")
                 } else {
-                    return format!("Stage {stage_number}/7: {stage_name}");
+                    format!("Stage {stage_number}/7: {stage_name}")
                 }
             }
         }
     } else {
-        return "Pending".to_string();
+        "Pending".to_string()
     }
 }
 
@@ -226,5 +198,5 @@ pub fn get_task_remaining_time_string(task: &Task) -> String {
 
     let estimated_remaining_time_seconds = ((task_time * 100.0 / p) - task_time) / 1000.0;
 
-    return duration_to_string(estimated_remaining_time_seconds);
+    duration_to_string(estimated_remaining_time_seconds)
 }

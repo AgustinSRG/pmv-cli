@@ -1,6 +1,6 @@
 // Account command
 
-use std::{process};
+use std::process;
 
 use clap::Subcommand;
 
@@ -56,7 +56,7 @@ pub enum AccountCommand {
     },
 }
 
-pub async fn run_account_cmd(global_opts: CommandGlobalOptions, cmd: AccountCommand) -> () {
+pub async fn run_account_cmd(global_opts: CommandGlobalOptions, cmd: AccountCommand) {
     match cmd {
         AccountCommand::Context => {
             run_cmd_context(global_opts).await;
@@ -82,7 +82,7 @@ pub async fn run_account_cmd(global_opts: CommandGlobalOptions, cmd: AccountComm
     }
 }
 
-pub async fn run_cmd_context(global_opts: CommandGlobalOptions) -> () {
+pub async fn run_cmd_context(global_opts: CommandGlobalOptions) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -166,7 +166,7 @@ pub async fn run_cmd_context(global_opts: CommandGlobalOptions) -> () {
     }
 }
 
-pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username: String) -> () {
+pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -247,7 +247,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
     }
 }
 
-pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) -> () {
+pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -367,7 +367,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) -> () {
     }
 }
 
-pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool) -> () {
+pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -417,17 +417,16 @@ pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool)
             println!("total: {total}");
 
             if csv {
-                println!("");
+                println!();
                 println!("\"Username\",\"Permissions\"");
 
                 for account in accounts {
                     let row_username = to_csv_string(&account.username);
-                    let row_permissions: String;
-                    if account.write {
-                        row_permissions = to_csv_string("read, write");
+                    let row_permissions: String = if account.write {
+                        to_csv_string("read, write")
                     } else {
-                        row_permissions = to_csv_string("read");
-                    }
+                        to_csv_string("read")
+                    };
                     println!("{row_username},{row_permissions}");
                 }
             } else {
@@ -471,7 +470,7 @@ pub async fn run_cmd_create_account(
     global_opts: CommandGlobalOptions,
     username: String,
     allow_write: bool,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -584,7 +583,7 @@ pub async fn run_cmd_create_account(
     }
 }
 
-pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username: String) -> () {
+pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {

@@ -7,7 +7,8 @@ use clap::Subcommand;
 use crate::{
     api::{
         api_call_album_add_media, api_call_album_remove_media, api_call_get_album,
-        api_call_get_tags, api_call_search, api_call_tag_add, api_call_tag_remove, api_call_media_delete,
+        api_call_get_tags, api_call_media_delete, api_call_search, api_call_tag_add,
+        api_call_tag_remove,
     },
     models::{
         parse_media_type, parse_tag_name, parse_tag_search_mode, tags_map_from_list,
@@ -55,6 +56,7 @@ pub enum BatchCommand {
     Delete,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn run_cmd_batch_operation(
     global_opts: CommandGlobalOptions,
     title: Option<String>,
@@ -65,7 +67,7 @@ pub async fn run_cmd_batch_operation(
     album: Option<String>,
     everything: bool,
     batch_command: BatchCommand,
-) -> () {
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
 
     if url_parse_res.is_err() {
@@ -194,12 +196,12 @@ pub async fn run_cmd_batch_operation(
 
     if tags.is_some() {
         let tags_str = tags.unwrap();
-        let tag_names = tags_str.split(" ");
+        let tag_names = tags_str.split(' ');
 
         let mut tag_ids: Vec<u64> = Vec::new();
 
         for tag_name in tag_names {
-            let parsed_tag_name = parse_tag_name(&tag_name);
+            let parsed_tag_name = parse_tag_name(tag_name);
             if parsed_tag_name.is_empty() {
                 continue;
             }
@@ -281,27 +283,25 @@ pub async fn run_cmd_batch_operation(
             eprintln!("Error: The --everything option is incompatible with any other filter.");
             process::exit(1);
         }
-    } else {
-        if tags_filter_mode == TagSearchMode::All
-            && tag_param.is_none()
-            && media_type_filter.is_none()
-            && description_filter.is_empty()
-            && title_filter.is_empty()
-            && album_filter.is_none()
-        {
-            if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+    } else if tags_filter_mode == TagSearchMode::All
+        && tag_param.is_none()
+        && media_type_filter.is_none()
+        && description_filter.is_empty()
+        && title_filter.is_empty()
+        && album_filter.is_none()
+    {
+        if logout_after_operation {
+            let logout_res = do_logout(global_opts, vault_url.clone()).await;
 
-                match logout_res {
-                    Ok(_) => {}
-                    Err(_) => {
-                        process::exit(1);
-                    }
+            match logout_res {
+                Ok(_) => {}
+                Err(_) => {
+                    process::exit(1);
                 }
             }
-            eprintln!("Error: You must specify at least one filter. Use the --everything option if you want to apply the operation to the entire vault.");
-            process::exit(1);
         }
+        eprintln!("Error: You must specify at least one filter. Use the --everything option if you want to apply the operation to the entire vault.");
+        process::exit(1);
     }
 
     // Search results and push them into a list
@@ -394,7 +394,7 @@ async fn apply_batch_operation(
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
     batch_command: BatchCommand,
-) -> () {
+) {
     if media_list.is_empty() {
         if logout_after_operation {
             let logout_res = do_logout(global_opts, vault_url.clone()).await;
@@ -482,15 +482,15 @@ async fn batch_add_tags(
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
     tags: String,
-) -> () {
+) {
     let n_total = media_list.len();
 
     let mut tags_to_add: Vec<String> = Vec::new();
 
-    let tag_names = tags.split(" ");
+    let tag_names = tags.split(' ');
 
     for tag_name in tag_names {
-        let parsed_tag_name = parse_tag_name(&tag_name);
+        let parsed_tag_name = parse_tag_name(tag_name);
         if parsed_tag_name.is_empty() {
             continue;
         }
@@ -583,7 +583,7 @@ async fn batch_remove_tags(
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
     tags: String,
-) -> () {
+) {
     let n_total = media_list.len();
 
     // Get tags
@@ -612,10 +612,10 @@ async fn batch_remove_tags(
 
     let mut tags_to_remove: Vec<u64> = Vec::new();
 
-    let tag_names = tags.split(" ");
+    let tag_names = tags.split(' ');
 
     for tag_name in tag_names {
-        let parsed_tag_name = parse_tag_name(&tag_name);
+        let parsed_tag_name = parse_tag_name(tag_name);
         if parsed_tag_name.is_empty() {
             continue;
         }
@@ -685,7 +685,7 @@ async fn batch_remove_tags(
         n_done += 1;
 
         for tag in tags_to_remove.iter() {
-            let tag_name = tags_map.get(&tag).unwrap_or(&default_tag_name);
+            let tag_name = tags_map.get(tag).unwrap_or(&default_tag_name);
 
             let api_res = api_call_tag_remove(
                 vault_url.clone(),
@@ -729,7 +729,7 @@ async fn batch_add_to_album(
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
     album: String,
-) -> () {
+) {
     let n_total = media_list.len();
 
     let album_id_res = parse_identifier(&album);
@@ -823,7 +823,7 @@ async fn batch_remove_from_album(
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
     album: String,
-) -> () {
+) {
     let n_total = media_list.len();
 
     let album_id_res = parse_identifier(&album);
@@ -918,7 +918,7 @@ async fn batch_delete(
     vault_url: VaultURI,
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
-) -> () {
+) {
     let n_total = media_list.len();
 
     // Ask confirmation
@@ -949,8 +949,7 @@ async fn batch_delete(
     for media in media_list {
         n_done += 1;
 
-        let api_res =
-            api_call_media_delete(vault_url.clone(), media.id, global_opts.debug).await;
+        let api_res = api_call_media_delete(vault_url.clone(), media.id, global_opts.debug).await;
 
         match api_res {
             Ok(_) => {

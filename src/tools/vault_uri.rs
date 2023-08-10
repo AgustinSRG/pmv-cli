@@ -61,20 +61,18 @@ pub fn parse_vault_uri(uri: String) -> Result<VaultURI, VaultURIParseError> {
                 });
             }
 
-            return Ok(VaultURI::LoginURI {
+            Ok(VaultURI::LoginURI {
                 base_url: u,
                 password: pass,
                 username,
-            });
+            })
         }
-        Err(e) => {
-            return Err(VaultURIParseError::URLError(e));
-        }
+        Err(e) => Err(VaultURIParseError::URLError(e)),
     }
 }
 
 impl VaultURI {
-    pub fn to_string(&self) -> String {
+    pub fn to_url_string(&self) -> String {
         match self {
             VaultURI::LoginURI {
                 base_url,
@@ -82,14 +80,14 @@ impl VaultURI {
                 password,
             } => {
                 let mut base_url_c = base_url.clone();
-                base_url_c.set_username(&username).unwrap();
-                base_url_c.set_password(Some(&password)).unwrap();
-                return base_url_c.to_string();
+                base_url_c.set_username(username).unwrap();
+                base_url_c.set_password(Some(password)).unwrap();
+                base_url_c.to_string()
             }
             VaultURI::SessionURI { base_url, session } => {
                 let mut base_url_c = base_url.clone();
-                base_url_c.set_password(Some(&session)).unwrap();
-                return base_url_c.to_string();
+                base_url_c.set_password(Some(session)).unwrap();
+                base_url_c.to_string()
             }
         }
     }
@@ -100,15 +98,11 @@ impl VaultURI {
                 base_url,
                 username: _,
                 password: _,
-            } => {
-                return base_url.to_string();
-            }
+            } => base_url.to_string(),
             VaultURI::SessionURI {
                 base_url,
                 session: _,
-            } => {
-                return base_url.to_string();
-            }
+            } => base_url.to_string(),
         }
     }
 
@@ -118,15 +112,11 @@ impl VaultURI {
                 base_url,
                 username: _,
                 password: _,
-            } => {
-                return base_url.clone();
-            }
+            } => base_url.clone(),
             VaultURI::SessionURI {
                 base_url,
                 session: _,
-            } => {
-                return base_url.clone();
-            }
+            } => base_url.clone(),
         }
     }
 
@@ -137,13 +127,13 @@ impl VaultURI {
                 username: _,
                 password: _,
             } => {
-                return true;
+                true
             }
             VaultURI::SessionURI {
                 base_url: _,
                 session: _,
             } => {
-                return false;
+                false
             }
         }
     }
@@ -154,15 +144,11 @@ impl VaultURI {
                 base_url: _,
                 username: _,
                 password: _,
-            } => {
-                return false;
-            }
+            } => false,
             VaultURI::SessionURI {
                 base_url: _,
                 session: _,
-            } => {
-                return true;
-            }
+            } => true,
         }
     }
 
@@ -172,9 +158,7 @@ impl VaultURI {
                 base_url: _,
                 username: _,
                 password: _,
-            } => {
-                return path.to_string();
-            }
+            } => path.to_string(),
             VaultURI::SessionURI { base_url, session } => {
                 let cloned_base_url = base_url.clone();
 
@@ -182,13 +166,13 @@ impl VaultURI {
 
                 match resolved_url_res {
                     Ok(mut resolved_url) => {
-                        resolved_url.query_pairs_mut().append_pair("session_token", &session);
+                        resolved_url
+                            .query_pairs_mut()
+                            .append_pair("session_token", session);
 
-                        return resolved_url.to_string();
+                        resolved_url.to_string()
                     }
-                    Err(_) => {
-                        return path.to_string();
-                    }
+                    Err(_) => path.to_string(),
                 }
             }
         }
