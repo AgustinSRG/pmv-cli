@@ -1,5 +1,8 @@
 # Command line interface client for PersonalMediaVault
 
+[![Rust](https://github.com/AgustinSRG/pmv-cli/actions/workflows/rust.yml/badge.svg)](https://github.com/AgustinSRG/pmv-cli/actions/workflows/rust.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
+
 This project is a command line interface client to interact with [PersonalMediaVault](https://github.com/AgustinSRG/PersonalMediaVault).
 
 For regular use cases, you may use the web interface instead. However, a CLi tool may be useful when:
@@ -28,7 +31,13 @@ Check the [manual](./MANUAL.md) for a detailed explanation of each available opt
 
 ## Build from source code
 
-In order to build the source code, you will need the rust compiler.
+In order to build the source code, you will need the rust compiler installed in your system.
+
+Also, due to dependencies on libssl, you will need to install it:
+
+```sh
+sudo apt install libssl-dev
+```
 
 Type the following command to compile:
 
