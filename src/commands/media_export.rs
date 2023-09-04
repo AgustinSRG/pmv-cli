@@ -7,7 +7,7 @@ use unicode_width::UnicodeWidthStr;
 use crate::{
     api::{api_call_get_media, api_call_get_tags},
     commands::logout::do_logout,
-    models::{tags_map_from_list, MediaMetadata, MediaMetadataExport, MediaSubtitleOrAudioExport},
+    models::{tags_map_from_list, MediaMetadata, MediaMetadataExport, MediaSubtitleOrAudioExport, MediaAttachmentExport},
     tools::{
         ask_user, do_get_download_request, ensure_login, parse_identifier, parse_vault_uri,
         ProgressReceiver, VaultURI,
@@ -184,6 +184,7 @@ pub async fn run_cmd_export_media(
         time_slices: None,
         subtitles: None,
         audios: None,
+        attachments: None,
     };
 
     out_metadata.title = Some(media_metadata.title.clone());
@@ -426,6 +427,43 @@ pub async fn run_cmd_export_media(
         }
 
         out_metadata.audios = Some(audios_export);
+    }
+
+    // Attachments
+
+    if let Some(attachments) = media_metadata.attachments {
+        let mut attachment_counter = 0;
+        let mut attachments_export: Vec<MediaAttachmentExport> = Vec::new();
+        for att in attachments {
+            attachment_counter += 1;
+            let att_name = att.name.clone();
+            let d_name = format!("attachment {att_name}");
+            let ext = get_extension_from_url(&att.url, "bin");
+            let out_file_name = format!("attachment_{attachment_counter}.{ext}");
+
+            let att_out_path = std::path::Path::new(&out_folder)
+                .join(&out_file_name)
+                .to_str()
+                .unwrap()
+                .to_string();
+
+            download_media_asset(
+                global_opts.clone(),
+                vault_url.clone(),
+                &d_name,
+                att.url,
+                att_out_path,
+                logout_after_operation,
+            )
+            .await;
+
+            attachments_export.push(MediaAttachmentExport{
+                name: att.name.clone(),
+                file: out_file_name,
+            });
+        }
+
+        out_metadata.attachments = Some(attachments_export);
     }
 
     // After everything is downloaded, write metadata

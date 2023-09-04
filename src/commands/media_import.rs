@@ -7,16 +7,17 @@ use std::{
 
 use crate::{
     api::{
-        api_call_get_media, api_call_media_change_description,
+        api_call_get_media, api_call_media_add_attachment, api_call_media_change_description,
         api_call_media_change_extended_description, api_call_media_change_extra,
         api_call_media_change_notes, api_call_media_change_thumbnail,
-        api_call_media_change_time_slices, api_call_media_set_audio, api_call_media_set_subtitle,
-        api_call_tag_add, api_call_upload_media,
+        api_call_media_change_time_slices, api_call_media_rename_attachment,
+        api_call_media_set_audio, api_call_media_set_subtitle, api_call_tag_add,
+        api_call_upload_media,
     },
     commands::logout::do_logout,
     models::{
-        AddTagBody, ImageNote, MediaMetadataExport, MediaUpdateDescriptionBody,
-        MediaUpdateExtendedDescriptionBody, MediaUpdateExtraBody,
+        AddTagBody, ImageNote, MediaMetadataExport, MediaRenameAttachmentBody,
+        MediaUpdateDescriptionBody, MediaUpdateExtendedDescriptionBody, MediaUpdateExtraBody,
     },
     tools::{
         ensure_login, identifier_to_string, parse_identifier, parse_vault_uri, to_csv_string,
@@ -547,6 +548,63 @@ pub async fn run_cmd_import_media(
                     eprintln!(
                         "Successfully uploaded new audio track file for {media_id_str}: {track_id}"
                     );
+                }
+                Err(e) => {
+                    print_request_error(e);
+                }
+            }
+        }
+    }
+
+    // Attachments
+
+    if let Some(attachments) = import_metadata.attachments {
+        for att in attachments {
+            let att_name = att.name.clone();
+            let att_file_path = std::path::Path::new(&path)
+                .join(&att.file)
+                .to_str()
+                .unwrap()
+                .to_string();
+
+            let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
+
+            let api_res = api_call_media_add_attachment(
+                vault_url.clone(),
+                media_id,
+                att_file_path.clone(),
+                global_opts.debug,
+                progress_printer,
+            )
+            .await;
+
+            match api_res {
+                Ok(uploaded_att) => {
+                    eprintln!("Upload completed: {att_file_path}");
+
+                    // Rename the attachment
+
+                    let api_rename_res = api_call_media_rename_attachment(
+                        vault_url.clone(),
+                        media_id,
+                        MediaRenameAttachmentBody {
+                            id: uploaded_att.id,
+                            name: att.name.clone(),
+                        },
+                        global_opts.debug,
+                    )
+                    .await;
+
+                    match api_rename_res {
+                        Ok(_) => {
+                            eprintln!(
+                            "Successfully uploaded new attachment file for {media_id_str}: {att_name}"
+                        );
+                        }
+                        Err(e) => {
+                            print_request_error(e);
+                        }
+                    }
                 }
                 Err(e) => {
                     print_request_error(e);

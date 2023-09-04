@@ -21,6 +21,7 @@ use logout::*;
 mod media;
 use media::*;
 
+mod media_attachments;
 mod media_audio_tracks;
 mod media_download;
 mod media_export;

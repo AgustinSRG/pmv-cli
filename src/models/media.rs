@@ -136,6 +136,9 @@ pub struct MediaMetadata {
     #[serde(rename = "audios")]
     pub audios: Option<Vec<MediaAudioTrack>>,
 
+    #[serde(rename = "attachments")]
+    pub attachments: Option<Vec<MediaAttachment>>,
+
     #[serde(rename = "time_slices")]
     pub time_slices: Option<Vec<MediaTimeSlice>>,
 
@@ -183,6 +186,9 @@ pub struct MediaMetadataExport {
 
     #[serde(rename = "audios")]
     pub audios: Option<Vec<MediaSubtitleOrAudioExport>>,
+
+    #[serde(rename = "attachments")]
+    pub attachments: Option<Vec<MediaAttachmentExport>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -190,6 +196,15 @@ pub struct MediaSubtitleOrAudioExport {
     #[serde(rename = "id")]
     pub id: String,
 
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(rename = "file")]
+    pub file: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaAttachmentExport {
     #[serde(rename = "name")]
     pub name: String,
 
@@ -250,6 +265,21 @@ pub struct MediaAudioTrack {
 
     #[serde(rename = "name")]
     pub name: String,
+
+    #[serde(rename = "url")]
+    pub url: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaAttachment {
+    #[serde(rename = "id")]
+    pub id: u64,
+
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(rename = "size")]
+    pub size: u64,
 
     #[serde(rename = "url")]
     pub url: String,
@@ -401,4 +431,13 @@ pub struct ImageNote {
 pub struct MediaUpdateThumbnailResponse {
     #[serde(rename = "url")]
     pub url: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaRenameAttachmentBody {
+    #[serde(rename = "id")]
+    pub id: u64,
+
+    #[serde(rename = "name")]
+    pub name: String,
 }

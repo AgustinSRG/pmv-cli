@@ -7,7 +7,7 @@ use unicode_width::UnicodeWidthStr;
 use crate::{
     api::api_call_get_media,
     commands::logout::do_logout,
-    models::{ConfigImageResolution, ConfigVideoResolution, TaskEncodeResolution},
+    models::{ConfigImageResolution, ConfigVideoResolution, TaskEncodeResolution, MediaAttachment},
     tools::{
         ask_user, do_get_download_request, ensure_login, parse_identifier, parse_vault_uri,
         ProgressReceiver, VaultURI,
@@ -26,6 +26,7 @@ pub enum DownloadAssetType {
     VideoPreview(u32),
     Notes,
     ExtendedDescription,
+    Attachment(u64),
 }
 
 pub fn parse_asset_type(s: &str) -> Result<DownloadAssetType, ()> {
@@ -86,6 +87,12 @@ pub fn parse_asset_type(s: &str) -> Result<DownloadAssetType, ()> {
         let i_res = val.parse::<u32>();
         match i_res {
             Ok(i) => Ok(DownloadAssetType::VideoPreview(i)),
+            Err(_) => Err(()),
+        }
+    } else if parts_type == "attachment" || parts_type == "att" {
+        let i_res = val.parse::<u64>();
+        match i_res {
+            Ok(i) => Ok(DownloadAssetType::Attachment(i)),
             Err(_) => Err(()),
         }
     } else {
@@ -634,6 +641,56 @@ pub async fn run_cmd_download_media(
                         process::exit(1);
                     }
                 },
+                DownloadAssetType::Attachment(att_id) => {
+                    match media_data.attachments {
+                        Some(attachments) => {
+                            let mut att_opt: Option<MediaAttachment> = None;
+
+                            for a in attachments {
+                                if a.id == att_id {
+                                    att_opt = Some(a);
+                                    break;
+                                }
+                            }
+
+                            match att_opt {
+                                Some(att) => {
+                                    download_path = att.url;
+                                },
+                                None => {
+                                    if logout_after_operation {
+                                        let logout_res =
+                                            do_logout(global_opts.clone(), vault_url.clone()).await;
+            
+                                        match logout_res {
+                                            Ok(_) => {}
+                                            Err(_) => {
+                                                process::exit(1);
+                                            }
+                                        }
+                                    }
+                                    eprintln!("Attachment not found");
+                                    process::exit(1);
+                                },
+                            }
+                        },
+                        None => {
+                            if logout_after_operation {
+                                let logout_res =
+                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+    
+                                match logout_res {
+                                    Ok(_) => {}
+                                    Err(_) => {
+                                        process::exit(1);
+                                    }
+                                }
+                            }
+                            eprintln!("This media asset has no attachments");
+                            process::exit(1);
+                        },
+                    }
+                }
             }
 
             if download_path.is_empty() {

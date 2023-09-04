@@ -4,10 +4,11 @@ use std::sync::{Arc, Mutex};
 
 use crate::{
     models::{
-        ImageNote, MediaAssetSizeStats, MediaAudioTrack, MediaMetadata, MediaResolution,
-        MediaSubtitle, MediaTimeSlice, MediaUpdateDescriptionBody,
-        MediaUpdateExtendedDescriptionBody, MediaUpdateExtraBody, MediaUpdateThumbnailResponse,
-        MediaUpdateTitleBody, MediaUploadResponse, TaskEncodeResolution,
+        ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata,
+        MediaRenameAttachmentBody, MediaResolution, MediaSubtitle, MediaTimeSlice,
+        MediaUpdateDescriptionBody, MediaUpdateExtendedDescriptionBody, MediaUpdateExtraBody,
+        MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaUploadResponse,
+        TaskEncodeResolution,
     },
     tools::{
         do_get_request, do_multipart_upload_request, do_post_request, ProgressReceiver,
@@ -423,6 +424,69 @@ pub async fn api_call_media_remove_audio(
     url_path.push_str(&("?id=".to_owned() + &urlencoding::encode(&audio_id)));
 
     do_post_request(url, url_path, "".to_string(), debug).await?;
+
+    Ok(())
+}
+
+pub async fn api_call_media_add_attachment(
+    url: VaultURI,
+    media: u64,
+    file_path: String,
+    debug: bool,
+    progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
+) -> Result<MediaAttachment, RequestError> {
+    let url_path = format!("/api/media/{media}/attachments/add");
+
+    let body_str = do_multipart_upload_request(
+        url,
+        url_path,
+        "file".to_string(),
+        file_path,
+        debug,
+        progress_receiver,
+    )
+    .await?;
+
+    let parsed_body: Result<MediaAttachment, _> = serde_json::from_str(&body_str);
+
+    if parsed_body.is_err() {
+        return Err(RequestError::Json {
+            message: parsed_body.err().unwrap().to_string(),
+            body: body_str,
+        });
+    }
+
+    Ok(parsed_body.unwrap())
+}
+
+pub async fn api_call_media_remove_attachment(
+    url: VaultURI,
+    media: u64,
+    att_id: u64,
+    debug: bool,
+) -> Result<(), RequestError> {
+    let mut url_path = format!("/api/media/{media}/attachments/remove");
+
+    url_path.push_str(&("?id=".to_owned() + &att_id.to_string()));
+
+    do_post_request(url, url_path, "".to_string(), debug).await?;
+
+    Ok(())
+}
+
+pub async fn api_call_media_rename_attachment(
+    url: VaultURI,
+    media: u64,
+    req_body: MediaRenameAttachmentBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    do_post_request(
+        url,
+        format!("/api/media/{media}/attachments/rename"),
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
 
     Ok(())
 }

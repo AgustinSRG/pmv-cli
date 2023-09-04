@@ -23,6 +23,10 @@ use crate::{
 
 use super::{
     get_vault_url,
+    media_attachments::{
+        run_cmd_delete_media_attachment, run_cmd_rename_media_attachment,
+        run_cmd_upload_media_attachment,
+    },
     media_audio_tracks::{run_cmd_delete_media_audio_track, run_cmd_upload_media_audio_track},
     media_download::run_cmd_download_media,
     media_export::run_cmd_export_media,
@@ -56,7 +60,7 @@ pub enum MediaCommand {
         /// Media asset ID
         media: String,
 
-        /// Asset to download. Examples: original, thumbnail, resolution:1280x720:30, sub:ID, audio:ID, notes, preview:Index, ext_desc
+        /// Asset to download. Examples: original, thumbnail, resolution:1280x720:30, sub:ID, audio:ID, attachment:ID, notes, preview:Index, ext_desc
         asset: Option<String>,
 
         /// Path to the file to download the asset into
@@ -247,6 +251,36 @@ pub enum MediaCommand {
         track_id: String,
     },
 
+    /// Adds attachment file
+    AddAttachment {
+        /// Media asset ID
+        media: String,
+
+        /// Path to the attachment file
+        path: String,
+    },
+
+    /// Renames attachment file
+    RenameAttachment {
+        /// Media asset ID
+        media: String,
+
+        /// Attachment ID
+        attachment_id: String,
+
+        /// New name for the attachment file
+        name: String,
+    },
+
+    /// Removes attachment file
+    RemoveAttachment {
+        /// Media asset ID
+        media: String,
+
+        /// Attachment ID
+        attachment_id: String,
+    },
+
     /// Re-Encodes a media asset
     ReEncode {
         /// Media asset ID
@@ -352,6 +386,22 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         }
         MediaCommand::Import { path, album } => {
             run_cmd_import_media(global_opts, path, album).await;
+        }
+        MediaCommand::AddAttachment { media, path } => {
+            run_cmd_upload_media_attachment(global_opts, media, path).await;
+        }
+        MediaCommand::RenameAttachment {
+            media,
+            attachment_id,
+            name,
+        } => {
+            run_cmd_rename_media_attachment(global_opts, media, attachment_id, name).await;
+        }
+        MediaCommand::RemoveAttachment {
+            media,
+            attachment_id,
+        } => {
+            run_cmd_delete_media_attachment(global_opts, media, attachment_id).await;
         }
     }
 }
@@ -586,6 +636,23 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
                         println!("\t  Name: {sub_name}");
                         let url = sub.url;
                         println!("\t  File: {url}");
+                    }
+                }
+            }
+
+            if let Some(attachments) = media_data.attachments {
+                if !attachments.is_empty() {
+                    println!("Attachments:");
+
+                    for att in attachments {
+                        let att_id = att.id;
+                        println!("\t- Attachment ID: {att_id}");
+                        let att_name = to_csv_string(&att.name);
+                        println!("\t  Name: {att_name}");
+                        let url = att.url;
+                        println!("\t  File: {url}");
+                        let size = render_size_bytes(att.size);
+                        println!("\t  Size: {size}");
                     }
                 }
             }
