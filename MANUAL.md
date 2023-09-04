@@ -245,6 +245,9 @@ pmv-cli media <COMMAND>
 | [remove-subtitle](#command-media-remove-subtitle) | Removes subtitle file from a media asset |
 | [add-audio](#command-media-add-audio) | Adds audio track file to a media asset |
 | [remove-audio](#command-media-remove-audio) | Removes audio track file from a media asset |
+| [add-attachment](#command-media-add-attachment) | Adds attachment file |
+| [rename-attachment](#command-media-rename-attachment) | Renames attachment file |
+| [remove-attachment](#command-media-remove-attachment) | Removes attachment file |
 | [re-encode](#command-media-re-encode) | Re-Encodes a media asset |
 | [delete](#command-media-delete) | Deletes a media asset |
 
@@ -313,7 +316,7 @@ pmv-cli media download [OPTIONS] <MEDIA> [ASSET]
 | Argument | Description |
 | --- | --- |
 | `<MEDIA>` | Media asset ID |
-| `[ASSET]` | Asset to download. Examples: original, thumbnail, resolution:1280x720:30, sub:ID, audio:ID, notes, preview:Index, ext_desc |
+| `[ASSET]` | Asset to download. Examples: original, thumbnail, resolution:1280x720:30, sub:ID, audio:ID, attachment:ID, notes, preview:Index, ext_desc |
 
 <ins>**Options:**</ins>
 
@@ -713,6 +716,76 @@ pmv-cli media remove-audio <MEDIA> <TRACK_ID>
 | --- | --- |
 | `<MEDIA>` | Media asset ID |
 | `<TRACK_ID>` | Audio track file identifier. Example: EN |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media add-attachment
+
+Adds attachment file
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media add-attachment <MEDIA> <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<PATH>` | Path to the attachment file |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media rename-attachment
+
+Renames attachment file
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media rename-attachment <MEDIA> <ATTACHMENT_ID> <NAME>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<ATTACHMENT_ID>` | Attachment ID |
+| `<NAME>` | New name for the attachment file |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media remove-attachment
+
+Removes attachment file
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media remove-attachment <MEDIA> <ATTACHMENT_ID>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<ATTACHMENT_ID>` | Attachment ID |
 
 <ins>**Options:**</ins>
 
