@@ -21,7 +21,7 @@ pub async fn run_cmd_export_media(
     media: String,
     output: Option<String>,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -40,7 +40,7 @@ pub async fn run_cmd_export_media(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -55,7 +55,7 @@ pub async fn run_cmd_export_media(
         Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -71,11 +71,11 @@ pub async fn run_cmd_export_media(
 
     // Get tags
 
-    let tags_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
+    let tags_res = api_call_get_tags(&vault_url, global_opts.debug).await;
 
     if tags_res.is_err() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -95,14 +95,14 @@ pub async fn run_cmd_export_media(
     // Get media metadata
 
     let api_get_media_res =
-        api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+        api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
     let media_metadata: MediaMetadata = match api_get_media_res {
         Ok(meta) => meta,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -134,7 +134,7 @@ pub async fn run_cmd_export_media(
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -156,7 +156,7 @@ pub async fn run_cmd_export_media(
                 let e_str = e.to_string();
                 eprintln!("Could not create the folder {out_folder}. Error: {e_str}");
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -218,7 +218,7 @@ pub async fn run_cmd_export_media(
             if original_asset_url.is_empty() {
                 eprintln!("The media has no original asset. It's probably still pending for upload or encryption.");
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -248,7 +248,7 @@ pub async fn run_cmd_export_media(
 
             download_media_asset(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 "original",
                 original_asset_url,
                 original_out_path,
@@ -261,7 +261,7 @@ pub async fn run_cmd_export_media(
         None => {
             eprintln!("The media has no original asset. It's probably still pending for upload or encryption.");
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -288,7 +288,7 @@ pub async fn run_cmd_export_media(
 
         download_media_asset(
             global_opts.clone(),
-            vault_url.clone(),
+            &vault_url,
             "thumbnail",
             media_metadata.thumbnail,
             thumbnail_out_path,
@@ -314,7 +314,7 @@ pub async fn run_cmd_export_media(
 
             download_media_asset(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 "extended description",
                 ext_desc_url,
                 ext_desc_out_path,
@@ -341,7 +341,7 @@ pub async fn run_cmd_export_media(
 
             download_media_asset(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 "image notes",
                 img_notes_url,
                 notes_out_path,
@@ -373,7 +373,7 @@ pub async fn run_cmd_export_media(
 
             download_media_asset(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 &d_name,
                 subtitle.url,
                 sub_out_path,
@@ -411,7 +411,7 @@ pub async fn run_cmd_export_media(
 
             download_media_asset(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 &d_name,
                 audio.url,
                 audio_out_path,
@@ -449,7 +449,7 @@ pub async fn run_cmd_export_media(
 
             download_media_asset(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 &d_name,
                 att.url,
                 att_out_path,
@@ -482,7 +482,7 @@ pub async fn run_cmd_export_media(
     match meta_write_res {
         Ok(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -497,7 +497,7 @@ pub async fn run_cmd_export_media(
             let e_str = e.to_string();
             eprintln!("Could not write metadata file: {metadata_out_path}. Error: {e_str}");
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -513,7 +513,7 @@ pub async fn run_cmd_export_media(
 
 pub async fn download_media_asset(
     global_opts: CommandGlobalOptions,
-    vault_url: VaultURI,
+    vault_url: &VaultURI,
     download_name: &str,
     download_path: String,
     out_file: String,
@@ -522,7 +522,7 @@ pub async fn download_media_asset(
     let mut progress_printer = DownloaderProgressPrinter::new(download_name);
 
     let download_result = do_get_download_request(
-        vault_url.clone(),
+        vault_url,
         download_path,
         out_file.clone(),
         global_opts.debug,
@@ -537,7 +537,7 @@ pub async fn download_media_asset(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}

@@ -65,7 +65,7 @@ pub async fn run_task_cmd(global_opts: CommandGlobalOptions, cmd: TaskCommand) {
 }
 
 pub async fn run_cmd_list_tasks(global_opts: CommandGlobalOptions, csv: bool) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -84,7 +84,7 @@ pub async fn run_cmd_list_tasks(global_opts: CommandGlobalOptions, csv: bool) {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -94,12 +94,12 @@ pub async fn run_cmd_list_tasks(global_opts: CommandGlobalOptions, csv: bool) {
 
     // Call API
 
-    let api_res = api_call_get_tasks(vault_url.clone(), global_opts.debug).await;
+    let api_res = api_call_get_tasks(&vault_url, global_opts.debug).await;
 
     match api_res {
         Ok(tasks) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -156,7 +156,7 @@ pub async fn run_cmd_list_tasks(global_opts: CommandGlobalOptions, csv: bool) {
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -171,7 +171,7 @@ pub async fn run_cmd_list_tasks(global_opts: CommandGlobalOptions, csv: bool) {
 }
 
 pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -190,7 +190,7 @@ pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -205,7 +205,7 @@ pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) {
         Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -221,12 +221,12 @@ pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) {
 
     // Call API
 
-    let api_res = api_call_get_task(vault_url.clone(), task_id, global_opts.debug).await;
+    let api_res = api_call_get_task(&vault_url, task_id, global_opts.debug).await;
 
     match api_res {
         Ok(task) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -259,7 +259,7 @@ pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) {
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -274,7 +274,7 @@ pub async fn run_cmd_get_task(global_opts: CommandGlobalOptions, task: String) {
 }
 
 pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -293,7 +293,7 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -314,7 +314,7 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) {
     let mut monitoring_started = false;
 
     loop {
-        let api_res = api_call_get_tasks(vault_url.clone(), false).await;
+        let api_res = api_call_get_tasks(&vault_url, false).await;
 
         match api_res {
             Ok(tasks) => {
@@ -374,7 +374,7 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) {
                 } => {
                     if status == StatusCode::UNAUTHORIZED && monitoring_started {
                         if logout_after_operation {
-                            do_logout(global_opts, vault_url.clone())
+                            do_logout(&global_opts, &vault_url)
                                 .await
                                 .unwrap_or(());
                         }
@@ -382,7 +382,7 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) {
                     } else {
                         print_request_error(e);
                         if logout_after_operation {
-                            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -403,7 +403,7 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) {
                 | crate::tools::RequestError::FileSystem(_) => {
                     print_request_error(e);
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -436,7 +436,7 @@ pub fn spawn_termination_thread(
             match r {
                 Ok(_) => {
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -457,7 +457,7 @@ pub fn spawn_termination_thread(
 }
 
 pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: String) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -476,7 +476,7 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -491,7 +491,7 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
         Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -513,7 +513,7 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
     let mut clear_line_str = "".to_string();
 
     loop {
-        let api_res = api_call_get_task(vault_url.clone(), task_id, false).await;
+        let api_res = api_call_get_task(&vault_url, task_id, false).await;
 
         match api_res {
             Ok(task) => {
@@ -535,7 +535,7 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
             }
             Err(e) => {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}

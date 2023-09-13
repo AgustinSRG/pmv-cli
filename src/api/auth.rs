@@ -6,7 +6,7 @@ use crate::{
 };
 
 pub async fn api_call_login(
-    url: VaultURI,
+    url: &VaultURI,
     credentials: Credentials,
     debug: bool,
 ) -> Result<LoginResult, RequestError> {
@@ -30,7 +30,7 @@ pub async fn api_call_login(
     Ok(parsed_body.unwrap())
 }
 
-pub async fn api_call_logout(url: VaultURI, debug: bool) -> Result<(), RequestError> {
+pub async fn api_call_logout(url: &VaultURI, debug: bool) -> Result<(), RequestError> {
     do_post_request(url, "/api/auth/logout".to_string(), "".to_string(), debug).await?;
 
     Ok(())

@@ -5,7 +5,7 @@ use crate::{
     tools::{do_get_request, do_post_request, RequestError, VaultURI},
 };
 
-pub async fn api_call_get_tags(url: VaultURI, debug: bool) -> Result<Vec<MediaTag>, RequestError> {
+pub async fn api_call_get_tags(url: &VaultURI, debug: bool) -> Result<Vec<MediaTag>, RequestError> {
     let body_str = do_get_request(url, "/api/tags".to_string(), debug).await?;
 
     let parsed_body: Result<Vec<MediaTag>, _> = serde_json::from_str(&body_str);
@@ -21,7 +21,7 @@ pub async fn api_call_get_tags(url: VaultURI, debug: bool) -> Result<Vec<MediaTa
 }
 
 pub async fn api_call_tag_add(
-    url: VaultURI,
+    url: &VaultURI,
     req_body: AddTagBody,
     debug: bool,
 ) -> Result<MediaTag, RequestError> {
@@ -46,7 +46,7 @@ pub async fn api_call_tag_add(
 }
 
 pub async fn api_call_tag_remove(
-    url: VaultURI,
+    url: &VaultURI,
     req_body: RemoveTagBody,
     debug: bool,
 ) -> Result<(), RequestError> {

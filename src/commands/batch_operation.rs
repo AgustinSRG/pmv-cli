@@ -68,7 +68,7 @@ pub async fn run_cmd_batch_operation(
     everything: bool,
     batch_command: BatchCommand,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -87,7 +87,7 @@ pub async fn run_cmd_batch_operation(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -97,11 +97,11 @@ pub async fn run_cmd_batch_operation(
 
     // Get tags
 
-    let tags_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
+    let tags_res = api_call_get_tags(&vault_url, global_opts.debug).await;
 
     if tags_res.is_err() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -128,7 +128,7 @@ pub async fn run_cmd_batch_operation(
         match album_id_res {
             Ok(_) => {
                 let album_get_api_res =
-                    api_call_get_album(vault_url.clone(), album_id_res.unwrap(), global_opts.debug)
+                    api_call_get_album(&vault_url, album_id_res.unwrap(), global_opts.debug)
                         .await;
 
                 match album_get_api_res {
@@ -143,7 +143,7 @@ pub async fn run_cmd_batch_operation(
             }
             Err(_) => {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -175,7 +175,7 @@ pub async fn run_cmd_batch_operation(
             }
             Err(_) => {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -208,7 +208,7 @@ pub async fn run_cmd_batch_operation(
 
             if !tags_reverse_map.contains_key(&parsed_tag_name) {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -247,7 +247,7 @@ pub async fn run_cmd_batch_operation(
             }
             Err(_) => {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -271,7 +271,7 @@ pub async fn run_cmd_batch_operation(
             || album_filter.is_some()
         {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -291,7 +291,7 @@ pub async fn run_cmd_batch_operation(
         && album_filter.is_none()
     {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -329,7 +329,7 @@ pub async fn run_cmd_batch_operation(
             while !advanced_search_finished {
                 // Call API
                 let api_res = api_call_search(
-                    vault_url.clone(),
+                    &vault_url,
                     tag_param.clone(),
                     false,
                     page,
@@ -360,7 +360,7 @@ pub async fn run_cmd_batch_operation(
                     Err(e) => {
                         print_request_error(e);
                         if logout_after_operation {
-                            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -397,7 +397,7 @@ async fn apply_batch_operation(
 ) {
     if media_list.is_empty() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -414,7 +414,7 @@ async fn apply_batch_operation(
         BatchCommand::AddTags { tags } => {
             batch_add_tags(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 logout_after_operation,
                 media_list,
                 tags,
@@ -424,7 +424,7 @@ async fn apply_batch_operation(
         BatchCommand::RemoveTags { tags } => {
             batch_remove_tags(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 logout_after_operation,
                 media_list,
                 tags,
@@ -434,7 +434,7 @@ async fn apply_batch_operation(
         BatchCommand::AddToAlbum { album } => {
             batch_add_to_album(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 logout_after_operation,
                 media_list,
                 album,
@@ -444,7 +444,7 @@ async fn apply_batch_operation(
         BatchCommand::RemoveFromAlbum { album } => {
             batch_remove_from_album(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 logout_after_operation,
                 media_list,
                 album,
@@ -454,7 +454,7 @@ async fn apply_batch_operation(
         BatchCommand::Delete => {
             batch_delete(
                 global_opts.clone(),
-                vault_url.clone(),
+                &vault_url,
                 logout_after_operation,
                 media_list,
             )
@@ -463,7 +463,7 @@ async fn apply_batch_operation(
     }
 
     if logout_after_operation {
-        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+        let logout_res = do_logout(&global_opts, &vault_url).await;
 
         match logout_res {
             Ok(_) => {}
@@ -478,7 +478,7 @@ async fn apply_batch_operation(
 
 async fn batch_add_tags(
     global_opts: CommandGlobalOptions,
-    vault_url: VaultURI,
+    vault_url: &VaultURI,
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
     tags: String,
@@ -500,7 +500,7 @@ async fn batch_add_tags(
 
     if tags_to_add.is_empty() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -521,7 +521,7 @@ async fn batch_add_tags(
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -542,7 +542,7 @@ async fn batch_add_tags(
         n_done += 1;
         for tag in tags_to_add.iter() {
             let api_res = api_call_tag_add(
-                vault_url.clone(),
+                vault_url,
                 AddTagBody {
                     media_id: media.id,
                     tag_name: tag.to_string(),
@@ -561,7 +561,7 @@ async fn batch_add_tags(
                 Err(e) => {
                     print_request_error(e);
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -579,7 +579,7 @@ async fn batch_add_tags(
 
 async fn batch_remove_tags(
     global_opts: CommandGlobalOptions,
-    vault_url: VaultURI,
+    vault_url: &VaultURI,
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
     tags: String,
@@ -588,11 +588,11 @@ async fn batch_remove_tags(
 
     // Get tags
 
-    let tags_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
+    let tags_res = api_call_get_tags(vault_url, global_opts.debug).await;
 
     if tags_res.is_err() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -622,7 +622,7 @@ async fn batch_remove_tags(
 
         if !tags_reverse_map.contains_key(&parsed_tag_name) {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -640,7 +640,7 @@ async fn batch_remove_tags(
 
     if tags_to_remove.is_empty() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -663,7 +663,7 @@ async fn batch_remove_tags(
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -688,7 +688,7 @@ async fn batch_remove_tags(
             let tag_name = tags_map.get(tag).unwrap_or(&default_tag_name);
 
             let api_res = api_call_tag_remove(
-                vault_url.clone(),
+                vault_url,
                 RemoveTagBody {
                     media_id: media.id,
                     tag_id: *tag,
@@ -707,7 +707,7 @@ async fn batch_remove_tags(
                 Err(e) => {
                     print_request_error(e);
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -725,7 +725,7 @@ async fn batch_remove_tags(
 
 async fn batch_add_to_album(
     global_opts: CommandGlobalOptions,
-    vault_url: VaultURI,
+    vault_url: &VaultURI,
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
     album: String,
@@ -743,7 +743,7 @@ async fn batch_add_to_album(
         }
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -765,7 +765,7 @@ async fn batch_add_to_album(
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -786,7 +786,7 @@ async fn batch_add_to_album(
         n_done += 1;
 
         let api_res = api_call_album_add_media(
-            vault_url.clone(),
+            vault_url,
             album_id,
             AlbumMediaBody { media_id: media.id },
             global_opts.debug,
@@ -802,7 +802,7 @@ async fn batch_add_to_album(
             Err(e) => {
                 print_request_error(e);
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -819,7 +819,7 @@ async fn batch_add_to_album(
 
 async fn batch_remove_from_album(
     global_opts: CommandGlobalOptions,
-    vault_url: VaultURI,
+    vault_url: &VaultURI,
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
     album: String,
@@ -837,7 +837,7 @@ async fn batch_remove_from_album(
         }
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -861,7 +861,7 @@ async fn batch_remove_from_album(
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -882,7 +882,7 @@ async fn batch_remove_from_album(
         n_done += 1;
 
         let api_res = api_call_album_remove_media(
-            vault_url.clone(),
+            vault_url,
             album_id,
             AlbumMediaBody { media_id: media.id },
             global_opts.debug,
@@ -898,7 +898,7 @@ async fn batch_remove_from_album(
             Err(e) => {
                 print_request_error(e);
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -915,7 +915,7 @@ async fn batch_remove_from_album(
 
 async fn batch_delete(
     global_opts: CommandGlobalOptions,
-    vault_url: VaultURI,
+    vault_url: &VaultURI,
     logout_after_operation: bool,
     media_list: Vec<MediaListItem>,
 ) {
@@ -929,7 +929,7 @@ async fn batch_delete(
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -949,7 +949,7 @@ async fn batch_delete(
     for media in media_list {
         n_done += 1;
 
-        let api_res = api_call_media_delete(vault_url.clone(), media.id, global_opts.debug).await;
+        let api_res = api_call_media_delete(vault_url, media.id, global_opts.debug).await;
 
         match api_res {
             Ok(_) => {
@@ -960,7 +960,7 @@ async fn batch_delete(
             Err(e) => {
                 print_request_error(e);
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}

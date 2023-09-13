@@ -5,7 +5,7 @@ use crate::{
     tools::{do_get_request, RequestError, VaultURI},
 };
 
-pub async fn api_call_get_tasks(url: VaultURI, debug: bool) -> Result<Vec<Task>, RequestError> {
+pub async fn api_call_get_tasks(url: &VaultURI, debug: bool) -> Result<Vec<Task>, RequestError> {
     let body_str = do_get_request(url, "/api/tasks".to_string(), debug).await?;
 
     let parsed_body: Result<Vec<Task>, _> = serde_json::from_str(&body_str);
@@ -21,7 +21,7 @@ pub async fn api_call_get_tasks(url: VaultURI, debug: bool) -> Result<Vec<Task>,
 }
 
 pub async fn api_call_get_task(
-    url: VaultURI,
+    url: &VaultURI,
     task: u64,
     debug: bool,
 ) -> Result<Task, RequestError> {

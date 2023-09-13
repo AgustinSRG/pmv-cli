@@ -83,7 +83,7 @@ pub async fn run_account_cmd(global_opts: CommandGlobalOptions, cmd: AccountComm
 }
 
 pub async fn run_cmd_context(global_opts: CommandGlobalOptions) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -102,7 +102,7 @@ pub async fn run_cmd_context(global_opts: CommandGlobalOptions) {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -112,12 +112,12 @@ pub async fn run_cmd_context(global_opts: CommandGlobalOptions) {
 
     // Call API
 
-    let api_res = api_call_context(vault_url.clone(), global_opts.debug).await;
+    let api_res = api_call_context(&vault_url, global_opts.debug).await;
 
     match api_res {
         Ok(context) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -152,7 +152,7 @@ pub async fn run_cmd_context(global_opts: CommandGlobalOptions) {
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -167,7 +167,7 @@ pub async fn run_cmd_context(global_opts: CommandGlobalOptions) {
 }
 
 pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username: String) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -186,7 +186,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -206,7 +206,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
     // Call API
 
     let api_res = api_call_change_username(
-        vault_url.clone(),
+        &vault_url,
         Credentials {
             username: username.clone(),
             password,
@@ -218,7 +218,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
     match api_res {
         Ok(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -233,7 +233,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -248,7 +248,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
 }
 
 pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -267,7 +267,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -287,7 +287,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) {
 
     if new_password != new_password_c {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -302,7 +302,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) {
 
     if new_password.is_empty() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -326,7 +326,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) {
     // Call API
 
     let api_res = api_call_change_password(
-        vault_url.clone(),
+        &vault_url,
         ChangePasswordBody {
             old_password: password,
             password: new_password,
@@ -338,7 +338,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) {
     match api_res {
         Ok(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -353,7 +353,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) {
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -368,7 +368,7 @@ pub async fn run_cmd_change_password(global_opts: CommandGlobalOptions) {
 }
 
 pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -387,7 +387,7 @@ pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool)
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -397,12 +397,12 @@ pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool)
 
     // Call API
 
-    let api_res = api_call_list_accounts(vault_url.clone(), global_opts.debug).await;
+    let api_res = api_call_list_accounts(&vault_url, global_opts.debug).await;
 
     match api_res {
         Ok(accounts) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -452,7 +452,7 @@ pub async fn run_cmd_list_accounts(global_opts: CommandGlobalOptions, csv: bool)
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -471,7 +471,7 @@ pub async fn run_cmd_create_account(
     username: String,
     allow_write: bool,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -490,7 +490,7 @@ pub async fn run_cmd_create_account(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -510,7 +510,7 @@ pub async fn run_cmd_create_account(
 
     if new_password != new_password_c {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -525,7 +525,7 @@ pub async fn run_cmd_create_account(
 
     if new_password.is_empty() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -541,7 +541,7 @@ pub async fn run_cmd_create_account(
     // Call API
 
     let api_res = api_call_create_account(
-        vault_url.clone(),
+        &vault_url,
         AccountCreateBody {
             username: username.clone(),
             password: new_password,
@@ -554,7 +554,7 @@ pub async fn run_cmd_create_account(
     match api_res {
         Ok(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -569,7 +569,7 @@ pub async fn run_cmd_create_account(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -584,7 +584,7 @@ pub async fn run_cmd_create_account(
 }
 
 pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username: String) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -603,7 +603,7 @@ pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username:
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -619,7 +619,7 @@ pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username:
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -635,7 +635,7 @@ pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username:
     // Call API
 
     let api_res = api_call_delete_account(
-        vault_url.clone(),
+        &vault_url,
         AccountDeleteBody {
             username: username.clone(),
         },
@@ -646,7 +646,7 @@ pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username:
     match api_res {
         Ok(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -661,7 +661,7 @@ pub async fn run_cmd_delete_account(global_opts: CommandGlobalOptions, username:
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}

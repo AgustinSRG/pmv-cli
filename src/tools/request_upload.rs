@@ -113,7 +113,7 @@ impl std::io::Read for UploadProgressReporterSync {
 }
 
 pub async fn do_multipart_upload_request(
-    uri: VaultURI,
+    uri: &VaultURI,
     path: String,
     field: String,
     file_path: String,

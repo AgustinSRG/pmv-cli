@@ -122,7 +122,7 @@ pub async fn run_config_cmd(global_opts: CommandGlobalOptions, cmd: ConfigComman
 }
 
 pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -141,7 +141,7 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -151,12 +151,12 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) {
 
     // Call API
 
-    let api_res = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res = api_call_get_config(&vault_url, global_opts.debug).await;
 
     match api_res {
         Ok(config) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -216,7 +216,7 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) {
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -231,7 +231,7 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) {
 }
 
 pub async fn run_cmd_config_get_css(global_opts: CommandGlobalOptions) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -250,7 +250,7 @@ pub async fn run_cmd_config_get_css(global_opts: CommandGlobalOptions) {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -260,12 +260,12 @@ pub async fn run_cmd_config_get_css(global_opts: CommandGlobalOptions) {
 
     // Call API
 
-    let api_res = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res = api_call_get_config(&vault_url, global_opts.debug).await;
 
     match api_res {
         Ok(config) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -282,7 +282,7 @@ pub async fn run_cmd_config_get_css(global_opts: CommandGlobalOptions) {
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -297,7 +297,7 @@ pub async fn run_cmd_config_get_css(global_opts: CommandGlobalOptions) {
 }
 
 pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: String) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -316,7 +316,7 @@ pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: 
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -326,14 +326,14 @@ pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: 
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -355,7 +355,7 @@ pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: 
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -364,7 +364,7 @@ pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: 
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -379,7 +379,7 @@ pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: 
 }
 
 pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max_tasks: i32) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -398,7 +398,7 @@ pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -408,14 +408,14 @@ pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -437,7 +437,7 @@ pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -446,7 +446,7 @@ pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -464,7 +464,7 @@ pub async fn run_cmd_config_set_encoding_threads(
     global_opts: CommandGlobalOptions,
     encoding_threads: i32,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -483,7 +483,7 @@ pub async fn run_cmd_config_set_encoding_threads(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -493,14 +493,14 @@ pub async fn run_cmd_config_set_encoding_threads(
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -522,7 +522,7 @@ pub async fn run_cmd_config_set_encoding_threads(
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -531,7 +531,7 @@ pub async fn run_cmd_config_set_encoding_threads(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -549,7 +549,7 @@ pub async fn run_cmd_config_set_video_previews_interval(
     global_opts: CommandGlobalOptions,
     interval_seconds: i32,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -568,7 +568,7 @@ pub async fn run_cmd_config_set_video_previews_interval(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -578,14 +578,14 @@ pub async fn run_cmd_config_set_video_previews_interval(
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -607,7 +607,7 @@ pub async fn run_cmd_config_set_video_previews_interval(
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -623,7 +623,7 @@ pub async fn run_cmd_config_set_video_previews_interval(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -638,7 +638,7 @@ pub async fn run_cmd_config_set_video_previews_interval(
 }
 
 pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path: String) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -657,7 +657,7 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -667,14 +667,14 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -705,7 +705,7 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
             eprintln!("Error reading the file {file_path} | Error: {e_str}");
 
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -721,7 +721,7 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -730,7 +730,7 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -745,7 +745,7 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
 }
 
 pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -764,7 +764,7 @@ pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) {
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -774,14 +774,14 @@ pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) {
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -802,7 +802,7 @@ pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) {
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -824,7 +824,7 @@ pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) {
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -833,7 +833,7 @@ pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) {
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -851,7 +851,7 @@ pub async fn run_cmd_config_add_video_resolution(
     global_opts: CommandGlobalOptions,
     resolution: String,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -870,7 +870,7 @@ pub async fn run_cmd_config_add_video_resolution(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -880,14 +880,14 @@ pub async fn run_cmd_config_add_video_resolution(
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -908,7 +908,7 @@ pub async fn run_cmd_config_add_video_resolution(
         Err(_) => {
             eprintln!("Invalid video resolution specified: {resolution}");
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -933,7 +933,7 @@ pub async fn run_cmd_config_add_video_resolution(
     if already_exists {
         eprintln!("The video resolution already exists in the configuration: {resolution}");
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -954,7 +954,7 @@ pub async fn run_cmd_config_add_video_resolution(
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -963,7 +963,7 @@ pub async fn run_cmd_config_add_video_resolution(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -981,7 +981,7 @@ pub async fn run_cmd_config_remove_video_resolution(
     global_opts: CommandGlobalOptions,
     resolution: String,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -1000,7 +1000,7 @@ pub async fn run_cmd_config_remove_video_resolution(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -1010,14 +1010,14 @@ pub async fn run_cmd_config_remove_video_resolution(
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -1039,7 +1039,7 @@ pub async fn run_cmd_config_remove_video_resolution(
         Err(_) => {
             eprintln!("Invalid video resolution specified: {resolution}");
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -1064,7 +1064,7 @@ pub async fn run_cmd_config_remove_video_resolution(
     if !already_exists {
         eprintln!("The video resolution was not found in the configuration: {resolution}");
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -1085,7 +1085,7 @@ pub async fn run_cmd_config_remove_video_resolution(
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -1094,7 +1094,7 @@ pub async fn run_cmd_config_remove_video_resolution(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -1112,7 +1112,7 @@ pub async fn run_cmd_config_add_image_resolution(
     global_opts: CommandGlobalOptions,
     resolution: String,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -1131,7 +1131,7 @@ pub async fn run_cmd_config_add_image_resolution(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -1141,14 +1141,14 @@ pub async fn run_cmd_config_add_image_resolution(
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -1170,7 +1170,7 @@ pub async fn run_cmd_config_add_image_resolution(
         Err(_) => {
             eprintln!("Invalid image resolution specified: {resolution}");
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -1195,7 +1195,7 @@ pub async fn run_cmd_config_add_image_resolution(
     if already_exists {
         eprintln!("The image resolution already exists in the configuration: {resolution}");
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -1216,7 +1216,7 @@ pub async fn run_cmd_config_add_image_resolution(
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -1225,7 +1225,7 @@ pub async fn run_cmd_config_add_image_resolution(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -1243,7 +1243,7 @@ pub async fn run_cmd_config_remove_image_resolution(
     global_opts: CommandGlobalOptions,
     resolution: String,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -1262,7 +1262,7 @@ pub async fn run_cmd_config_remove_image_resolution(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -1272,14 +1272,14 @@ pub async fn run_cmd_config_remove_image_resolution(
 
     // Get config
 
-    let api_res_get_conf = api_call_get_config(vault_url.clone(), global_opts.debug).await;
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
 
     let current_config: VaultConfig = match api_res_get_conf {
         Ok(config) => config,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -1301,7 +1301,7 @@ pub async fn run_cmd_config_remove_image_resolution(
         Err(_) => {
             eprintln!("Invalid image resolution specified: {resolution}");
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -1326,7 +1326,7 @@ pub async fn run_cmd_config_remove_image_resolution(
     if !already_exists {
         eprintln!("The image resolution was not found in the configuration: {resolution}");
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -1349,7 +1349,7 @@ pub async fn run_cmd_config_remove_image_resolution(
     // Set config
 
     let api_res_set_conf =
-        api_call_set_config(vault_url.clone(), new_config, global_opts.debug).await;
+        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -1358,7 +1358,7 @@ pub async fn run_cmd_config_remove_image_resolution(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}

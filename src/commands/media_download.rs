@@ -7,7 +7,7 @@ use unicode_width::UnicodeWidthStr;
 use crate::{
     api::api_call_get_media,
     commands::logout::do_logout,
-    models::{ConfigImageResolution, ConfigVideoResolution, TaskEncodeResolution, MediaAttachment},
+    models::{ConfigImageResolution, ConfigVideoResolution, MediaAttachment, TaskEncodeResolution},
     tools::{
         ask_user, do_get_download_request, ensure_login, parse_identifier, parse_vault_uri,
         ProgressReceiver, VaultURI,
@@ -107,7 +107,7 @@ pub async fn run_cmd_download_media(
     output: Option<String>,
     print_link: bool,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -126,7 +126,7 @@ pub async fn run_cmd_download_media(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -141,7 +141,7 @@ pub async fn run_cmd_download_media(
         Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -167,7 +167,7 @@ pub async fn run_cmd_download_media(
                 }
                 Err(_) => {
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -188,7 +188,7 @@ pub async fn run_cmd_download_media(
 
     // Call API
 
-    let api_res = api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+    let api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
     match api_res {
         Ok(media_data) => {
@@ -199,8 +199,7 @@ pub async fn run_cmd_download_media(
                     Some(u) => {
                         if u.is_empty() {
                             if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -217,8 +216,7 @@ pub async fn run_cmd_download_media(
                     }
                     None => {
                         if logout_after_operation {
-                            let logout_res =
-                                do_logout(global_opts.clone(), vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -234,8 +232,7 @@ pub async fn run_cmd_download_media(
                 DownloadAssetType::Thumbnail => {
                     if media_data.thumbnail.is_empty() {
                         if logout_after_operation {
-                            let logout_res =
-                                do_logout(global_opts.clone(), vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -255,8 +252,7 @@ pub async fn run_cmd_download_media(
                         Some(resolutions) => {
                             if resolutions.is_empty() {
                                 if logout_after_operation {
-                                    let logout_res =
-                                        do_logout(global_opts.clone(), vault_url.clone()).await;
+                                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                     match logout_res {
                                         Ok(_) => {}
@@ -292,11 +288,8 @@ pub async fn run_cmd_download_media(
                                     Some(u) => {
                                         if u.is_empty() {
                                             if logout_after_operation {
-                                                let logout_res = do_logout(
-                                                    global_opts.clone(),
-                                                    vault_url.clone(),
-                                                )
-                                                .await;
+                                                let logout_res =
+                                                    do_logout(&global_opts, &vault_url).await;
 
                                                 match logout_res {
                                                     Ok(_) => {}
@@ -320,9 +313,7 @@ pub async fn run_cmd_download_media(
                                     None => {
                                         if logout_after_operation {
                                             let logout_res =
-                                                do_logout(global_opts.clone(), vault_url.clone())
-                                                    .await;
-
+                                                do_logout(&global_opts, &vault_url).await;
                                             match logout_res {
                                                 Ok(_) => {}
                                                 Err(_) => {
@@ -342,8 +333,7 @@ pub async fn run_cmd_download_media(
 
                             if !found {
                                 if logout_after_operation {
-                                    let logout_res =
-                                        do_logout(global_opts.clone(), vault_url.clone()).await;
+                                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                     match logout_res {
                                         Ok(_) => {}
@@ -360,8 +350,7 @@ pub async fn run_cmd_download_media(
                         }
                         None => {
                             if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -379,8 +368,7 @@ pub async fn run_cmd_download_media(
                     Some(subtitles) => {
                         if subtitles.is_empty() {
                             if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -402,8 +390,7 @@ pub async fn run_cmd_download_media(
 
                             if subtitle.url.is_empty() {
                                 if logout_after_operation {
-                                    let logout_res =
-                                        do_logout(global_opts.clone(), vault_url.clone()).await;
+                                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                     match logout_res {
                                         Ok(_) => {}
@@ -423,8 +410,7 @@ pub async fn run_cmd_download_media(
 
                         if !found {
                             if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -439,8 +425,7 @@ pub async fn run_cmd_download_media(
                     }
                     None => {
                         if logout_after_operation {
-                            let logout_res =
-                                do_logout(global_opts.clone(), vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -457,8 +442,7 @@ pub async fn run_cmd_download_media(
                     Some(audios) => {
                         if audios.is_empty() {
                             if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -480,8 +464,7 @@ pub async fn run_cmd_download_media(
 
                             if audio.url.is_empty() {
                                 if logout_after_operation {
-                                    let logout_res =
-                                        do_logout(global_opts.clone(), vault_url.clone()).await;
+                                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                     match logout_res {
                                         Ok(_) => {}
@@ -501,8 +484,7 @@ pub async fn run_cmd_download_media(
 
                         if !found {
                             if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -517,8 +499,7 @@ pub async fn run_cmd_download_media(
                     }
                     None => {
                         if logout_after_operation {
-                            let logout_res =
-                                do_logout(global_opts.clone(), vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -535,8 +516,7 @@ pub async fn run_cmd_download_media(
                     Some(u) => {
                         if u.is_empty() {
                             if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -555,8 +535,7 @@ pub async fn run_cmd_download_media(
                     }
                     None => {
                         if logout_after_operation {
-                            let logout_res =
-                                do_logout(global_opts.clone(), vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -573,8 +552,7 @@ pub async fn run_cmd_download_media(
                     Some(u) => {
                         if u.is_empty() {
                             if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -591,8 +569,7 @@ pub async fn run_cmd_download_media(
                     }
                     None => {
                         if logout_after_operation {
-                            let logout_res =
-                                do_logout(global_opts.clone(), vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -609,8 +586,7 @@ pub async fn run_cmd_download_media(
                     Some(u) => {
                         if u.is_empty() {
                             if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -627,8 +603,7 @@ pub async fn run_cmd_download_media(
                     }
                     None => {
                         if logout_after_operation {
-                            let logout_res =
-                                do_logout(global_opts.clone(), vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -641,61 +616,57 @@ pub async fn run_cmd_download_media(
                         process::exit(1);
                     }
                 },
-                DownloadAssetType::Attachment(att_id) => {
-                    match media_data.attachments {
-                        Some(attachments) => {
-                            let mut att_opt: Option<MediaAttachment> = None;
+                DownloadAssetType::Attachment(att_id) => match media_data.attachments {
+                    Some(attachments) => {
+                        let mut att_opt: Option<MediaAttachment> = None;
 
-                            for a in attachments {
-                                if a.id == att_id {
-                                    att_opt = Some(a);
-                                    break;
-                                }
+                        for a in attachments {
+                            if a.id == att_id {
+                                att_opt = Some(a);
+                                break;
                             }
+                        }
 
-                            match att_opt {
-                                Some(att) => {
-                                    download_path = att.url;
-                                },
-                                None => {
-                                    if logout_after_operation {
-                                        let logout_res =
-                                            do_logout(global_opts.clone(), vault_url.clone()).await;
-            
-                                        match logout_res {
-                                            Ok(_) => {}
-                                            Err(_) => {
-                                                process::exit(1);
-                                            }
+                        match att_opt {
+                            Some(att) => {
+                                download_path = att.url;
+                            }
+                            None => {
+                                if logout_after_operation {
+                                    let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                                    match logout_res {
+                                        Ok(_) => {}
+                                        Err(_) => {
+                                            process::exit(1);
                                         }
                                     }
-                                    eprintln!("Attachment not found");
-                                    process::exit(1);
-                                },
+                                }
+                                eprintln!("Attachment not found");
+                                process::exit(1);
                             }
-                        },
-                        None => {
-                            if logout_after_operation {
-                                let logout_res =
-                                    do_logout(global_opts.clone(), vault_url.clone()).await;
-    
-                                match logout_res {
-                                    Ok(_) => {}
-                                    Err(_) => {
-                                        process::exit(1);
-                                    }
+                        }
+                    }
+                    None => {
+                        if logout_after_operation {
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                            match logout_res {
+                                Ok(_) => {}
+                                Err(_) => {
+                                    process::exit(1);
                                 }
                             }
-                            eprintln!("This media asset has no attachments");
-                            process::exit(1);
-                        },
+                        }
+                        eprintln!("This media asset has no attachments");
+                        process::exit(1);
                     }
-                }
+                },
             }
 
             if download_path.is_empty() {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -710,7 +681,7 @@ pub async fn run_cmd_download_media(
 
             if print_link {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -736,7 +707,7 @@ pub async fn run_cmd_download_media(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -806,7 +777,7 @@ async fn download_media_asset(
 
         if confirmation.to_lowercase() != "y" {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -822,7 +793,7 @@ async fn download_media_asset(
     let mut progress_printer = DownloaderProgressPrinter::new();
 
     let download_result = do_get_download_request(
-        vault_url.clone(),
+        &vault_url,
         download_path,
         out_file.clone(),
         global_opts.debug,
@@ -831,7 +802,7 @@ async fn download_media_asset(
     .await;
 
     if logout_after_operation {
-        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+        let logout_res = do_logout(&global_opts, &vault_url).await;
 
         match logout_res {
             Ok(_) => {}

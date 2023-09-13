@@ -74,7 +74,7 @@ pub async fn run_cmd_list_tags(
     csv: bool,
     alphabetically: bool,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -93,7 +93,7 @@ pub async fn run_cmd_list_tags(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -103,12 +103,12 @@ pub async fn run_cmd_list_tags(
 
     // Call API
 
-    let api_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
+    let api_res = api_call_get_tags(&vault_url, global_opts.debug).await;
 
     match api_res {
         Ok(mut tags) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -154,7 +154,7 @@ pub async fn run_cmd_list_tags(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -169,7 +169,7 @@ pub async fn run_cmd_list_tags(
 }
 
 pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, media: String) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -188,7 +188,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -205,7 +205,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
     match media_id_res {
         Ok(media_id) => {
             let media_api_res =
-                api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -236,7 +236,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
                     }
 
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -251,7 +251,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
         }
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -267,11 +267,11 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
 
     // Get tags
 
-    let tags_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
+    let tags_res = api_call_get_tags(&vault_url, global_opts.debug).await;
 
     if tags_res.is_err() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -314,7 +314,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
     // Call API
 
     let api_res = api_call_tag_add(
-        vault_url.clone(),
+        &vault_url,
         AddTagBody {
             media_id: media_id_param,
             tag_name: tag_param,
@@ -326,7 +326,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
     match api_res {
         Ok(added_tag) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -344,7 +344,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -363,7 +363,7 @@ pub async fn run_cmd_tag_remove(
     tag: String,
     media: String,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -382,7 +382,7 @@ pub async fn run_cmd_tag_remove(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -398,7 +398,7 @@ pub async fn run_cmd_tag_remove(
         Ok(media_id) => media_id,
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -414,11 +414,11 @@ pub async fn run_cmd_tag_remove(
 
     // Get tags
 
-    let tags_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
+    let tags_res = api_call_get_tags(&vault_url, global_opts.debug).await;
 
     if tags_res.is_err() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -453,7 +453,7 @@ pub async fn run_cmd_tag_remove(
                     tag_param = *tags_reverse_map.get(&parsed_tag).unwrap();
                 } else {
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -474,7 +474,7 @@ pub async fn run_cmd_tag_remove(
             tag_param = *tags_reverse_map.get(&parsed_tag).unwrap();
         } else {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -495,7 +495,7 @@ pub async fn run_cmd_tag_remove(
     // Call API
 
     let api_res = api_call_tag_remove(
-        vault_url.clone(),
+        &vault_url,
         RemoveTagBody {
             media_id: media_id_param,
             tag_id: tag_param,
@@ -507,7 +507,7 @@ pub async fn run_cmd_tag_remove(
     match api_res {
         Ok(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -522,7 +522,7 @@ pub async fn run_cmd_tag_remove(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}

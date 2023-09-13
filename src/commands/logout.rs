@@ -10,7 +10,7 @@ use crate::{
 use super::{get_vault_url, print_request_error, CommandGlobalOptions};
 
 pub async fn run_cmd_logout(global_opts: CommandGlobalOptions) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -28,7 +28,7 @@ pub async fn run_cmd_logout(global_opts: CommandGlobalOptions) {
 
     let vault_url = url_parse_res.unwrap();
 
-    let logout_res = do_logout(global_opts, vault_url).await;
+    let logout_res = do_logout(&global_opts, &vault_url).await;
 
     match logout_res {
         Ok(_) => {
@@ -40,7 +40,7 @@ pub async fn run_cmd_logout(global_opts: CommandGlobalOptions) {
     }
 }
 
-pub async fn do_logout(global_opts: CommandGlobalOptions, vault_url: VaultURI) -> Result<(), ()> {
+pub async fn do_logout(global_opts: &CommandGlobalOptions, vault_url: &VaultURI) -> Result<(), ()> {
     match vault_url {
         crate::tools::VaultURI::LoginURI {
             base_url: _,
@@ -52,7 +52,7 @@ pub async fn do_logout(global_opts: CommandGlobalOptions, vault_url: VaultURI) -
         }
         crate::tools::VaultURI::SessionURI { base_url, session } => {
             let logout_res = api_call_logout(
-                VaultURI::SessionURI { base_url, session },
+                &VaultURI::SessionURI { base_url: base_url.clone(), session: session.clone() },
                 global_opts.debug,
             )
             .await;

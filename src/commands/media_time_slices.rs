@@ -12,7 +12,7 @@ use crate::{
 use super::{get_vault_url, print_request_error, CommandGlobalOptions};
 
 pub async fn run_cmd_get_media_time_slices(global_opts: CommandGlobalOptions, media: String) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -31,7 +31,7 @@ pub async fn run_cmd_get_media_time_slices(global_opts: CommandGlobalOptions, me
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -46,7 +46,7 @@ pub async fn run_cmd_get_media_time_slices(global_opts: CommandGlobalOptions, me
         Ok(id) => id,
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -62,12 +62,12 @@ pub async fn run_cmd_get_media_time_slices(global_opts: CommandGlobalOptions, me
 
     // Call API
 
-    let api_res = api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+    let api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
     match api_res {
         Ok(media_data) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -94,7 +94,7 @@ pub async fn run_cmd_get_media_time_slices(global_opts: CommandGlobalOptions, me
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -113,7 +113,7 @@ pub async fn run_cmd_set_media_time_slices(
     media: String,
     path: String,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -132,7 +132,7 @@ pub async fn run_cmd_set_media_time_slices(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -149,7 +149,7 @@ pub async fn run_cmd_set_media_time_slices(
     match media_id_res {
         Ok(media_id) => {
             let media_api_res =
-                api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -159,7 +159,7 @@ pub async fn run_cmd_set_media_time_slices(
                     print_request_error(e);
 
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -174,7 +174,7 @@ pub async fn run_cmd_set_media_time_slices(
         }
         Err(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -216,7 +216,7 @@ pub async fn run_cmd_set_media_time_slices(
     // Call API
 
     let api_res = api_call_media_change_time_slices(
-        vault_url.clone(),
+        &vault_url,
         media_id_param,
         time_slices,
         global_opts.debug,
@@ -226,7 +226,7 @@ pub async fn run_cmd_set_media_time_slices(
     match api_res {
         Ok(_) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -241,7 +241,7 @@ pub async fn run_cmd_set_media_time_slices(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}

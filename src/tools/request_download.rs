@@ -17,7 +17,7 @@ pub trait ProgressReceiver {
 }
 
 pub async fn do_get_download_request(
-    uri: VaultURI,
+    uri: &VaultURI,
     path: String,
     file_path: String,
     debug: bool,

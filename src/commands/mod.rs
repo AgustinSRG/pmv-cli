@@ -345,9 +345,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
     }
 }
 
-pub fn get_vault_url(global_opts_url: Option<String>) -> String {
+pub fn get_vault_url(global_opts_url: &Option<String>) -> String {
     match global_opts_url {
-        Some(u) => u,
+        Some(u) => u.clone(),
         None => {
             let env_val = std::env::var("PMV_URL");
 

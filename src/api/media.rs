@@ -17,7 +17,7 @@ use crate::{
 };
 
 pub async fn api_call_get_media(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     debug: bool,
 ) -> Result<MediaMetadata, RequestError> {
@@ -36,7 +36,7 @@ pub async fn api_call_get_media(
 }
 
 pub async fn api_call_get_media_albums(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     debug: bool,
 ) -> Result<Vec<u64>, RequestError> {
@@ -55,7 +55,7 @@ pub async fn api_call_get_media_albums(
 }
 
 pub async fn api_call_upload_media(
-    url: VaultURI,
+    url: &VaultURI,
     file_path: String,
     title: Option<String>,
     album: Option<u64>,
@@ -102,7 +102,7 @@ pub async fn api_call_upload_media(
 }
 
 pub async fn api_call_get_media_stats(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     debug: bool,
 ) -> Result<MediaAssetSizeStats, RequestError> {
@@ -121,7 +121,7 @@ pub async fn api_call_get_media_stats(
 }
 
 pub async fn api_call_media_change_title(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     req_body: MediaUpdateTitleBody,
     debug: bool,
@@ -138,7 +138,7 @@ pub async fn api_call_media_change_title(
 }
 
 pub async fn api_call_media_change_description(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     req_body: MediaUpdateDescriptionBody,
     debug: bool,
@@ -155,7 +155,7 @@ pub async fn api_call_media_change_description(
 }
 
 pub async fn api_call_media_change_extended_description(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     req_body: MediaUpdateExtendedDescriptionBody,
     debug: bool,
@@ -172,7 +172,7 @@ pub async fn api_call_media_change_extended_description(
 }
 
 pub async fn api_call_media_change_extra(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     req_body: MediaUpdateExtraBody,
     debug: bool,
@@ -189,7 +189,7 @@ pub async fn api_call_media_change_extra(
 }
 
 pub async fn api_call_media_change_time_slices(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     req_body: Vec<MediaTimeSlice>,
     debug: bool,
@@ -206,7 +206,7 @@ pub async fn api_call_media_change_time_slices(
 }
 
 pub async fn api_call_media_change_notes(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     req_body: Vec<ImageNote>,
     debug: bool,
@@ -223,7 +223,7 @@ pub async fn api_call_media_change_notes(
 }
 
 pub async fn api_call_media_change_thumbnail(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     file_path: String,
     debug: bool,
@@ -252,7 +252,7 @@ pub async fn api_call_media_change_thumbnail(
 }
 
 pub async fn api_call_media_re_encode(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     debug: bool,
 ) -> Result<(), RequestError> {
@@ -268,7 +268,7 @@ pub async fn api_call_media_re_encode(
 }
 
 pub async fn api_call_media_delete(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     debug: bool,
 ) -> Result<(), RequestError> {
@@ -284,7 +284,7 @@ pub async fn api_call_media_delete(
 }
 
 pub async fn api_call_media_add_resolution(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     req_body: TaskEncodeResolution,
     debug: bool,
@@ -310,7 +310,7 @@ pub async fn api_call_media_add_resolution(
 }
 
 pub async fn api_call_media_remove_resolution(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     req_body: TaskEncodeResolution,
     debug: bool,
@@ -327,7 +327,7 @@ pub async fn api_call_media_remove_resolution(
 }
 
 pub async fn api_call_media_set_subtitle(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     sub_id: String,
     sub_name: String,
@@ -363,7 +363,7 @@ pub async fn api_call_media_set_subtitle(
 }
 
 pub async fn api_call_media_remove_subtitle(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     sub_id: String,
     debug: bool,
@@ -378,7 +378,7 @@ pub async fn api_call_media_remove_subtitle(
 }
 
 pub async fn api_call_media_set_audio(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     audio_id: String,
     audio_name: String,
@@ -414,7 +414,7 @@ pub async fn api_call_media_set_audio(
 }
 
 pub async fn api_call_media_remove_audio(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     audio_id: String,
     debug: bool,
@@ -429,7 +429,7 @@ pub async fn api_call_media_remove_audio(
 }
 
 pub async fn api_call_media_add_attachment(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     file_path: String,
     debug: bool,
@@ -460,7 +460,7 @@ pub async fn api_call_media_add_attachment(
 }
 
 pub async fn api_call_media_remove_attachment(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     att_id: u64,
     debug: bool,
@@ -475,7 +475,7 @@ pub async fn api_call_media_remove_attachment(
 }
 
 pub async fn api_call_media_rename_attachment(
-    url: VaultURI,
+    url: &VaultURI,
     media: u64,
     req_body: MediaRenameAttachmentBody,
     debug: bool,

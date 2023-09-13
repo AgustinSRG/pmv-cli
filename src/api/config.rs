@@ -5,7 +5,7 @@ use crate::{
     tools::{do_get_request, do_post_request, RequestError, VaultURI},
 };
 
-pub async fn api_call_get_config(url: VaultURI, debug: bool) -> Result<VaultConfig, RequestError> {
+pub async fn api_call_get_config(url: &VaultURI, debug: bool) -> Result<VaultConfig, RequestError> {
     let body_str = do_get_request(url, "/api/config".to_string(), debug).await?;
 
     let parsed_body: Result<VaultConfig, _> = serde_json::from_str(&body_str);
@@ -21,7 +21,7 @@ pub async fn api_call_get_config(url: VaultURI, debug: bool) -> Result<VaultConf
 }
 
 pub async fn api_call_set_config(
-    url: VaultURI,
+    url: &VaultURI,
     req_body: VaultConfig,
     debug: bool,
 ) -> Result<(), RequestError> {

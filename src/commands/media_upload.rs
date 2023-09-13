@@ -26,7 +26,7 @@ pub async fn run_cmd_upload_media(
     tags: Option<String>,
     skip_encryption: bool,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -45,7 +45,7 @@ pub async fn run_cmd_upload_media(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -67,7 +67,7 @@ pub async fn run_cmd_upload_media(
                 }
                 Err(_) => {
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -91,7 +91,7 @@ pub async fn run_cmd_upload_media(
     let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
 
     let api_res = api_call_upload_media(
-        vault_url.clone(),
+        &vault_url,
         path.clone(),
         title,
         album_param,
@@ -118,7 +118,7 @@ pub async fn run_cmd_upload_media(
 
                 while !encryption_done {
                     let api_get_res = api_call_get_media(
-                        vault_url.clone(),
+                        &vault_url,
                         upload_res.media_id,
                         global_opts.debug,
                     )
@@ -139,7 +139,7 @@ pub async fn run_cmd_upload_media(
                         Err(e) => {
                             encryption_progress_printer.progress_finish();
                             if logout_after_operation {
-                                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                                 match logout_res {
                                     Ok(_) => {}
@@ -171,7 +171,7 @@ pub async fn run_cmd_upload_media(
                     }
 
                     let api_tag_res = api_call_tag_add(
-                        vault_url.clone(),
+                        &vault_url,
                         AddTagBody {
                             media_id: upload_res.media_id,
                             tag_name: tag.clone(),
@@ -192,7 +192,7 @@ pub async fn run_cmd_upload_media(
             }
 
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -206,7 +206,7 @@ pub async fn run_cmd_upload_media(
         }
         Err(e) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}

@@ -26,7 +26,7 @@ pub async fn run_cmd_search_basic(
     extended: bool,
     csv: bool,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -45,7 +45,7 @@ pub async fn run_cmd_search_basic(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -55,11 +55,11 @@ pub async fn run_cmd_search_basic(
 
     // Get tags
 
-    let tags_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
+    let tags_res = api_call_get_tags(&vault_url, global_opts.debug).await;
 
     if tags_res.is_err() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -108,7 +108,7 @@ pub async fn run_cmd_search_basic(
     // Call API
 
     let api_res = api_call_search(
-        vault_url.clone(),
+        &vault_url,
         tag_param,
         reverse,
         page_param,
@@ -120,7 +120,7 @@ pub async fn run_cmd_search_basic(
     match api_res {
         Ok(search_result) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -210,7 +210,7 @@ pub async fn run_cmd_search_basic(
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}

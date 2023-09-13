@@ -8,7 +8,7 @@ use crate::{
 };
 
 pub async fn api_call_get_albums(
-    url: VaultURI,
+    url: &VaultURI,
     debug: bool,
 ) -> Result<Vec<AlbumListItem>, RequestError> {
     let body_str = do_get_request(url, "/api/albums".to_string(), debug).await?;
@@ -26,7 +26,7 @@ pub async fn api_call_get_albums(
 }
 
 pub async fn api_call_get_album(
-    url: VaultURI,
+    url: &VaultURI,
     album: u64,
     debug: bool,
 ) -> Result<Album, RequestError> {
@@ -45,7 +45,7 @@ pub async fn api_call_get_album(
 }
 
 pub async fn api_call_create_album(
-    url: VaultURI,
+    url: &VaultURI,
     req_body: AlbumNameBody,
     debug: bool,
 ) -> Result<AlbumIdResponse, RequestError> {
@@ -70,7 +70,7 @@ pub async fn api_call_create_album(
 }
 
 pub async fn api_call_rename_album(
-    url: VaultURI,
+    url: &VaultURI,
     album: u64,
     req_body: AlbumNameBody,
     debug: bool,
@@ -87,7 +87,7 @@ pub async fn api_call_rename_album(
 }
 
 pub async fn api_call_delete_album(
-    url: VaultURI,
+    url: &VaultURI,
     album: u64,
     debug: bool,
 ) -> Result<(), RequestError> {
@@ -103,7 +103,7 @@ pub async fn api_call_delete_album(
 }
 
 pub async fn api_call_album_set_order(
-    url: VaultURI,
+    url: &VaultURI,
     album: u64,
     req_body: AlbumSetOrderBody,
     debug: bool,
@@ -120,7 +120,7 @@ pub async fn api_call_album_set_order(
 }
 
 pub async fn api_call_album_add_media(
-    url: VaultURI,
+    url: &VaultURI,
     album: u64,
     req_body: AlbumMediaBody,
     debug: bool,
@@ -137,7 +137,7 @@ pub async fn api_call_album_add_media(
 }
 
 pub async fn api_call_album_remove_media(
-    url: VaultURI,
+    url: &VaultURI,
     album: u64,
     req_body: AlbumMediaBody,
     debug: bool,

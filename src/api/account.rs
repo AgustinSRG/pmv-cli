@@ -8,7 +8,7 @@ use crate::{
     tools::{do_get_request, do_post_request, RequestError, VaultURI},
 };
 
-pub async fn api_call_context(url: VaultURI, debug: bool) -> Result<AccountContext, RequestError> {
+pub async fn api_call_context(url: &VaultURI, debug: bool) -> Result<AccountContext, RequestError> {
     let body_str = do_get_request(url, "/api/account".to_string(), debug).await?;
 
     let parsed_body: Result<AccountContext, _> = serde_json::from_str(&body_str);
@@ -24,7 +24,7 @@ pub async fn api_call_context(url: VaultURI, debug: bool) -> Result<AccountConte
 }
 
 pub async fn api_call_change_username(
-    url: VaultURI,
+    url: &VaultURI,
     credentials: Credentials,
     debug: bool,
 ) -> Result<(), RequestError> {
@@ -40,7 +40,7 @@ pub async fn api_call_change_username(
 }
 
 pub async fn api_call_change_password(
-    url: VaultURI,
+    url: &VaultURI,
     req_body: ChangePasswordBody,
     debug: bool,
 ) -> Result<(), RequestError> {
@@ -56,7 +56,7 @@ pub async fn api_call_change_password(
 }
 
 pub async fn api_call_list_accounts(
-    url: VaultURI,
+    url: &VaultURI,
     debug: bool,
 ) -> Result<Vec<AccountListItem>, RequestError> {
     let body_str = do_get_request(url, "/api/admin/accounts".to_string(), debug).await?;
@@ -74,7 +74,7 @@ pub async fn api_call_list_accounts(
 }
 
 pub async fn api_call_create_account(
-    url: VaultURI,
+    url: &VaultURI,
     req_body: AccountCreateBody,
     debug: bool,
 ) -> Result<(), RequestError> {
@@ -90,7 +90,7 @@ pub async fn api_call_create_account(
 }
 
 pub async fn api_call_delete_account(
-    url: VaultURI,
+    url: &VaultURI,
     req_body: AccountDeleteBody,
     debug: bool,
 ) -> Result<(), RequestError> {

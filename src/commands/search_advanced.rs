@@ -33,7 +33,7 @@ pub async fn run_cmd_search_advanced(
     extended: bool,
     csv: bool,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -52,7 +52,7 @@ pub async fn run_cmd_search_advanced(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -62,11 +62,11 @@ pub async fn run_cmd_search_advanced(
 
     // Get tags
 
-    let tags_res = api_call_get_tags(vault_url.clone(), global_opts.debug).await;
+    let tags_res = api_call_get_tags(&vault_url, global_opts.debug).await;
 
     if tags_res.is_err() {
         if logout_after_operation {
-            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+            let logout_res = do_logout(&global_opts, &vault_url).await;
 
             match logout_res {
                 Ok(_) => {}
@@ -94,7 +94,7 @@ pub async fn run_cmd_search_advanced(
         match album_id_res {
             Ok(_) => {
                 let album_get_api_res =
-                    api_call_get_album(vault_url.clone(), album_id_res.unwrap(), global_opts.debug)
+                    api_call_get_album(&vault_url, album_id_res.unwrap(), global_opts.debug)
                         .await;
 
                 match album_get_api_res {
@@ -109,7 +109,7 @@ pub async fn run_cmd_search_advanced(
             }
             Err(_) => {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -144,7 +144,7 @@ pub async fn run_cmd_search_advanced(
             }
             Err(_) => {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -177,7 +177,7 @@ pub async fn run_cmd_search_advanced(
 
             if !tags_reverse_map.contains_key(&parsed_tag_name) {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -216,7 +216,7 @@ pub async fn run_cmd_search_advanced(
             }
             Err(_) => {
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -294,7 +294,7 @@ pub async fn run_cmd_search_advanced(
 
                 // Call API
                 let api_res = api_call_search(
-                    vault_url.clone(),
+                    &vault_url,
                     tag_param.clone(),
                     reverse,
                     page,
@@ -334,7 +334,7 @@ pub async fn run_cmd_search_advanced(
                     Err(e) => {
                         print_request_error(e);
                         if logout_after_operation {
-                            let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
 
                             match logout_res {
                                 Ok(_) => {}
@@ -355,7 +355,7 @@ pub async fn run_cmd_search_advanced(
     // Print results
 
     if logout_after_operation {
-        let logout_res = do_logout(global_opts, vault_url.clone()).await;
+        let logout_res = do_logout(&global_opts, &vault_url).await;
 
         match logout_res {
             Ok(_) => {}

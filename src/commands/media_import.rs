@@ -36,7 +36,7 @@ pub async fn run_cmd_import_media(
     path: String,
     album: Option<String>,
 ) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url.clone()));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -55,7 +55,7 @@ pub async fn run_cmd_import_media(
     let mut vault_url = url_parse_res.unwrap();
 
     let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(vault_url, None, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);
@@ -77,7 +77,7 @@ pub async fn run_cmd_import_media(
                 }
                 Err(_) => {
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -118,7 +118,7 @@ pub async fn run_cmd_import_media(
                     let e_str = e.to_string();
                     eprintln!("Could not read metadata file. Error: {e_str}");
                     if logout_after_operation {
-                        let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
 
                         match logout_res {
                             Ok(_) => {}
@@ -135,7 +135,7 @@ pub async fn run_cmd_import_media(
             let e_str = e.to_string();
             eprintln!("Could not read metadata file. Error: {e_str}");
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -158,7 +158,7 @@ pub async fn run_cmd_import_media(
             .to_string(),
         None => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts.clone(), vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -175,7 +175,7 @@ pub async fn run_cmd_import_media(
     let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
 
     let upload_api_res = api_call_upload_media(
-        vault_url.clone(),
+        &vault_url,
         original_file_path.clone(),
         import_metadata.title,
         album_param,
@@ -197,7 +197,7 @@ pub async fn run_cmd_import_media(
         }
         Err(e) => {
             if logout_after_operation {
-                let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
                     Ok(_) => {}
@@ -220,7 +220,7 @@ pub async fn run_cmd_import_media(
     let mut encryption_done = false;
 
     while !encryption_done {
-        let api_get_res = api_call_get_media(vault_url.clone(), media_id, global_opts.debug).await;
+        let api_get_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
         match api_get_res {
             Ok(media_data) => {
@@ -237,7 +237,7 @@ pub async fn run_cmd_import_media(
             Err(e) => {
                 encryption_progress_printer.progress_finish();
                 if logout_after_operation {
-                    let logout_res = do_logout(global_opts, vault_url.clone()).await;
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
                     match logout_res {
                         Ok(_) => {}
@@ -261,7 +261,7 @@ pub async fn run_cmd_import_media(
             }
 
             let api_tag_res = api_call_tag_add(
-                vault_url.clone(),
+                &vault_url,
                 AddTagBody {
                     media_id,
                     tag_name: tag.clone(),
@@ -286,7 +286,7 @@ pub async fn run_cmd_import_media(
     if let Some(description) = import_metadata.description {
         if !description.is_empty() {
             let api_res = api_call_media_change_description(
-                vault_url.clone(),
+                &vault_url,
                 media_id,
                 MediaUpdateDescriptionBody {
                     description: description.clone(),
@@ -315,7 +315,7 @@ pub async fn run_cmd_import_media(
     if let Some(force_start_beginning) = import_metadata.force_start_beginning {
         if force_start_beginning {
             let api_res = api_call_media_change_extra(
-                vault_url.clone(),
+                &vault_url,
                 media_id,
                 MediaUpdateExtraBody {
                     force_start_beginning,
@@ -347,7 +347,7 @@ pub async fn run_cmd_import_media(
         let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
 
         let api_res = api_call_media_change_thumbnail(
-            vault_url.clone(),
+            &vault_url,
             media_id,
             thumbnail_file_path.clone(),
             global_opts.debug,
@@ -383,7 +383,7 @@ pub async fn run_cmd_import_media(
         match ext_desc_read_res {
             Ok(ext_desc) => {
                 let api_res = api_call_media_change_extended_description(
-                    vault_url.clone(),
+                    &vault_url,
                     media_id,
                     MediaUpdateExtendedDescriptionBody { ext_desc },
                     global_opts.debug,
@@ -413,7 +413,7 @@ pub async fn run_cmd_import_media(
     if let Some(time_slices) = import_metadata.time_slices {
         if !time_slices.is_empty() {
             let api_res = api_call_media_change_time_slices(
-                vault_url.clone(),
+                &vault_url,
                 media_id,
                 time_slices,
                 global_opts.debug,
@@ -450,7 +450,7 @@ pub async fn run_cmd_import_media(
                 match parsed_notes_res {
                     Ok(image_notes) => {
                         let api_res = api_call_media_change_notes(
-                            vault_url.clone(),
+                            &vault_url,
                             media_id,
                             image_notes,
                             global_opts.debug,
@@ -494,7 +494,7 @@ pub async fn run_cmd_import_media(
             let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
 
             let api_res = api_call_media_set_subtitle(
-                vault_url.clone(),
+                &vault_url,
                 media_id,
                 sub_id.clone(),
                 subtitle.name.clone(),
@@ -532,7 +532,7 @@ pub async fn run_cmd_import_media(
             let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
 
             let api_res = api_call_media_set_audio(
-                vault_url.clone(),
+                &vault_url,
                 media_id,
                 track_id.clone(),
                 audio.name.clone(),
@@ -570,7 +570,7 @@ pub async fn run_cmd_import_media(
             let progress_printer = Arc::new(Mutex::new(UploaderProgressPrinter::new()));
 
             let api_res = api_call_media_add_attachment(
-                vault_url.clone(),
+                &vault_url,
                 media_id,
                 att_file_path.clone(),
                 global_opts.debug,
@@ -585,7 +585,7 @@ pub async fn run_cmd_import_media(
                     // Rename the attachment
 
                     let api_rename_res = api_call_media_rename_attachment(
-                        vault_url.clone(),
+                        &vault_url,
                         media_id,
                         MediaRenameAttachmentBody {
                             id: uploaded_att.id,

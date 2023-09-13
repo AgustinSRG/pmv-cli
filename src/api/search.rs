@@ -6,7 +6,7 @@ use crate::{
 };
 
 pub async fn api_call_search(
-    url: VaultURI,
+    url: &VaultURI,
     tag: Option<String>,
     reverse_order: bool,
     page: u32,
@@ -41,7 +41,7 @@ pub async fn api_call_search(
 }
 
 pub async fn api_call_random(
-    url: VaultURI,
+    url: &VaultURI,
     tag: Option<String>,
     seed: i64,
     page_size: u32,

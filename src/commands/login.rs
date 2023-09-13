@@ -13,7 +13,7 @@ use crate::{
 use super::CommandGlobalOptions;
 
 pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<String>) {
-    let url_parse_res = parse_vault_uri(get_vault_url(global_opts.vault_url));
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
         match url_parse_res.err().unwrap() {
@@ -33,7 +33,7 @@ pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<S
 
     if vault_url.is_session() {
         // If the URL is a session URL, check if the session is valid
-        let context_api_res = api_call_context(vault_url.clone(), global_opts.debug).await;
+        let context_api_res = api_call_context(&vault_url, global_opts.debug).await;
 
         match context_api_res {
             Ok(_) => {}
@@ -92,7 +92,7 @@ pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<S
         }
     }
 
-    let login_result = ensure_login(vault_url, username, global_opts.debug).await;
+    let login_result = ensure_login(&vault_url, &username, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);

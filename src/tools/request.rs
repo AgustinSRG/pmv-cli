@@ -59,7 +59,7 @@ pub fn get_session_from_uri(uri: VaultURI) -> Option<String> {
 }
 
 pub async fn do_get_request(
-    uri: VaultURI,
+    uri: &VaultURI,
     path: String,
     debug: bool,
 ) -> Result<String, RequestError> {
@@ -124,7 +124,7 @@ pub async fn do_get_request(
 }
 
 pub async fn do_post_request(
-    uri: VaultURI,
+    uri: &VaultURI,
     path: String,
     body: String,
     debug: bool,
