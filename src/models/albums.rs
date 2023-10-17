@@ -49,13 +49,16 @@ pub struct Album {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct AlbumSetOrderBody {
-    #[serde(rename = "list")]
-    pub list: Vec<u64>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct AlbumMediaBody {
     #[serde(rename = "media_id")]
     pub media_id: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AlbumMoveMediaBody {
+    #[serde(rename = "media_id")]
+    pub media_id: u64,
+
+    #[serde(rename = "position")]
+    pub position: u32,
 }

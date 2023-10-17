@@ -2,7 +2,7 @@
 
 use crate::{
     models::{
-        Album, AlbumIdResponse, AlbumListItem, AlbumMediaBody, AlbumNameBody, AlbumSetOrderBody,
+        Album, AlbumIdResponse, AlbumListItem, AlbumMediaBody, AlbumNameBody, AlbumMoveMediaBody,
     },
     tools::{do_get_request, do_post_request, RequestError, VaultURI},
 };
@@ -102,23 +102,6 @@ pub async fn api_call_delete_album(
     Ok(())
 }
 
-pub async fn api_call_album_set_order(
-    url: &VaultURI,
-    album: u64,
-    req_body: AlbumSetOrderBody,
-    debug: bool,
-) -> Result<(), RequestError> {
-    do_post_request(
-        url,
-        format!("/api/albums/{album}/set"),
-        serde_json::to_string(&req_body).unwrap(),
-        debug,
-    )
-    .await?;
-
-    Ok(())
-}
-
 pub async fn api_call_album_add_media(
     url: &VaultURI,
     album: u64,
@@ -145,6 +128,23 @@ pub async fn api_call_album_remove_media(
     do_post_request(
         url,
         format!("/api/albums/{album}/remove"),
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
+
+    Ok(())
+}
+
+pub async fn api_call_album_move_media(
+    url: &VaultURI,
+    album: u64,
+    req_body: AlbumMoveMediaBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    do_post_request(
+        url,
+        format!("/api/albums/{album}/move"),
         serde_json::to_string(&req_body).unwrap(),
         debug,
     )

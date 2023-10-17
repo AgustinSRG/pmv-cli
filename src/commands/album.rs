@@ -7,14 +7,14 @@ use hyper::StatusCode;
 
 use crate::{
     api::{
-        api_call_album_add_media, api_call_album_remove_media, api_call_album_set_order,
+        api_call_album_add_media, api_call_album_move_media, api_call_album_remove_media,
         api_call_create_album, api_call_delete_album, api_call_get_album, api_call_get_albums,
         api_call_get_media, api_call_get_media_albums, api_call_get_tags, api_call_rename_album,
     },
     commands::logout::do_logout,
     models::{
-        tags_map_from_list, tags_names_from_ids, AlbumListItem, AlbumMediaBody, AlbumNameBody,
-        AlbumSetOrderBody,
+        tags_map_from_list, tags_names_from_ids, AlbumListItem, AlbumMediaBody, AlbumMoveMediaBody,
+        AlbumNameBody,
     },
     tools::{
         ask_user, ensure_login, format_date, identifier_to_string, parse_identifier,
@@ -883,8 +883,7 @@ pub async fn run_cmd_album_add_media(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -1269,8 +1268,7 @@ pub async fn run_cmd_album_media_change_position(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -1333,46 +1331,9 @@ pub async fn run_cmd_album_media_change_position(
     // Get album
 
     let api_get_res = api_call_get_album(&vault_url, album_id, global_opts.debug).await;
-    let album_name: String;
-
-    let mut album_new_list: Vec<u64> = Vec::new();
-    let mut actual_inserted_position = position;
-
-    match api_get_res {
+    let album_name = match api_get_res {
         Ok(album_data) => {
-            album_name = album_data.name;
-
-            // Remove media asset from the album, if present
-            let filtered_list: Vec<u64> = album_data
-                .list
-                .into_iter()
-                .map(|m| m.id)
-                .filter(|id| *id != media_id_param)
-                .collect();
-
-            // Insert
-            let mut inserted = false;
-
-            if position < 1 {
-                album_new_list.push(media_id_param);
-                inserted = true;
-                actual_inserted_position = 1;
-            }
-
-            for (i, m_id) in filtered_list.into_iter().enumerate() {
-                if position == (i + 1) as u32 {
-                    album_new_list.push(media_id_param);
-                    inserted = true;
-                    actual_inserted_position = (1 + 1) as u32;
-                }
-
-                album_new_list.push(m_id);
-            }
-
-            if !inserted {
-                album_new_list.push(media_id_param);
-                actual_inserted_position = album_new_list.len() as u32;
-            }
+            album_data.name
         }
         Err(e) => {
             print_request_error(e);
@@ -1388,15 +1349,16 @@ pub async fn run_cmd_album_media_change_position(
             }
             process::exit(1);
         }
-    }
+    };
 
     // Call API
 
-    let api_res = api_call_album_set_order(
+    let api_res = api_call_album_move_media(
         &vault_url,
         album_id,
-        AlbumSetOrderBody {
-            list: album_new_list,
+        AlbumMoveMediaBody {
+            media_id: media_id_param,
+            position,
         },
         global_opts.debug,
     )
@@ -1415,7 +1377,7 @@ pub async fn run_cmd_album_media_change_position(
                 }
             }
 
-            eprintln!("Successfully inserted media asset #{media_id_param} into position {actual_inserted_position} of album #{album_id}: {album_name}");
+            eprintln!("Successfully inserted media asset #{media_id_param} into position {position} of album #{album_id}: {album_name}");
         }
         Err(e) => {
             print_request_error(e);
