@@ -5,7 +5,7 @@
 
 This project is a command line interface client to interact with [PersonalMediaVault](https://github.com/AgustinSRG/PersonalMediaVault).
 
-For regular use cases, you may use the web interface instead. However, a CLi tool may be useful when:
+For regular use cases, you may use the web interface instead. However, a CLI tool may be useful when:
 
  - Creating shell scripts that interact with the media vaults
  - Interacting with the vault when a GUI environment is not available.
