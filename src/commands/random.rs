@@ -87,9 +87,7 @@ pub async fn run_cmd_random(
 
     let mut tag_param: Option<String> = None;
 
-    if tag.is_some() {
-        let tag_name = tag.unwrap();
-
+    if let Some(tag_name) = tag {
         if is_identifier(&tag_name) {
             let tag_id_res = parse_identifier(&tag_name);
 

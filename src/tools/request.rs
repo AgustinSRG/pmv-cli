@@ -73,8 +73,8 @@ pub async fn do_get_request(
 
     let session = get_session_from_uri(uri.clone());
 
-    if session.is_some() {
-        request_builder = request_builder.header(SESSION_HEADER_NAME, session.unwrap());
+    if let Some(s) = session {
+        request_builder = request_builder.header(SESSION_HEADER_NAME, s);
     }
 
     let request = request_builder.body(Body::empty()).unwrap();
@@ -142,8 +142,8 @@ pub async fn do_post_request(
 
     let session = get_session_from_uri(uri.clone());
 
-    if session.is_some() {
-        request_builder = request_builder.header(SESSION_HEADER_NAME, session.unwrap());
+    if let Some(s) = session {
+        request_builder = request_builder.header(SESSION_HEADER_NAME, s);
     }
 
     let request = request_builder.body(Body::from(body)).unwrap();

@@ -192,8 +192,8 @@ pub async fn run_cmd_list_albums(
 
     let mut albums_media_filter: Option<HashSet<u64>> = None;
 
-    if media.is_some() {
-        let media_id_res = parse_identifier(&media.unwrap());
+    if let Some(media_id_str) = media {
+        let media_id_res = parse_identifier(&media_id_str);
 
         match media_id_res {
             Ok(media_id) => {

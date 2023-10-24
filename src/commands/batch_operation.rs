@@ -122,8 +122,8 @@ pub async fn run_cmd_batch_operation(
 
     let mut album_filter: Option<Vec<MediaListItem>> = None;
 
-    if album.is_some() {
-        let album_id_res = parse_identifier(&album.unwrap());
+    if let Some(album_id_str) = album {
+        let album_id_res = parse_identifier(&album_id_str);
 
         match album_id_res {
             Ok(_) => {
@@ -165,8 +165,7 @@ pub async fn run_cmd_batch_operation(
 
     let mut media_type_filter: Option<MediaType> = None;
 
-    if media_type.is_some() {
-        let media_type_str = media_type.unwrap();
+    if let Some(media_type_str) = media_type {
         let media_type_res = parse_media_type(&media_type_str);
 
         match media_type_res {
@@ -194,8 +193,7 @@ pub async fn run_cmd_batch_operation(
     let mut first_tag_name: Option<String> = None;
     let mut tag_param: Option<String> = None;
 
-    if tags.is_some() {
-        let tags_str = tags.unwrap();
+    if let Some(tags_str) = tags {
         let tag_names = tags_str.split(' ');
 
         let mut tag_ids: Vec<u64> = Vec::new();
@@ -233,8 +231,7 @@ pub async fn run_cmd_batch_operation(
 
     let mut tags_filter_mode = TagSearchMode::All;
 
-    if tags_mode.is_some() {
-        let tags_mode_str = tags_mode.unwrap();
+    if let Some(tags_mode_str) = tags_mode{
         let tags_mode_res = parse_tag_search_mode(&tags_mode_str);
 
         match tags_mode_res {
