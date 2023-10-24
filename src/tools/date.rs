@@ -11,7 +11,7 @@ pub fn format_date(timestamp: i64) -> String {
 
     match naive {
         Some(n) => {
-            let d: DateTime<Utc> = DateTime::from_utc(n, Utc);
+            let d: DateTime<Utc> = DateTime::from_naive_utc_and_offset(n, Utc);
             d.format("%Y-%m-%d %H:%M:%S").to_string()
         }
         None => "???".to_string(),
