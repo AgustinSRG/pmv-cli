@@ -267,6 +267,26 @@ pub async fn api_call_media_re_encode(
     Ok(())
 }
 
+pub async fn api_call_media_replace(
+    url: &VaultURI,
+    media: u64,
+    file_path: String,
+    debug: bool,
+    progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
+) -> Result<(), RequestError> {
+    do_multipart_upload_request(
+        url,
+        format!("/api/media/{media}/replace"),
+        "file".to_string(),
+        file_path,
+        debug,
+        progress_receiver,
+    )
+    .await?;
+
+    Ok(())
+}
+
 pub async fn api_call_media_delete(
     url: &VaultURI,
     media: u64,

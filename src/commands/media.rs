@@ -38,7 +38,7 @@ use super::{
     media_thumbnail::run_cmd_upload_media_thumbnail,
     media_time_slices::{run_cmd_get_media_time_slices, run_cmd_set_media_time_slices},
     media_upload::run_cmd_upload_media,
-    print_request_error, CommandGlobalOptions,
+    print_request_error, CommandGlobalOptions, media_replace::run_cmd_replace_media,
 };
 
 #[derive(Subcommand)]
@@ -287,6 +287,15 @@ pub enum MediaCommand {
         media: String,
     },
 
+    /// Replaces the media asset with another file
+    Replace {
+        /// Media asset ID
+        media: String,
+
+        /// Path to the media file to upload
+        path: String,
+    },
+
     /// Deletes a media asset
     Delete {
         /// Media asset ID
@@ -374,6 +383,9 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         }
         MediaCommand::ReEncode { media } => {
             run_cmd_media_re_encode(global_opts, media).await;
+        }
+        MediaCommand::Replace { media, path } => {
+            run_cmd_replace_media(global_opts, media, path).await;
         }
         MediaCommand::Delete { media } => {
             run_cmd_media_delete(global_opts, media).await;

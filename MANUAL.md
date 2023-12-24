@@ -249,6 +249,7 @@ pmv-cli media <COMMAND>
 | [rename-attachment](#command-media-rename-attachment) | Renames attachment file |
 | [remove-attachment](#command-media-remove-attachment) | Removes attachment file |
 | [re-encode](#command-media-re-encode) | Re-Encodes a media asset |
+| [replace](#command-media-replace) | Replaces the media asset with another file |
 | [delete](#command-media-delete) | Deletes a media asset |
 
 <ins>**Options:**</ins>
@@ -808,6 +809,29 @@ pmv-cli media re-encode <MEDIA>
 | Argument | Description |
 | --- | --- |
 | `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media replace
+
+Replaces the media asset with another file
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media replace <MEDIA> <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<PATH>` | Path to the media file to upload |
 
 <ins>**Options:**</ins>
 

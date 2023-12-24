@@ -33,6 +33,7 @@ mod media_subtitles;
 mod media_thumbnail;
 mod media_time_slices;
 mod media_upload;
+mod media_replace;
 
 mod random;
 use random::*;
