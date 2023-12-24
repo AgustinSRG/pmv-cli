@@ -152,7 +152,7 @@ pub async fn run_cmd_import_media(
 
     let original_file_path: String = match import_metadata.original {
         Some(original_file) => std::path::Path::new(&path)
-            .join(&original_file)
+            .join(original_file)
             .to_str()
             .unwrap()
             .to_string(),

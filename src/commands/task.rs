@@ -374,9 +374,7 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) {
                 } => {
                     if status == StatusCode::UNAUTHORIZED && monitoring_started {
                         if logout_after_operation {
-                            do_logout(&global_opts, &vault_url)
-                                .await
-                                .unwrap_or(());
+                            do_logout(&global_opts, &vault_url).await.unwrap_or(());
                         }
                         process::exit(0);
                     } else {
@@ -430,27 +428,25 @@ pub fn spawn_termination_thread(
     task::spawn(async move {
         let mut stdin = io::stdin();
 
-        loop {
-            let r = stdin.read_u8().await;
+        let r = stdin.read_u8().await;
 
-            match r {
-                Ok(_) => {
-                    if logout_after_operation {
-                        let logout_res = do_logout(&global_opts, &vault_url).await;
+        match r {
+            Ok(_) => {
+                if logout_after_operation {
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
 
-                        match logout_res {
-                            Ok(_) => {}
-                            Err(_) => {
-                                process::exit(1);
-                            }
+                    match logout_res {
+                        Ok(_) => {}
+                        Err(_) => {
+                            process::exit(1);
                         }
                     }
+                }
 
-                    process::exit(0);
-                }
-                Err(_) => {
-                    process::exit(1);
-                }
+                process::exit(0);
+            }
+            Err(_) => {
+                process::exit(1);
             }
         }
     });
