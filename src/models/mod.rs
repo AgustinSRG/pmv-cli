@@ -15,6 +15,9 @@ pub use config::*;
 mod error;
 pub use error::*;
 
+mod invites;
+pub use invites::*;
+
 mod media;
 pub use media::*;
 

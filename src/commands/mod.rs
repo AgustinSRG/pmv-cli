@@ -72,6 +72,10 @@ pub enum Commands {
         /// Session duration. Can be: day, week, month or year
         #[arg(short = 'D', long)]
         duration: Option<String>,
+
+        /// Invite code. Setting this option will ignore the credentials and use the code.
+        #[arg(short = 'I', long)]
+        invite_code: Option<String>,
     },
 
     /// Closes the active session, given a session URL
@@ -252,8 +256,8 @@ pub enum Commands {
 
 pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
     match cmd {
-        Commands::Login { username, duration } => {
-            run_cmd_login(global_opts, username, duration).await;
+        Commands::Login { username, duration, invite_code } => {
+            run_cmd_login(global_opts, username, duration, invite_code).await;
         }
         Commands::Logout => {
             run_cmd_logout(global_opts).await;

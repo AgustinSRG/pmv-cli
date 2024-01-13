@@ -5,14 +5,20 @@ use std::process;
 use hyper::StatusCode;
 
 use crate::{
-    api::api_call_context,
-    commands::get_vault_url,
-    tools::{parse_vault_uri, VaultURI, ensure_login_ext},
+    api::{api_call_context, api_call_login_invite_code},
+    commands::{get_vault_url, print_request_error},
+    models::InviteCodeLoginBody,
+    tools::{ensure_login_ext, parse_vault_uri, VaultURI},
 };
 
 use super::CommandGlobalOptions;
 
-pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<String>, duration: Option<String>) {
+pub async fn run_cmd_login(
+    global_opts: CommandGlobalOptions,
+    username: Option<String>,
+    duration: Option<String>,
+    invite_code: Option<String>,
+) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
@@ -92,13 +98,51 @@ pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<S
         }
     }
 
-    let login_result = ensure_login_ext(&vault_url, &username, &duration, global_opts.debug).await;
+    match invite_code {
+        Some(code) => {
+            vault_url = VaultURI::LoginURI {
+                base_url: vault_url.get_base_url(),
+                username: "".to_string(),
+                password: "".to_string(),
+            };
 
-    if login_result.is_err() {
-        process::exit(1);
+            if let VaultURI::LoginURI {
+                base_url,
+                username: _,
+                password: _,
+            } = vault_url.clone()
+            {
+                let login_res = api_call_login_invite_code(
+                    &vault_url,
+                    InviteCodeLoginBody { code: code.clone() },
+                    global_opts.debug,
+                )
+                .await;
+
+                if login_res.is_err() {
+                    print_request_error(login_res.err().unwrap());
+                    process::exit(1);
+                }
+
+                let session_id = login_res.unwrap().session_id;
+
+                vault_url = VaultURI::SessionURI {
+                    base_url: base_url.clone(),
+                    session: session_id,
+                }
+            }
+        }
+        None => {
+            let login_result =
+                ensure_login_ext(&vault_url, &username, &duration, global_opts.debug).await;
+
+            if login_result.is_err() {
+                process::exit(1);
+            }
+
+            vault_url = login_result.unwrap();
+        }
     }
-
-    vault_url = login_result.unwrap();
 
     let vault_url_str = vault_url.to_url_string();
 

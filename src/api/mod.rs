@@ -12,6 +12,9 @@ pub use auth::*;
 mod config;
 pub use config::*;
 
+mod invites;
+pub use invites::*;
+
 mod media;
 pub use media::*;
 
