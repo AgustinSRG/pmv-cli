@@ -23,6 +23,7 @@ pmv-cli [OPTIONS] <COMMAND>
 | [album](#command-album) | Manages albums |
 | [config](#command-config) | Manages vault configuration |
 | [task](#command-task) | Retrieves tasks information |
+| [invites](#command-invites) | Manages invites |
 | [batch](#command-batch) | Applies a batch operation to a list of media assets |
 
 <ins>**Options:**</ins>
@@ -1629,6 +1630,120 @@ pmv-cli task wait <TASK>
 | Argument | Description |
 | --- | --- |
 | `<TASK>` | Task identifier |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+## Command: invites
+
+Manages invites
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli invites <COMMAND>
+```
+
+<ins>**Commands:**</ins>
+
+| Command | Description |
+| --- | --- |
+| [check](#command-invites-check) | Prints the current invite code, if any |
+| [generate](#command-invites-generate) | Generates a new invite code |
+| [clear](#command-invites-clear) | Clears the current invite code |
+| [list-sessions](#command-invites-list-sessions) | List active invited sessions |
+| [close-session](#command-invites-close-session) | Closes an invited session |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: invites check
+
+Prints the current invite code, if any
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli invites check
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: invites generate
+
+Generates a new invite code
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli invites generate [OPTIONS]
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-D, --duration <DURATION>` | Session duration. Can be: day, week, month or year |
+| `-h, --help` | Print help |
+
+### Command: invites clear
+
+Clears the current invite code
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli invites clear
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: invites list-sessions
+
+List active invited sessions
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli invites list-sessions [OPTIONS]
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-c, --csv` | CSV format |
+| `-h, --help` | Print help |
+
+### Command: invites close-session
+
+Closes an invited session
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli invites close-session <INDEX>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<INDEX>` | Session index |
 
 <ins>**Options:**</ins>
 

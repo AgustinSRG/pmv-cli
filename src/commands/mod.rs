@@ -12,6 +12,9 @@ use batch_operation::*;
 mod config;
 use config::*;
 
+mod invites;
+use invites::*;
+
 mod login;
 use login::*;
 
@@ -219,6 +222,12 @@ pub enum Commands {
         task_cmd: TaskCommand,
     },
 
+    /// Manages invites
+    Invites {
+        #[command(subcommand)]
+        invites_cmd: InvitesCommand,
+    },
+
     /// Applies a batch operation to a list of media assets
     Batch {
         /// Filter by title
@@ -351,6 +360,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
             )
             .await;
         }
+        Commands::Invites { invites_cmd } => {
+            run_invites_cmd(global_opts, invites_cmd).await;
+        },
     }
 }
 

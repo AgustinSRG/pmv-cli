@@ -198,3 +198,69 @@ pub async fn do_post_request(
 
     Ok(res_body)
 }
+
+
+pub async fn do_delete_request(
+    uri: &VaultURI,
+    path: String,
+    debug: bool,
+) -> Result<String, RequestError> {
+    let final_uri = resolve_vault_api_uri(uri.clone(), path);
+
+    if debug {
+        eprintln!("\rDEBUG: DELETE {final_uri}");
+    }
+
+    let mut request_builder = Request::builder().method(Method::DELETE).uri(final_uri);
+
+    let session = get_session_from_uri(uri.clone());
+
+    if let Some(s) = session {
+        request_builder = request_builder.header(SESSION_HEADER_NAME, s);
+    }
+
+    let request = request_builder.body(Body::empty()).unwrap();
+
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
+
+    // Response received
+
+    let response = client.request(request).await?;
+
+    let res_status = response.status();
+
+    // Read body
+
+    let res_body_bytes = hyper::body::to_bytes(response).await;
+
+    if res_body_bytes.is_err() {
+        // Connection error receiving the body
+        return Err(RequestError::Hyper(res_body_bytes.err().unwrap()));
+    }
+
+    let res_body = String::from_utf8(res_body_bytes.unwrap().to_vec()).unwrap_or("".to_string());
+
+    if res_status != 200 {
+        if !res_body.is_empty() {
+            let parsed_body: Result<APIErrorResponse, _> = serde_json::from_str(&res_body);
+
+            match parsed_body {
+                Ok(r) => {
+                    return Err(RequestError::Api {
+                        status: res_status,
+                        code: r.code,
+                        message: r.message,
+                    });
+                }
+                Err(_) => {
+                    return Err(RequestError::StatusCode(res_status));
+                }
+            }
+        }
+
+        return Err(RequestError::StatusCode(res_status));
+    }
+
+    Ok(res_body)
+}
