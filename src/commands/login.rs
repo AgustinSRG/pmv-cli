@@ -7,12 +7,12 @@ use hyper::StatusCode;
 use crate::{
     api::api_call_context,
     commands::get_vault_url,
-    tools::{ensure_login, parse_vault_uri, VaultURI},
+    tools::{parse_vault_uri, VaultURI, ensure_login_ext},
 };
 
 use super::CommandGlobalOptions;
 
-pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<String>) {
+pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<String>, duration: Option<String>) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
@@ -92,7 +92,7 @@ pub async fn run_cmd_login(global_opts: CommandGlobalOptions, username: Option<S
         }
     }
 
-    let login_result = ensure_login(&vault_url, &username, global_opts.debug).await;
+    let login_result = ensure_login_ext(&vault_url, &username, &duration, global_opts.debug).await;
 
     if login_result.is_err() {
         process::exit(1);

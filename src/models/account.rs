@@ -21,6 +21,15 @@ pub struct AccountContext {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct ChangeUsernameBody {
+  #[serde(rename = "username")]
+  pub username: String,
+
+  #[serde(rename = "password")]
+  pub password: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ChangePasswordBody {
   #[serde(rename = "old_password")]
   pub old_password: String,

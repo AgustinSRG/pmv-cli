@@ -9,9 +9,10 @@ use crate::{
 
 use super::VaultURI;
 
-pub async fn ensure_login(
+pub async fn ensure_login_ext(
     url: &VaultURI,
     given_username: &Option<String>,
+    duration: &Option<String>,
     debug: bool,
 ) -> Result<VaultURI, ()> {
     match url.clone() {
@@ -50,6 +51,7 @@ pub async fn ensure_login(
                 Credentials {
                     username: username_m,
                     password: password_m,
+                    duration: duration.clone(),
                 },
                 debug,
             )
@@ -78,4 +80,12 @@ pub async fn ensure_login(
             Ok(url.clone())
         }
     }
+}
+
+pub async fn ensure_login(
+    url: &VaultURI,
+    given_username: &Option<String>,
+    debug: bool,
+) -> Result<VaultURI, ()> {
+    ensure_login_ext(url, given_username, &None, debug).await
 }

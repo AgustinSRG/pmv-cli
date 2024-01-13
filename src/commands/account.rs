@@ -9,7 +9,7 @@ use crate::{
         api_call_change_password, api_call_change_username, api_call_context,
         api_call_create_account, api_call_delete_account, api_call_list_accounts,
     },
-    models::{AccountCreateBody, AccountDeleteBody, ChangePasswordBody, Credentials},
+    models::{AccountCreateBody, AccountDeleteBody, ChangePasswordBody, ChangeUsernameBody},
     tools::{
         ask_user, ask_user_password, ensure_login, parse_vault_uri, print_table, to_csv_string,
     },
@@ -207,7 +207,7 @@ pub async fn run_cmd_change_username(global_opts: CommandGlobalOptions, username
 
     let api_res = api_call_change_username(
         &vault_url,
-        Credentials {
+        ChangeUsernameBody {
             username: username.clone(),
             password,
         },

@@ -3,7 +3,7 @@
 use crate::{
     models::{
         AccountContext, AccountCreateBody, AccountDeleteBody, AccountListItem, ChangePasswordBody,
-        Credentials,
+        ChangeUsernameBody,
     },
     tools::{do_get_request, do_post_request, RequestError, VaultURI},
 };
@@ -25,13 +25,13 @@ pub async fn api_call_context(url: &VaultURI, debug: bool) -> Result<AccountCont
 
 pub async fn api_call_change_username(
     url: &VaultURI,
-    credentials: Credentials,
+    req_body: ChangeUsernameBody,
     debug: bool,
 ) -> Result<(), RequestError> {
     do_post_request(
         url,
         "/api/account/username".to_string(),
-        serde_json::to_string(&credentials).unwrap(),
+        serde_json::to_string(&req_body).unwrap(),
         debug,
     )
     .await?;

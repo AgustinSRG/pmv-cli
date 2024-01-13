@@ -9,6 +9,9 @@ pub struct Credentials {
 
   #[serde(rename = "password")]
   pub password: String,
+
+  #[serde(rename = "duration")]
+  pub duration: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

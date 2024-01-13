@@ -50,6 +50,7 @@ pmv-cli login [OPTIONS]
 | Option | Description |
 | --- | --- |
 | `-U, --username <USERNAME>` | Vault username. You can also specify the credentials in the URL |
+| `-D, --duration <DURATION>` | Session duration. Can be: day, week, month or year |
 | `-h, --help` | Print help |
 
 ## Command: logout
