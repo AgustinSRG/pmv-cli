@@ -181,6 +181,7 @@ pub async fn run_cmd_export_media(
         description: None,
         tags: None,
         force_start_beginning: None,
+        is_anim: None,
         time_slices: None,
         subtitles: None,
         audios: None,
@@ -190,6 +191,7 @@ pub async fn run_cmd_export_media(
     out_metadata.title = Some(media_metadata.title.clone());
     out_metadata.description = Some(media_metadata.description.clone());
     out_metadata.force_start_beginning = media_metadata.force_start_beginning;
+    out_metadata.is_anim = media_metadata.is_anim;
     out_metadata.time_slices = media_metadata.time_slices.clone();
 
     let mut tag_names_list: Vec<String> = Vec::new();

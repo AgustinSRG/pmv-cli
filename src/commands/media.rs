@@ -141,13 +141,22 @@ pub enum MediaCommand {
         path: String,
     },
 
-    /// Changes the description of a media asset
+    /// Changes the forced start from beginning parameter of a media asset
     SetForceStartBeginning {
         /// Media asset ID
         media: String,
 
         /// Set to 'true' if you want to tell the clients not to store the time, so they always start from the beginning
         force_start_beginning: String,
+    },
+
+    /// Changes the is-animation parameter of a media asset
+    SetIsAnimation {
+        /// Media asset ID
+        media: String,
+
+        /// Set to 'true' if you want to tell the clients to treat the media as an animation, so they force the loop and disable time skipping
+        is_animation: String,
     },
 
     /// Sets the thumbnail of a media asset
@@ -339,6 +348,13 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
             force_start_beginning,
         } => {
             run_cmd_media_set_force_start_beginning(global_opts, media, force_start_beginning)
+                .await;
+        }
+        MediaCommand::SetIsAnimation {
+            media,
+            is_animation,
+        } => {
+            run_cmd_media_set_is_anim(global_opts, media, is_animation)
                 .await;
         }
         MediaCommand::SetThumbnail { media, path } => {
@@ -543,6 +559,12 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
             if let Some(force_start_beginning) = media_data.force_start_beginning {
                 if force_start_beginning {
                     println!("Force start beginning: ENABLED");
+                }
+            }
+
+            if let Some(is_anim) = media_data.is_anim {
+                if is_anim {
+                    println!("Is animation: ENABLED");
                 }
             }
 
@@ -1185,7 +1207,8 @@ pub async fn run_cmd_media_set_force_start_beginning(
         &vault_url,
         media_id_param,
         MediaUpdateExtraBody {
-            force_start_beginning: force_start_beginning_bool,
+            force_start_beginning: Some(force_start_beginning_bool),
+            is_anim: None,
         },
         global_opts.debug,
     )
@@ -1205,6 +1228,161 @@ pub async fn run_cmd_media_set_force_start_beginning(
             }
 
             eprintln!("Successfully updated the force-start-beginning param of #{media_id_param}: {force_start_beginning_bool}");
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_media_set_is_anim(
+    global_opts: CommandGlobalOptions,
+    media: String,
+    is_anim: String,
+) {
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Media ID
+
+    let media_id_res = parse_identifier(&media);
+
+    let media_id_param: u64;
+
+    match media_id_res {
+        Ok(media_id) => {
+            let media_api_res =
+                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+
+            match media_api_res {
+                Ok(_) => {
+                    media_id_param = media_id;
+                }
+                Err(e) => {
+                    print_request_error(e);
+
+                    if logout_after_operation {
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                        match logout_res {
+                            Ok(_) => {}
+                            Err(_) => {
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    process::exit(1);
+                }
+            }
+        }
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid media asset identifier specified.");
+            process::exit(1);
+        }
+    }
+
+    // Param
+
+    let is_anim_lower = is_anim.to_lowercase();
+    let is_anim_bool: bool;
+
+    if is_anim_lower == "true"
+        || is_anim_lower == "yes"
+        || is_anim_lower == "1"
+    {
+        is_anim_bool = true;
+    } else if is_anim_lower == "false"
+        || is_anim_lower == "no"
+        || is_anim_lower == "0"
+    {
+        is_anim_bool = false;
+    } else {
+        if logout_after_operation {
+            let logout_res = do_logout(&global_opts, &vault_url).await;
+
+            match logout_res {
+                Ok(_) => {}
+                Err(_) => {
+                    process::exit(1);
+                }
+            }
+        }
+        eprintln!("Invalid IS_ANIMATION parameter. Set it to 'true' or 'false'.");
+        process::exit(1);
+    }
+
+    // Call API
+
+    let api_res = api_call_media_change_extra(
+        &vault_url,
+        media_id_param,
+        MediaUpdateExtraBody {
+            force_start_beginning: None,
+            is_anim: Some(is_anim_bool),
+        },
+        global_opts.debug,
+    )
+    .await;
+
+    match api_res {
+        Ok(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            eprintln!("Successfully updated the is-animation param of #{media_id_param}: {is_anim_bool}");
         }
         Err(e) => {
             print_request_error(e);

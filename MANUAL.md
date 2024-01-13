@@ -234,7 +234,8 @@ pmv-cli media <COMMAND>
 | [set-title](#command-media-set-title) | Changes the title of a media asset |
 | [set-description](#command-media-set-description) | Changes the description of a media asset |
 | [set-extended-description](#command-media-set-extended-description) | Changes the extended description of a media asset |
-| [set-force-start-beginning](#command-media-set-force-start-beginning) | Changes the description of a media asset |
+| [set-force-start-beginning](#command-media-set-force-start-beginning) | Changes the forced start from beginning parameter of a media asset |
+| [set-is-animation](#command-media-set-is-animation) | Changes the is-animation parameter of a media asset |
 | [set-thumbnail](#command-media-set-thumbnail) | Sets the thumbnail of a media asset |
 | [get-time-slices](#command-media-get-time-slices) | Prints the time slices of a media asset |
 | [set-time-slices](#command-media-set-time-slices) | Sets the time slices of a media asset |
@@ -470,7 +471,7 @@ pmv-cli media set-extended-description <MEDIA> <PATH>
 
 ### Command: media set-force-start-beginning
 
-Changes the description of a media asset
+Changes the forced start from beginning parameter of a media asset
 
 <ins>**Usage:**</ins>
 
@@ -484,6 +485,29 @@ pmv-cli media set-force-start-beginning <MEDIA> <FORCE_START_BEGINNING>
 | --- | --- |
 | `<MEDIA>` | Media asset ID |
 | `<FORCE_START_BEGINNING>` | Set to 'true' if you want to tell the clients not to store the time, so they always start from the beginning |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: media set-is-animation
+
+Changes the is-animation parameter of a media asset
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media set-is-animation <MEDIA> <IS_ANIMATION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<IS_ANIMATION>` | Set to 'true' if you want to tell the clients to treat the media as an animation, so they force the loop and disable time skipping |
 
 <ins>**Options:**</ins>
 

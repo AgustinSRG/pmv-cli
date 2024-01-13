@@ -312,26 +312,23 @@ pub async fn run_cmd_import_media(
 
     // Set extra configuration
 
-    if let Some(force_start_beginning) = import_metadata.force_start_beginning {
-        if force_start_beginning {
-            let api_res = api_call_media_change_extra(
-                &vault_url,
-                media_id,
-                MediaUpdateExtraBody {
-                    force_start_beginning,
-                },
-                global_opts.debug,
-            )
-            .await;
+    let api_res = api_call_media_change_extra(
+        &vault_url,
+        media_id,
+        MediaUpdateExtraBody {
+            force_start_beginning: import_metadata.force_start_beginning,
+            is_anim: import_metadata.is_anim,
+        },
+        global_opts.debug,
+    )
+    .await;
 
-            match api_res {
-                Ok(_) => {
-                    eprintln!("Successfully updated the force-start-beginning param of {media_id_str}: {force_start_beginning}");
-                }
-                Err(e) => {
-                    print_request_error(e);
-                }
-            }
+    match api_res {
+        Ok(_) => {
+            eprintln!("Successfully updated the extra parameters of {media_id_str}");
+        }
+        Err(e) => {
+            print_request_error(e);
         }
     }
 

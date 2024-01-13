@@ -127,6 +127,9 @@ pub struct MediaMetadata {
     #[serde(rename = "force_start_beginning")]
     pub force_start_beginning: Option<bool>,
 
+    #[serde(rename = "is_anim")]
+    pub is_anim: Option<bool>,
+
     #[serde(rename = "resolutions")]
     pub resolutions: Option<Vec<MediaResolution>>,
 
@@ -177,6 +180,9 @@ pub struct MediaMetadataExport {
 
     #[serde(rename = "force_start_beginning")]
     pub force_start_beginning: Option<bool>,
+
+    #[serde(rename = "is_anim")]
+    pub is_anim: Option<bool>,
 
     #[serde(rename = "time_slices")]
     pub time_slices: Option<Vec<MediaTimeSlice>>,
@@ -406,7 +412,10 @@ pub struct MediaUpdateExtendedDescriptionBody {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MediaUpdateExtraBody {
     #[serde(rename = "force_start_beginning")]
-    pub force_start_beginning: bool,
+    pub force_start_beginning: Option<bool>,
+
+    #[serde(rename = "is_anim")]
+    pub is_anim: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
