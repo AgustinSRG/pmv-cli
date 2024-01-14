@@ -1,5 +1,8 @@
 // API index
 
+mod about;
+pub use about::*;
+
 mod account;
 pub use account::*;
 

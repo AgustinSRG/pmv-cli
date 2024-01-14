@@ -47,6 +47,9 @@ use search_advanced::*;
 mod search_basic;
 use search_basic::*;
 
+mod server_info;
+use server_info::*;
+
 mod tag;
 use tag::*;
 
@@ -261,6 +264,10 @@ pub enum Commands {
         #[command(subcommand)]
         batch_command: BatchCommand,
     },
+
+    /// Gets server information, like the version it is using.
+    #[clap(alias("server-info"))]
+    GetServerInformation,
 }
 
 pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
@@ -362,6 +369,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
         }
         Commands::Invites { invites_cmd } => {
             run_invites_cmd(global_opts, invites_cmd).await;
+        },
+        Commands::GetServerInformation => {
+            run_cmd_server_info(global_opts).await;
         },
     }
 }

@@ -25,6 +25,7 @@ pmv-cli [OPTIONS] <COMMAND>
 | [task](#command-task) | Retrieves tasks information |
 | [invites](#command-invites) | Manages invites |
 | [batch](#command-batch) | Applies a batch operation to a list of media assets |
+| [get-server-information](#command-get-server-information) | Gets server information, like the version it is using |
 
 <ins>**Options:**</ins>
 
@@ -1880,6 +1881,22 @@ Delete media assets
 
 ```
 pmv-cli batch delete
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+## Command: get-server-information
+
+Gets server information, like the version it is using
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli get-server-information
 ```
 
 <ins>**Options:**</ins>
