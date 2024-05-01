@@ -122,5 +122,5 @@ pub async fn do_get_download_request(
 
     progress_receiver.progress_update(downloaded_bytes, body_length);
     progress_receiver.progress_finish();
-    return Ok(());
+    Ok(())
 }

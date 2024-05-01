@@ -223,10 +223,10 @@ pub async fn do_multipart_upload_request(
                 return Err(RequestError::StatusCode(res_status));
             }
 
-            return Ok(res_body);
+            Ok(res_body)
         }
         Err(err) => {
-            return Err(RequestError::NetworkError(err.to_string()));
+            Err(RequestError::NetworkError(err.to_string()))
         }
     }
 }

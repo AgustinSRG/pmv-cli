@@ -84,15 +84,15 @@ pub async fn send_request(request_builder: reqwest::RequestBuilder) -> Result<St
                         return Err(RequestError::StatusCode(res_status));
                     }
                 
-                    return Ok(res_body)
+                    Ok(res_body)
                 },
                 Err(err) => {
-                    return Err(RequestError::NetworkError(err.to_string()));
+                    Err(RequestError::NetworkError(err.to_string()))
                 },
             }
         },
         Err(err) => {
-            return Err(RequestError::NetworkError(err.to_string()));
+            Err(RequestError::NetworkError(err.to_string()))
         },
     }
 }
@@ -122,7 +122,7 @@ pub async fn do_get_request(
 
     // Send request
 
-    return send_request(request_builder).await;
+    send_request(request_builder).await
 }
 
 pub async fn do_post_request(
@@ -149,7 +149,7 @@ pub async fn do_post_request(
         request_builder = request_builder.header(SESSION_HEADER_NAME, s);
     }
 
-    return send_request(request_builder).await;
+    send_request(request_builder).await
 }
 
 
@@ -174,5 +174,5 @@ pub async fn do_delete_request(
         request_builder = request_builder.header(SESSION_HEADER_NAME, s);
     }
 
-    return send_request(request_builder).await;
+    send_request(request_builder).await
 }
