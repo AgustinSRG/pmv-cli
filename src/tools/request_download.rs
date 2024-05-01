@@ -5,8 +5,6 @@ use std::time::Instant;
 use crate::tools::{get_session_from_uri, resolve_vault_api_uri, SESSION_HEADER_NAME};
 
 use super::{RequestError, VaultURI};
-use hyper::{body::HttpBody, http::Request, Body, Client, Method};
-use hyper_tls::HttpsConnector;
 use tokio::{fs::File, io::AsyncWriteExt};
 
 pub trait ProgressReceiver {
@@ -29,7 +27,11 @@ pub async fn do_get_download_request(
         eprintln!("\rDEBUG: DOWNLOAD {final_uri} -> {file_path}");
     }
 
-    let mut request_builder = Request::builder().method(Method::GET).uri(final_uri);
+    let client = reqwest::Client::new();
+
+    // Build request
+
+    let mut request_builder = client.get(final_uri);
 
     let session = get_session_from_uri(uri.clone());
 
@@ -37,21 +39,15 @@ pub async fn do_get_download_request(
         request_builder = request_builder.header(SESSION_HEADER_NAME, s);
     }
 
-    let request = request_builder.body(Body::empty()).unwrap();
+    // Send request
 
-    let https = HttpsConnector::new();
-    let client = Client::builder().build::<_, hyper::Body>(https);
+    let response_result = request_builder.send().await;
 
-    let result = client.request(request).await;
-
-    if result.is_err() {
-        // Network error
-        return Err(RequestError::Hyper(result.err().unwrap()));
+    if let Err(err) = response_result {
+        return Err(RequestError::NetworkError(err.to_string()));
     }
 
-    // Response received
-
-    let response = result.unwrap();
+    let mut response = response_result.unwrap();
 
     let res_status = response.status();
 
@@ -73,61 +69,58 @@ pub async fn do_get_download_request(
 
     let mut body_length = 0;
 
-    let content_length_opt = response.headers().get("Content-Length");
-
-    if let Some(content_length_header) = content_length_opt {
-        let content_length_str_res = content_length_header.to_str();
-
-        if let Ok(content_length_str) = content_length_str_res {
-            let content_length_parsed = content_length_str.parse::<u64>();
-
-            if let Ok(content_length) = content_length_parsed {
-                body_length = content_length;
-            }
-        }
+    if let Some(content_length) = response.content_length() {
+        body_length = content_length;
     }
 
-    progress_receiver.progress_start();
-
-    let mut start = Instant::now();
-
-    let mut body = response.into_body();
     let mut downloaded_bytes: u64 = 0;
 
-    while let Some(buf) = body.data().await {
-        match buf {
-            Ok(mut buf_u) => {
-                let bug_u_len = buf_u.len();
-                let write_res = file.write_all_buf(&mut buf_u).await;
+    let mut start = Instant::now();
+    progress_receiver.progress_start();
 
-                match write_res {
-                    Ok(_) => {
-                        downloaded_bytes += bug_u_len as u64;
+    let mut finished = false;
 
-                        let elapsed = start.elapsed().as_millis();
+    while !finished {
+        // Grab chunk
 
-                        if elapsed > 100 {
-                            // Report progress
-                            progress_receiver.progress_update(downloaded_bytes, body_length);
+        let chunk_res = response.chunk().await;
 
-                            // Restart counter
-                            start = Instant::now();
-                        }
+        match chunk_res {
+            Ok(chunk_opt) => match chunk_opt {
+                Some(mut chunk) => {
+                    downloaded_bytes += chunk.len() as u64;
+
+                    // Write chunk to file
+
+                    let write_res = file.write_all_buf(&mut chunk).await;
+
+                    if let Err(err) = write_res {
+                        return Err(RequestError::FileSystem(err.to_string()));
                     }
-                    Err(e) => {
-                        progress_receiver.progress_finish();
-                        return Err(RequestError::FileSystem(e.to_string()));
+
+                    // Report progress
+
+                    let elapsed = start.elapsed().as_millis();
+
+                    if elapsed > 100 {
+                        // Report progress
+                        progress_receiver.progress_update(downloaded_bytes, body_length);
+
+                        // Restart counter
+                        start = Instant::now();
                     }
                 }
-            }
-            Err(e) => {
-                progress_receiver.progress_finish();
-                return Err(RequestError::Hyper(e));
+                None => {
+                    finished = true
+                },
+            },
+            Err(err) => {
+                return Err(RequestError::NetworkError(err.to_string()));
             }
         }
     }
 
     progress_receiver.progress_update(downloaded_bytes, body_length);
     progress_receiver.progress_finish();
-    Ok(())
+    return Ok(());
 }

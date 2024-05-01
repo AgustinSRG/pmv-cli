@@ -3,7 +3,7 @@
 use std::process;
 
 use clap::Subcommand;
-use hyper::StatusCode;
+use reqwest::StatusCode;
 use tokio::{
     io::{self, AsyncReadExt},
     task,
@@ -397,7 +397,7 @@ pub async fn run_cmd_monitor_tasks(global_opts: CommandGlobalOptions) {
                     message: _,
                     body: _,
                 }
-                | crate::tools::RequestError::Hyper(_)
+                | crate::tools::RequestError::NetworkError(_)
                 | crate::tools::RequestError::FileSystem(_) => {
                     print_request_error(e);
                     if logout_after_operation {
@@ -561,7 +561,7 @@ pub async fn run_cmd_wait_for_task(global_opts: CommandGlobalOptions, task: Stri
                             print_request_error(e);
                         }
                     }
-                    crate::tools::RequestError::Hyper(_)
+                    crate::tools::RequestError::NetworkError(_)
                     | crate::tools::RequestError::FileSystem(_) => {
                         print_request_error(e);
                     }

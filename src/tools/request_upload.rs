@@ -4,14 +4,12 @@ use std::fs::File;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
+use tokio_sync_read_stream::SyncReadStream;
 
 use super::{super::models::*, ProgressReceiver};
 use super::{get_session_from_uri, resolve_vault_api_uri, RequestError, SESSION_HEADER_NAME};
 
 use super::vault_uri::VaultURI;
-use hyper::{http::Request, Client, Method};
-use hyper_multipart_rfc7578::client::multipart;
-use hyper_tls::HttpsConnector;
 
 pub struct UploadProgressReporter {
     file: std::fs::File,
@@ -126,13 +124,7 @@ pub async fn do_multipart_upload_request(
         eprintln!("\rDEBUG: UPLOAD {file_path} -> {final_uri}");
     }
 
-    let mut request_builder = Request::builder().method(Method::POST).uri(final_uri);
-
-    let session = get_session_from_uri(uri.clone());
-
-    if let Some(s) = session {
-        request_builder = request_builder.header(SESSION_HEADER_NAME, s);
-    }
+    let client = reqwest::Client::new();
 
     // Load file
 
@@ -172,73 +164,69 @@ pub async fn do_multipart_upload_request(
 
     reporter.start();
 
-    let mut form = multipart::Form::default();
+    let stream: SyncReadStream<UploadProgressReporterSync> = reporter.clone().into();
 
-    form.add_reader_file(field, reporter.clone(), &file_name);
+    let file_part = reqwest::multipart::Part::stream(reqwest::Body::wrap_stream(stream)).file_name(file_name);
 
-    let request_build_result =
-        form.set_body_convert::<hyper::Body, multipart::Body>(request_builder);
+    let form = reqwest::multipart::Form::new().part(field, file_part);
 
-    if request_build_result.is_err() {
-        reporter.finish();
-        return Err(RequestError::FileSystem(
-            request_build_result.err().unwrap().to_string(),
-        ));
+    let mut request_builder = client.post(final_uri).multipart(form);
+
+    let session = get_session_from_uri(uri.clone());
+
+    if let Some(s) = session {
+        request_builder = request_builder.header(SESSION_HEADER_NAME, s);
     }
 
-    let request = request_build_result.unwrap();
+    // Send request
 
-    let https = HttpsConnector::new();
-    let client = Client::builder().build::<_, hyper::Body>(https);
+    let response_result = request_builder.send().await;
 
-    let result = client.request(request).await;
-
-    if result.is_err() {
-        // Network error
-        reporter.finish();
-        return Err(RequestError::Hyper(result.err().unwrap()));
+    if let Err(err) = response_result {
+        return Err(RequestError::NetworkError(err.to_string()));
     }
+
+    // Finish the upload reporter
 
     reporter.update(file_len);
     reporter.finish();
 
     // Response received
 
-    let response = result.unwrap();
+    let response = response_result.unwrap();
 
     let res_status = response.status();
+    // Grab body
 
-    // Read body
+    let body_result = response.text().await;
 
-    let res_body_bytes = hyper::body::to_bytes(response).await;
+    match body_result {
+        Ok(res_body) => {
+            if res_status != reqwest::StatusCode::OK {
+                if !res_body.is_empty() {
+                    let parsed_body: Result<APIErrorResponse, _> = serde_json::from_str(&res_body);
 
-    if res_body_bytes.is_err() {
-        // Connection error receiving the body
-        return Err(RequestError::Hyper(res_body_bytes.err().unwrap()));
-    }
-
-    let res_body = String::from_utf8(res_body_bytes.unwrap().to_vec()).unwrap_or("".to_string());
-
-    if res_status != 200 {
-        if !res_body.is_empty() {
-            let parsed_body: Result<APIErrorResponse, _> = serde_json::from_str(&res_body);
-
-            match parsed_body {
-                Ok(r) => {
-                    return Err(RequestError::Api {
-                        status: res_status,
-                        code: r.code,
-                        message: r.message,
-                    });
+                    match parsed_body {
+                        Ok(r) => {
+                            return Err(RequestError::Api {
+                                status: res_status,
+                                code: r.code,
+                                message: r.message,
+                            });
+                        }
+                        Err(_) => {
+                            return Err(RequestError::StatusCode(res_status));
+                        }
+                    }
                 }
-                Err(_) => {
-                    return Err(RequestError::StatusCode(res_status));
-                }
+
+                return Err(RequestError::StatusCode(res_status));
             }
+
+            return Ok(res_body);
         }
-
-        return Err(RequestError::StatusCode(res_status));
+        Err(err) => {
+            return Err(RequestError::NetworkError(err.to_string()));
+        }
     }
-
-    Ok(res_body)
 }

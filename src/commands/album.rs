@@ -3,7 +3,7 @@
 use std::{collections::HashSet, process};
 
 use clap::Subcommand;
-use hyper::StatusCode;
+use reqwest::StatusCode;
 
 use crate::{
     api::{
@@ -892,7 +892,7 @@ pub async fn run_cmd_album_add_media(
                 Err(e) => {
                     match e {
                         crate::tools::RequestError::StatusCode(_)
-                        | crate::tools::RequestError::Hyper(_)
+                        | crate::tools::RequestError::NetworkError(_)
                         | crate::tools::RequestError::FileSystem(_)
                         | crate::tools::RequestError::Json {
                             message: _,
@@ -1277,7 +1277,7 @@ pub async fn run_cmd_album_media_change_position(
                 Err(e) => {
                     match e {
                         crate::tools::RequestError::StatusCode(_)
-                        | crate::tools::RequestError::Hyper(_)
+                        | crate::tools::RequestError::NetworkError(_)
                         | crate::tools::RequestError::FileSystem(_)
                         | crate::tools::RequestError::Json {
                             message: _,

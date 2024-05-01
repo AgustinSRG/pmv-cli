@@ -406,7 +406,7 @@ pub fn print_request_error(e: RequestError) {
         } => {
             eprintln!("API Error | Status: {status} | Code: {code} | Message: {message}");
         }
-        RequestError::Hyper(e) => {
+        RequestError::NetworkError(e) => {
             eprintln!("Error: {e}");
         }
         RequestError::FileSystem(e) => {

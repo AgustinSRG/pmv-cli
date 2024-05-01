@@ -3,31 +3,23 @@
 use super::super::models::*;
 
 use super::vault_uri::VaultURI;
-use hyper::{http::Request, Body, Client, Method};
-use hyper_tls::HttpsConnector;
 
 pub const SESSION_HEADER_NAME: &str = "x-session-token";
 
 #[derive(Debug)]
 pub enum RequestError {
-    StatusCode(hyper::StatusCode),
+    StatusCode(reqwest::StatusCode),
     Api {
-        status: hyper::StatusCode,
+        status: reqwest::StatusCode,
         code: String,
         message: String,
     },
-    Hyper(hyper::Error),
+    NetworkError(String),
     Json {
         message: String,
         body: String,
     },
     FileSystem(String),
-}
-
-impl From<hyper::Error> for RequestError {
-    fn from(value: hyper::Error) -> Self {
-        RequestError::Hyper(value)
-    }
 }
 
 pub fn resolve_vault_api_uri(uri: VaultURI, path: String) -> String {
@@ -58,6 +50,53 @@ pub fn get_session_from_uri(uri: VaultURI) -> Option<String> {
     }
 }
 
+pub async fn send_request(request_builder: reqwest::RequestBuilder) -> Result<String, RequestError> {
+    let response_result = request_builder.send().await;
+
+    match response_result {
+        Ok(response) => {
+            let res_status = response.status();
+
+            // Grab body
+
+            let body_result = response.text().await;
+
+            match body_result {
+                Ok(res_body) => {
+                    if res_status != reqwest::StatusCode::OK {
+                        if !res_body.is_empty() {
+                            let parsed_body: Result<APIErrorResponse, _> = serde_json::from_str(&res_body);
+                
+                            match parsed_body {
+                                Ok(r) => {
+                                    return Err(RequestError::Api {
+                                        status: res_status,
+                                        code: r.code,
+                                        message: r.message,
+                                    });
+                                }
+                                Err(_) => {
+                                    return Err(RequestError::StatusCode(res_status));
+                                }
+                            }
+                        }
+                
+                        return Err(RequestError::StatusCode(res_status));
+                    }
+                
+                    return Ok(res_body)
+                },
+                Err(err) => {
+                    return Err(RequestError::NetworkError(err.to_string()));
+                },
+            }
+        },
+        Err(err) => {
+            return Err(RequestError::NetworkError(err.to_string()));
+        },
+    }
+}
+
 pub async fn do_get_request(
     uri: &VaultURI,
     path: String,
@@ -69,58 +108,21 @@ pub async fn do_get_request(
         eprintln!("\rDEBUG: GET {final_uri}");
     }
 
-    let mut request_builder = Request::builder().method(Method::GET).uri(final_uri);
+    let client = reqwest::Client::new();
 
     let session = get_session_from_uri(uri.clone());
+
+    // Build request
+
+    let mut request_builder = client.get(final_uri);
 
     if let Some(s) = session {
         request_builder = request_builder.header(SESSION_HEADER_NAME, s);
     }
 
-    let request = request_builder.body(Body::empty()).unwrap();
+    // Send request
 
-    let https = HttpsConnector::new();
-    let client = Client::builder().build::<_, hyper::Body>(https);
-
-    // Response received
-
-    let response = client.request(request).await?;
-
-    let res_status = response.status();
-
-    // Read body
-
-    let res_body_bytes = hyper::body::to_bytes(response).await;
-
-    if res_body_bytes.is_err() {
-        // Connection error receiving the body
-        return Err(RequestError::Hyper(res_body_bytes.err().unwrap()));
-    }
-
-    let res_body = String::from_utf8(res_body_bytes.unwrap().to_vec()).unwrap_or("".to_string());
-
-    if res_status != 200 {
-        if !res_body.is_empty() {
-            let parsed_body: Result<APIErrorResponse, _> = serde_json::from_str(&res_body);
-
-            match parsed_body {
-                Ok(r) => {
-                    return Err(RequestError::Api {
-                        status: res_status,
-                        code: r.code,
-                        message: r.message,
-                    });
-                }
-                Err(_) => {
-                    return Err(RequestError::StatusCode(res_status));
-                }
-            }
-        }
-
-        return Err(RequestError::StatusCode(res_status));
-    }
-
-    Ok(res_body)
+    return send_request(request_builder).await;
 }
 
 pub async fn do_post_request(
@@ -135,10 +137,11 @@ pub async fn do_post_request(
         eprintln!("\rDEBUG: POST {final_uri}");
     }
 
-    let mut request_builder = Request::builder()
-        .method(Method::POST)
-        .uri(final_uri)
-        .header("Content-Type", "application/json");
+    let client = reqwest::Client::new();
+
+    let mut request_builder = client.post(final_uri)
+        .header("Content-Type", "application/json")
+        .body(body);
 
     let session = get_session_from_uri(uri.clone());
 
@@ -146,57 +149,7 @@ pub async fn do_post_request(
         request_builder = request_builder.header(SESSION_HEADER_NAME, s);
     }
 
-    let request = request_builder.body(Body::from(body)).unwrap();
-
-    let https = HttpsConnector::new();
-    let client = Client::builder().build::<_, hyper::Body>(https);
-
-    let result = client.request(request).await;
-
-    if result.is_err() {
-        // Network error
-        return Err(RequestError::Hyper(result.err().unwrap()));
-    }
-
-    // Response received
-
-    let response = result.unwrap();
-
-    let res_status = response.status();
-
-    // Read body
-
-    let res_body_bytes = hyper::body::to_bytes(response).await;
-
-    if res_body_bytes.is_err() {
-        // Connection error receiving the body
-        return Err(RequestError::Hyper(res_body_bytes.err().unwrap()));
-    }
-
-    let res_body = String::from_utf8(res_body_bytes.unwrap().to_vec()).unwrap_or("".to_string());
-
-    if res_status != 200 {
-        if !res_body.is_empty() {
-            let parsed_body: Result<APIErrorResponse, _> = serde_json::from_str(&res_body);
-
-            match parsed_body {
-                Ok(r) => {
-                    return Err(RequestError::Api {
-                        status: res_status,
-                        code: r.code,
-                        message: r.message,
-                    });
-                }
-                Err(_) => {
-                    return Err(RequestError::StatusCode(res_status));
-                }
-            }
-        }
-
-        return Err(RequestError::StatusCode(res_status));
-    }
-
-    Ok(res_body)
+    return send_request(request_builder).await;
 }
 
 
@@ -211,7 +164,9 @@ pub async fn do_delete_request(
         eprintln!("\rDEBUG: DELETE {final_uri}");
     }
 
-    let mut request_builder = Request::builder().method(Method::DELETE).uri(final_uri);
+    let client = reqwest::Client::new();
+
+    let mut request_builder = client.delete(final_uri);
 
     let session = get_session_from_uri(uri.clone());
 
@@ -219,48 +174,5 @@ pub async fn do_delete_request(
         request_builder = request_builder.header(SESSION_HEADER_NAME, s);
     }
 
-    let request = request_builder.body(Body::empty()).unwrap();
-
-    let https = HttpsConnector::new();
-    let client = Client::builder().build::<_, hyper::Body>(https);
-
-    // Response received
-
-    let response = client.request(request).await?;
-
-    let res_status = response.status();
-
-    // Read body
-
-    let res_body_bytes = hyper::body::to_bytes(response).await;
-
-    if res_body_bytes.is_err() {
-        // Connection error receiving the body
-        return Err(RequestError::Hyper(res_body_bytes.err().unwrap()));
-    }
-
-    let res_body = String::from_utf8(res_body_bytes.unwrap().to_vec()).unwrap_or("".to_string());
-
-    if res_status != 200 {
-        if !res_body.is_empty() {
-            let parsed_body: Result<APIErrorResponse, _> = serde_json::from_str(&res_body);
-
-            match parsed_body {
-                Ok(r) => {
-                    return Err(RequestError::Api {
-                        status: res_status,
-                        code: r.code,
-                        message: r.message,
-                    });
-                }
-                Err(_) => {
-                    return Err(RequestError::StatusCode(res_status));
-                }
-            }
-        }
-
-        return Err(RequestError::StatusCode(res_status));
-    }
-
-    Ok(res_body)
+    return send_request(request_builder).await;
 }

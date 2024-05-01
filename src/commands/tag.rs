@@ -3,7 +3,7 @@
 use std::process;
 
 use clap::Subcommand;
-use hyper::StatusCode;
+use reqwest::StatusCode;
 
 use crate::{
     api::{api_call_get_media, api_call_get_tags, api_call_tag_add, api_call_tag_remove},
@@ -214,7 +214,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
                 Err(e) => {
                     match e {
                         crate::tools::RequestError::StatusCode(_)
-                        | crate::tools::RequestError::Hyper(_)
+                        | crate::tools::RequestError::NetworkError(_)
                         | crate::tools::RequestError::FileSystem(_)
                         | crate::tools::RequestError::Json {
                             message: _,

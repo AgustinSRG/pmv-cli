@@ -2,7 +2,7 @@
 
 use std::process;
 
-use hyper::StatusCode;
+use reqwest::StatusCode;
 
 use crate::{
     api::{api_call_context, api_call_login_invite_code},
@@ -75,7 +75,7 @@ pub async fn run_cmd_login(
                             process::exit(1);
                         }
                     }
-                    crate::tools::RequestError::Hyper(e) => {
+                    crate::tools::RequestError::NetworkError(e) => {
                         eprintln!("Error: {e}");
                         process::exit(1);
                     }
