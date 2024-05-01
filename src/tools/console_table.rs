@@ -10,7 +10,7 @@ pub fn to_csv_string(s: &str) -> String {
     serde_json::to_string(s).unwrap()
 }
 
-pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>, std_err: bool) {
+pub fn print_table(head: &[String], body: &Vec<Vec<String>>, std_err: bool) {
     let len = head.len();
 
     // Get term size
@@ -101,7 +101,7 @@ pub fn print_table(head: &Vec<String>, body: &Vec<Vec<String>>, std_err: bool) {
     }
 }
 
-fn print_table_with_sizes(head: &Vec<String>, body: &Vec<Vec<String>>, sizes: &Vec<usize>, std_err: bool) {
+fn print_table_with_sizes(head: &[String], body: &Vec<Vec<String>>, sizes: &Vec<usize>, std_err: bool) {
     print_table_separator(sizes, std_err);
 
     print_table_line(head, sizes, std_err);
@@ -115,7 +115,7 @@ fn print_table_with_sizes(head: &Vec<String>, body: &Vec<Vec<String>>, sizes: &V
     print_table_separator(sizes, std_err);
 }
 
-fn print_table_line(col: &Vec<String>, sizes: &[usize], std_err: bool) {
+fn print_table_line(col: &[String], sizes: &[usize], std_err: bool) {
     let mut more_lines = true;
     let mut line = 0;
 
