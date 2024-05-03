@@ -953,7 +953,7 @@ pmv-cli advanced-search [OPTIONS]
 | `-m, --tags-mode <TAGS_MODE>` | Tag filtering mode. Can be: all, any, none or untagged |
 | `-a, --album <ALBUM>` | Filter by album. Expected an album ID, like: #1 |
 | `-l, --limit <LIMIT>` | Limit on the number of results to get. 25 by default |
-| `-s, --skip <SKIP>` | Number of results to skip. 0 by default |
+| `-s, --start-from <START_FROM>` | Media id to use as a stating point for the scanning process |
 | `-r, --reverse` | Reverses results sorting. By default newest results are first. With this option, oldest results are first |
 | `-e, --extended` | Extended version of the results table |
 | `-c, --csv` | CSV format |
