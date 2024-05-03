@@ -6,9 +6,7 @@ use clap::Subcommand;
 
 use crate::{
     api::{
-        api_call_album_add_media, api_call_album_remove_media, api_call_get_album,
-        api_call_get_tags, api_call_media_delete, api_call_search, api_call_tag_add,
-        api_call_tag_remove,
+        api_call_album_add_media, api_call_album_remove_media, api_call_get_album, api_call_get_tags, api_call_media_delete, api_call_search_advanced, api_call_tag_add, api_call_tag_remove, MAX_API_TAGS_FILTER, MAX_SEARCH_PAGE_LIMIT
     },
     models::{
         parse_media_type, parse_tag_name, parse_tag_search_mode, tags_map_from_list,
@@ -190,13 +188,14 @@ pub async fn run_cmd_batch_operation(
     }
 
     let mut tags_filter: Option<Vec<u64>> = None;
-    let mut first_tag_name: Option<String> = None;
-    let mut tag_param: Option<String> = None;
+    let mut tag_param: Option<Vec<String>> = None;
+    let mut tags_filter_count: usize = 0;
 
     if let Some(tags_str) = tags {
         let tag_names = tags_str.split(' ');
 
         let mut tag_ids: Vec<u64> = Vec::new();
+        let mut tag_names_param: Vec<String> = Vec::new();
 
         for tag_name in tag_names {
             let parsed_tag_name = parse_tag_name(tag_name);
@@ -219,14 +218,17 @@ pub async fn run_cmd_batch_operation(
                 process::exit(1);
             }
 
-            if first_tag_name.is_none() {
-                first_tag_name = Some(parsed_tag_name.clone());
+            if tag_names_param.len() < MAX_API_TAGS_FILTER {
+                tag_names_param.push(parsed_tag_name.clone());
             }
 
             tag_ids.push(*tags_reverse_map.get(&parsed_tag_name).unwrap());
+
+            tags_filter_count += 1;
         }
 
         tags_filter = Some(tag_ids);
+        tag_param = Some(tag_names_param);
     }
 
     let mut tags_filter_mode = TagSearchMode::All;
@@ -237,10 +239,6 @@ pub async fn run_cmd_batch_operation(
         match tags_mode_res {
             Ok(m) => {
                 tags_filter_mode = m;
-
-                if tags_filter_mode == TagSearchMode::All && tags_filter.is_some() {
-                    tag_param = first_tag_name;
-                }
             }
             Err(_) => {
                 if logout_after_operation {
@@ -257,6 +255,34 @@ pub async fn run_cmd_batch_operation(
                 process::exit(1);
             }
         }
+    }
+
+    let tag_mode_api_param: String = match tags_filter_mode {
+        TagSearchMode::All => "allof".to_string(),
+        TagSearchMode::Any => {
+            if tags_filter_count > MAX_API_TAGS_FILTER {
+                "allof".to_string()
+            } else {
+                "anyof".to_string()
+            }
+        },
+        TagSearchMode::None => {
+            "noneof".to_string()
+        },
+        TagSearchMode::Untagged => "allof".to_string(),
+    };
+
+    match tags_filter_mode {
+        TagSearchMode::All => {},
+        TagSearchMode::Any => {
+            if tags_filter_count > MAX_API_TAGS_FILTER {
+                tag_param = None
+            }
+        },
+        TagSearchMode::None => {},
+        TagSearchMode::Untagged => {
+            tag_param = None
+        },
     }
 
     if everything {
@@ -322,15 +348,16 @@ pub async fn run_cmd_batch_operation(
         }
         None => {
             let mut advanced_search_finished = false;
-            let mut page = 0;
+            let mut continue_ref: Option<u64> = None;
             while !advanced_search_finished {
                 // Call API
-                let api_res = api_call_search(
+                let api_res = api_call_search_advanced(
                     &vault_url,
-                    tag_param.clone(),
+                    tag_param.as_deref(),
+                    &tag_mode_api_param,
                     false,
-                    page,
-                    256,
+                    MAX_SEARCH_PAGE_LIMIT as u32,
+                    continue_ref,
                     global_opts.debug,
                 )
                 .await;
@@ -350,9 +377,11 @@ pub async fn run_cmd_batch_operation(
                             }
                         }
 
-                        if search_result.page_index >= search_result.page_count - 1 {
+                        if search_result.scanned >= search_result.total_count {
                             advanced_search_finished = true;
-                        }
+                        } 
+
+                        continue_ref = Some(search_result.continue_ref);
                     }
                     Err(e) => {
                         print_request_error(e);
@@ -369,8 +398,6 @@ pub async fn run_cmd_batch_operation(
                         process::exit(1);
                     }
                 }
-
-                page += 1;
             }
         }
     }

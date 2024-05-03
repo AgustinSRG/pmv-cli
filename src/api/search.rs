@@ -5,6 +5,8 @@ use crate::{
     tools::{do_get_request, RequestError, VaultURI},
 };
 
+pub const MAX_SEARCH_PAGE_LIMIT: usize = 256;
+
 pub async fn api_call_search(
     url: &VaultURI,
     tag: Option<String>,
@@ -70,10 +72,12 @@ pub async fn api_call_random(
     Ok(parsed_body.unwrap())
 }
 
+pub const MAX_API_TAGS_FILTER: usize = 16;
+
 pub async fn api_call_search_advanced(
     url: &VaultURI,
     tags: Option<&[String]>,
-    tags_mode: &String,
+    tags_mode: &str,
     reverse_order: bool,
     limit: u32,
     continue_ref: Option<u64>,

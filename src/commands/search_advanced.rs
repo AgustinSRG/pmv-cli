@@ -2,7 +2,7 @@
 
 use std::process;
 
-use crate::api::{api_call_get_album, api_call_search_advanced};
+use crate::api::{api_call_get_album, api_call_search_advanced, MAX_API_TAGS_FILTER};
 use crate::models::{
     parse_media_type, parse_tag_name, parse_tag_search_mode, tags_reverse_map_from_list,
     MediaListItem, MediaType, TagSearchMode,
@@ -15,8 +15,6 @@ use crate::{
 };
 
 use super::{get_vault_url, logout::do_logout, print_request_error, CommandGlobalOptions};
-
-const MAX_API_TAGS_FILTER: usize = 16;
 
 const DEFAULT_RESULTS_LIMIT: u32 = 25;
 
