@@ -180,9 +180,9 @@ pub enum Commands {
         #[arg(short, long)]
         limit: Option<u32>,
 
-        /// Number of results to skip. 0 by default.
+        /// Media id to use as a stating point for the scanning process
         #[arg(short, long)]
-        skip: Option<u32>,
+        start_from: Option<String>,
 
         /// Reverses results sorting. By default newest results are first. With this option, oldest results are first.
         #[arg(short, long)]
@@ -311,7 +311,7 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
             tags_mode,
             album,
             limit,
-            skip,
+            start_from,
             reverse,
             extended,
             csv,
@@ -325,7 +325,7 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
                 tags_mode,
                 album,
                 limit,
-                skip,
+                start_from,
                 reverse,
                 extended,
                 csv,

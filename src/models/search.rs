@@ -33,3 +33,19 @@ pub struct RandomMediaResult {
     #[serde(rename = "page_items")]
     pub page_items: Vec<MediaListItem>,
 }
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AdvancedSearchMediaResult {
+    #[serde(rename = "total_count")]
+    pub total_count: u64,
+
+    #[serde(rename = "scanned")]
+    pub scanned: u64,
+
+    #[serde(rename = "continue")]
+    pub continue_ref: u64,
+
+    #[serde(rename = "items")]
+    pub page_items: Vec<MediaListItem>,
+}

@@ -2,7 +2,7 @@
 
 use std::process;
 
-use crate::api::{api_call_get_album, api_call_search};
+use crate::api::{api_call_get_album, api_call_search_advanced};
 use crate::models::{
     parse_media_type, parse_tag_name, parse_tag_search_mode, tags_reverse_map_from_list,
     MediaListItem, MediaType, TagSearchMode,
@@ -16,6 +16,8 @@ use crate::{
 
 use super::{get_vault_url, logout::do_logout, print_request_error, CommandGlobalOptions};
 
+const MAX_API_TAGS_FILTER: usize = 16;
+
 const DEFAULT_RESULTS_LIMIT: u32 = 25;
 
 #[allow(clippy::too_many_arguments)]
@@ -28,7 +30,7 @@ pub async fn run_cmd_search_advanced(
     tags_mode: Option<String>,
     album: Option<String>,
     limit: Option<u32>,
-    skip: Option<u32>,
+    start_from: Option<String>,
     reverse: bool,
     extended: bool,
     csv: bool,
@@ -94,8 +96,7 @@ pub async fn run_cmd_search_advanced(
         match album_id_res {
             Ok(_) => {
                 let album_get_api_res =
-                    api_call_get_album(&vault_url, album_id_res.unwrap(), global_opts.debug)
-                        .await;
+                    api_call_get_album(&vault_url, album_id_res.unwrap(), global_opts.debug).await;
 
                 match album_get_api_res {
                     Ok(album_data) => {
@@ -126,7 +127,32 @@ pub async fn run_cmd_search_advanced(
 
     // Params
 
-    let skip_param = skip.unwrap_or(0);
+    let mut start_from_param: Option<u64> = None;
+
+    if let Some(start_from_str) = start_from {
+        let start_from_res = parse_identifier(&start_from_str);
+
+        match start_from_res {
+            Ok(start_from_u64) => {
+                start_from_param = Some(start_from_u64);
+            }
+            Err(_) => {
+                if logout_after_operation {
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                    match logout_res {
+                        Ok(_) => {}
+                        Err(_) => {
+                            process::exit(1);
+                        }
+                    }
+                }
+                eprintln!("Invalid media identifier specified for the start-from option.");
+                process::exit(1);
+            }
+        }
+    }
+
     let limit_param = limit.unwrap_or(DEFAULT_RESULTS_LIMIT);
 
     let title_filter = title.unwrap_or("".to_string());
@@ -159,16 +185,18 @@ pub async fn run_cmd_search_advanced(
     }
 
     let mut tags_filter: Option<Vec<u64>> = None;
-    let mut first_tag_name: Option<String> = None;
-    let mut tag_param: Option<String> = None;
+    let mut tag_param: Option<Vec<String>> = None;
+    let mut tags_filter_count: usize = 0;
 
     if let Some(tags_str) = tags {
         let tag_names = tags_str.split(' ');
 
+        let mut tag_names_param: Vec<String> = Vec::new();
         let mut tag_ids: Vec<u64> = Vec::new();
 
         for tag_name in tag_names {
             let parsed_tag_name = parse_tag_name(tag_name);
+
             if parsed_tag_name.is_empty() {
                 continue;
             }
@@ -188,14 +216,17 @@ pub async fn run_cmd_search_advanced(
                 process::exit(1);
             }
 
-            if first_tag_name.is_none() {
-                first_tag_name = Some(parsed_tag_name.clone());
+            if tag_names_param.len() < MAX_API_TAGS_FILTER {
+                tag_names_param.push(parsed_tag_name.clone());
             }
 
             tag_ids.push(*tags_reverse_map.get(&parsed_tag_name).unwrap());
+
+            tags_filter_count += 1;
         }
 
         tags_filter = Some(tag_ids);
+        tag_param = Some(tag_names_param);
     }
 
     let mut tags_filter_mode = TagSearchMode::All;
@@ -206,10 +237,6 @@ pub async fn run_cmd_search_advanced(
         match tags_mode_res {
             Ok(m) => {
                 tags_filter_mode = m;
-
-                if tags_filter_mode == TagSearchMode::All && tags_filter.is_some() {
-                    tag_param = first_tag_name;
-                }
             }
             Err(_) => {
                 if logout_after_operation {
@@ -228,11 +255,37 @@ pub async fn run_cmd_search_advanced(
         }
     }
 
+    let tag_mode_api_param: String = match tags_filter_mode {
+        TagSearchMode::All => "allof".to_string(),
+        TagSearchMode::Any => {
+            if tags_filter_count > MAX_API_TAGS_FILTER {
+                "allof".to_string()
+            } else {
+                "anyof".to_string()
+            }
+        },
+        TagSearchMode::None => {
+            "noneof".to_string()
+        },
+        TagSearchMode::Untagged => "allof".to_string(),
+    };
+
+    match tags_filter_mode {
+        TagSearchMode::All => {},
+        TagSearchMode::Any => {
+            if tags_filter_count > MAX_API_TAGS_FILTER {
+                tag_param = None
+            }
+        },
+        TagSearchMode::None => {},
+        TagSearchMode::Untagged => {
+            tag_param = None
+        },
+    }
+
     // Search
 
     let mut advanced_search_results: Vec<MediaListItem> = Vec::new();
-
-    let mut skipped = 0;
 
     match album_filter {
         Some(album_list) => {
@@ -246,14 +299,10 @@ pub async fn run_cmd_search_advanced(
                         &tags_filter,
                         &tags_filter_mode,
                     ) {
-                        if skipped >= skip_param {
-                            advanced_search_results.push(item.clone());
+                        advanced_search_results.push(item.clone());
 
-                            if advanced_search_results.len() as u32 >= limit_param {
-                                break;
-                            }
-                        } else {
-                            skipped += 1;
+                        if advanced_search_results.len() as u32 >= limit_param {
+                            break;
                         }
                     }
                 }
@@ -267,14 +316,10 @@ pub async fn run_cmd_search_advanced(
                         &tags_filter,
                         &tags_filter_mode,
                     ) {
-                        if skipped >= skip_param {
-                            advanced_search_results.push(item);
+                        advanced_search_results.push(item);
 
-                            if advanced_search_results.len() as u32 >= limit_param {
-                                break;
-                            }
-                        } else {
-                            skipped += 1;
+                        if advanced_search_results.len() as u32 >= limit_param {
+                            break;
                         }
                     }
                 }
@@ -283,19 +328,20 @@ pub async fn run_cmd_search_advanced(
         None => {
             // Search loop
             let mut advanced_search_finished = false;
-            let mut page = 0;
+            let mut continue_ref: Option<u64> = start_from_param;
             while !advanced_search_finished {
                 if advanced_search_results.len() as u32 >= limit_param {
                     break;
                 }
 
                 // Call API
-                let api_res = api_call_search(
+                let api_res = api_call_search_advanced(
                     &vault_url,
-                    tag_param.clone(),
+                    tag_param.as_deref(),
+                    &tag_mode_api_param,
                     reverse,
-                    page,
                     limit_param,
+                    continue_ref,
                     global_opts.debug,
                 )
                 .await;
@@ -311,22 +357,20 @@ pub async fn run_cmd_search_advanced(
                                 &tags_filter,
                                 &tags_filter_mode,
                             ) {
-                                if skipped >= skip_param {
-                                    advanced_search_results.push(item);
+                                advanced_search_results.push(item);
 
-                                    if advanced_search_results.len() as u32 >= limit_param {
-                                        advanced_search_finished = true;
-                                        break;
-                                    }
-                                } else {
-                                    skipped += 1;
+                                if advanced_search_results.len() as u32 >= limit_param {
+                                    advanced_search_finished = true;
+                                    break;
                                 }
                             }
                         }
 
-                        if search_result.page_index >= search_result.page_count - 1 {
+                        if search_result.scanned >= search_result.total_count {
                             advanced_search_finished = true;
-                        }
+                        } 
+
+                        continue_ref = Some(search_result.continue_ref);
                     }
                     Err(e) => {
                         print_request_error(e);
@@ -343,8 +387,6 @@ pub async fn run_cmd_search_advanced(
                         process::exit(1);
                     }
                 }
-
-                page += 1;
             }
         }
     }
