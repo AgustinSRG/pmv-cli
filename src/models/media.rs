@@ -450,3 +450,12 @@ pub struct MediaRenameAttachmentBody {
     #[serde(rename = "name")]
     pub name: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaRenameSubtitleOrAudioBody {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "name")]
+    pub name: String,
+}

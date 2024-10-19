@@ -247,8 +247,10 @@ pmv-cli media <COMMAND>
 | [add-resolution](#command-media-add-resolution) | Adds new resolution to the media asset |
 | [remove-resolution](#command-media-remove-resolution) | Removes a resolution from the media asset |
 | [add-subtitle](#command-media-add-subtitle) | Adds subtitle file to a media asset |
+| [rename-subtitle](#command-media-rename-subtitle) | Renames a subtitles file |
 | [remove-subtitle](#command-media-remove-subtitle) | Removes subtitle file from a media asset |
 | [add-audio](#command-media-add-audio) | Adds audio track file to a media asset |
+| [rename-audio](#command-media-rename-audio) | Renames an audio track file |
 | [remove-audio](#command-media-remove-audio) | Removes audio track file from a media asset |
 | [add-attachment](#command-media-add-attachment) | Adds attachment file |
 | [rename-attachment](#command-media-rename-attachment) | Renames attachment file |
@@ -681,6 +683,31 @@ pmv-cli media add-subtitle [OPTIONS] <MEDIA> <SUB_ID> <PATH>
 | `--name <NAME>` | Subtitle file display name. If not specified, the identifier is used |
 | `-h, --help` | Print help |
 
+### Command: media rename-subtitle
+
+Renames a subtitles file
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media rename-subtitle [OPTIONS] <MEDIA> <SUB_ID>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<SUB_ID>` | Subtitle file identifier. Example: EN |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--new-id <NEW_ID>` | New ID for the subtitles file |
+| `--new-name <NEW_NAME>` | New name for the subtitles file |
+| `-h, --help` | Print help |
+
 ### Command: media remove-subtitle
 
 Removes subtitle file from a media asset
@@ -727,6 +754,31 @@ pmv-cli media add-audio [OPTIONS] <MEDIA> <TRACK_ID> <PATH>
 | Option | Description |
 | --- | --- |
 | `--name <NAME>` | Audio track file display name. If not specified, the identifier is used |
+| `-h, --help` | Print help |
+
+### Command: media rename-audio
+
+Renames an audio track file
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media rename-audio [OPTIONS] <MEDIA> <TRACK_ID>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+| `<TRACK_ID>` | Audio track file identifier. Example: EN |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--new-id <NEW_ID>` | New ID for the audio track file |
+| `--new-name <NEW_NAME>` | New name for the audio track file |
 | `-h, --help` | Print help |
 
 ### Command: media remove-audio

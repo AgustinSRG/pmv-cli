@@ -27,18 +27,24 @@ use super::{
         run_cmd_delete_media_attachment, run_cmd_rename_media_attachment,
         run_cmd_upload_media_attachment,
     },
-    media_audio_tracks::{run_cmd_delete_media_audio_track, run_cmd_upload_media_audio_track},
+    media_audio_tracks::{
+        run_cmd_delete_media_audio_track, run_cmd_rename_media_audio_track,
+        run_cmd_upload_media_audio_track,
+    },
     media_download::run_cmd_download_media,
     media_export::run_cmd_export_media,
     media_extended_description::run_cmd_set_media_extended_description,
     media_image_notes::run_cmd_set_media_image_notes,
     media_import::run_cmd_import_media,
+    media_replace::run_cmd_replace_media,
     media_resolutions::{run_cmd_media_add_resolution, run_cmd_media_remove_resolution},
-    media_subtitles::{run_cmd_delete_media_subtitle, run_cmd_upload_media_subtitle},
+    media_subtitles::{
+        run_cmd_delete_media_subtitle, run_cmd_rename_media_subtitle, run_cmd_upload_media_subtitle,
+    },
     media_thumbnail::run_cmd_upload_media_thumbnail,
     media_time_slices::{run_cmd_get_media_time_slices, run_cmd_set_media_time_slices},
     media_upload::run_cmd_upload_media,
-    print_request_error, CommandGlobalOptions, media_replace::run_cmd_replace_media,
+    print_request_error, CommandGlobalOptions,
 };
 
 #[derive(Subcommand)]
@@ -226,6 +232,23 @@ pub enum MediaCommand {
         name: Option<String>,
     },
 
+    /// Renames a subtitles file
+    RenameSubtitle {
+        /// Media asset ID
+        media: String,
+
+        /// Subtitle file identifier. Example: EN
+        sub_id: String,
+
+        /// New ID for the subtitles file
+        #[arg(long)]
+        new_id: Option<String>,
+
+        /// New name for the subtitles file
+        #[arg(long)]
+        new_name: Option<String>,
+    },
+
     /// Removes subtitle file from a media asset
     RemoveSubtitle {
         /// Media asset ID
@@ -249,6 +272,23 @@ pub enum MediaCommand {
         /// Audio track file display name. If not specified, the identifier is used.
         #[arg(long)]
         name: Option<String>,
+    },
+
+    /// Renames an audio track file
+    RenameAudio {
+        /// Media asset ID
+        media: String,
+
+        /// Audio track file identifier. Example: EN
+        track_id: String,
+
+        /// New ID for the audio track file
+        #[arg(long)]
+        new_id: Option<String>,
+
+        /// New name for the audio track file
+        #[arg(long)]
+        new_name: Option<String>,
     },
 
     /// Removes audio track file from a media asset
@@ -354,8 +394,7 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
             media,
             is_animation,
         } => {
-            run_cmd_media_set_is_anim(global_opts, media, is_animation)
-                .await;
+            run_cmd_media_set_is_anim(global_opts, media, is_animation).await;
         }
         MediaCommand::SetThumbnail { media, path } => {
             run_cmd_upload_media_thumbnail(global_opts, media, path).await;
@@ -430,6 +469,22 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
             attachment_id,
         } => {
             run_cmd_delete_media_attachment(global_opts, media, attachment_id).await;
+        }
+        MediaCommand::RenameSubtitle {
+            media,
+            sub_id,
+            new_id,
+            new_name,
+        } => {
+            run_cmd_rename_media_subtitle(global_opts, media, sub_id, new_id, new_name).await;
+        }
+        MediaCommand::RenameAudio {
+            media,
+            track_id,
+            new_id,
+            new_name,
+        } => {
+            run_cmd_rename_media_audio_track(global_opts, media, track_id, new_id, new_name).await;
         }
     }
 }
@@ -877,8 +932,7 @@ pub async fn run_cmd_media_set_title(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -1003,8 +1057,7 @@ pub async fn run_cmd_media_set_description(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -1131,8 +1184,7 @@ pub async fn run_cmd_media_set_force_start_beginning(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -1286,8 +1338,7 @@ pub async fn run_cmd_media_set_is_anim(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -1331,15 +1382,9 @@ pub async fn run_cmd_media_set_is_anim(
     let is_anim_lower = is_anim.to_lowercase();
     let is_anim_bool: bool;
 
-    if is_anim_lower == "true"
-        || is_anim_lower == "yes"
-        || is_anim_lower == "1"
-    {
+    if is_anim_lower == "true" || is_anim_lower == "yes" || is_anim_lower == "1" {
         is_anim_bool = true;
-    } else if is_anim_lower == "false"
-        || is_anim_lower == "no"
-        || is_anim_lower == "0"
-    {
+    } else if is_anim_lower == "false" || is_anim_lower == "no" || is_anim_lower == "0" {
         is_anim_bool = false;
     } else {
         if logout_after_operation {
@@ -1382,7 +1427,9 @@ pub async fn run_cmd_media_set_is_anim(
                 }
             }
 
-            eprintln!("Successfully updated the is-animation param of #{media_id_param}: {is_anim_bool}");
+            eprintln!(
+                "Successfully updated the is-animation param of #{media_id_param}: {is_anim_bool}"
+            );
         }
         Err(e) => {
             print_request_error(e);
@@ -1437,8 +1484,7 @@ pub async fn run_cmd_media_re_encode(global_opts: CommandGlobalOptions, media: S
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -1500,8 +1546,7 @@ pub async fn run_cmd_media_re_encode(global_opts: CommandGlobalOptions, media: S
 
     // Call API
 
-    let api_res =
-        api_call_media_re_encode(&vault_url, media_id_param, global_opts.debug).await;
+    let api_res = api_call_media_re_encode(&vault_url, media_id_param, global_opts.debug).await;
 
     match api_res {
         Ok(_) => {
@@ -1571,8 +1616,7 @@ pub async fn run_cmd_media_delete(global_opts: CommandGlobalOptions, media: Stri
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {

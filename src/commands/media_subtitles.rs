@@ -6,21 +6,25 @@ use std::{
 };
 
 use crate::{
-    api::{api_call_get_media, api_call_media_set_subtitle, api_call_media_remove_subtitle},
-    commands::logout::do_logout,
-    tools::{
-        ensure_login, parse_identifier, parse_vault_uri,
+    api::{
+        api_call_get_media, api_call_media_remove_subtitle, api_call_media_rename_subtitle,
+        api_call_media_set_subtitle,
     },
+    commands::logout::do_logout,
+    models::{MediaRenameSubtitleOrAudioBody, MediaSubtitle},
+    tools::{ensure_login, parse_identifier, parse_vault_uri},
 };
 
-use super::{get_vault_url, print_request_error, CommandGlobalOptions, media_upload::UploaderProgressPrinter};
+use super::{
+    get_vault_url, media_upload::UploaderProgressPrinter, print_request_error, CommandGlobalOptions,
+};
 
 pub async fn run_cmd_upload_media_subtitle(
     global_opts: CommandGlobalOptions,
     media: String,
     sub_id: String,
     path: String,
-    name: Option<String>
+    name: Option<String>,
 ) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
@@ -57,8 +61,7 @@ pub async fn run_cmd_upload_media_subtitle(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -138,10 +141,159 @@ pub async fn run_cmd_upload_media_subtitle(
     }
 }
 
+pub async fn run_cmd_rename_media_subtitle(
+    global_opts: CommandGlobalOptions,
+    media: String,
+    sub_id: String,
+    new_id: Option<String>,
+    new_name: Option<String>,
+) {
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Media ID
+
+    let media_id_res = parse_identifier(&media);
+
+    let media_id_param: u64;
+
+    let mut subtitle: Option<MediaSubtitle> = None;
+
+    match media_id_res {
+        Ok(media_id) => {
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+
+            match media_api_res {
+                Ok(metadata) => {
+                    media_id_param = media_id;
+
+                    if let Some(subtitles) = metadata.subtitles {
+                        for sub in subtitles {
+                            if sub.id == sub_id {
+                                subtitle = Some(sub.clone());
+                            }
+                        }
+                    } else {
+                        eprintln!("Could not find subtitles in media: {sub_id}");
+                        process::exit(1);
+                    }
+                }
+                Err(e) => {
+                    print_request_error(e);
+
+                    if logout_after_operation {
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                        match logout_res {
+                            Ok(_) => {}
+                            Err(_) => {
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    process::exit(1);
+                }
+            }
+        }
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid media asset identifier specified.");
+            process::exit(1);
+        }
+    }
+
+    // Call API
+
+    let mut body = MediaRenameSubtitleOrAudioBody {
+        id: sub_id.clone(),
+        name: "".to_string(),
+    };
+
+    if let Some(sub) = subtitle {
+        body.name = sub.name.clone();
+    } else {
+        eprintln!("Could not find subtitles in media: {sub_id}");
+        process::exit(1);
+    }
+
+    if let Some(new_id_str) = new_id {
+        body.id = new_id_str;
+    }
+
+    if let Some(new_name_str) = new_name {
+        body.name = new_name_str;
+    }
+
+    let final_id = body.id.clone();
+    let final_name = body.name.clone();
+
+    let api_res = api_call_media_rename_subtitle(
+        &vault_url,
+        media_id_param,
+        sub_id.clone(),
+        &body,
+        global_opts.debug,
+    )
+    .await;
+
+    match api_res {
+        Ok(_) => {
+            eprintln!("Successfully renamed subtitles file from #{media_id_param}: {sub_id} -> {final_id} - {final_name}");
+        }
+        Err(e) => {
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            print_request_error(e);
+            process::exit(1);
+        }
+    }
+}
+
 pub async fn run_cmd_delete_media_subtitle(
     global_opts: CommandGlobalOptions,
     media: String,
-    sub_id: String
+    sub_id: String,
 ) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
@@ -178,8 +330,7 @@ pub async fn run_cmd_delete_media_subtitle(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {

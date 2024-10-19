@@ -4,11 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::{
     models::{
-        ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata,
-        MediaRenameAttachmentBody, MediaResolution, MediaSubtitle, MediaTimeSlice,
-        MediaUpdateDescriptionBody, MediaUpdateExtendedDescriptionBody, MediaUpdateExtraBody,
-        MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaUploadResponse,
-        TaskEncodeResolution,
+        ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata, MediaRenameAttachmentBody, MediaRenameSubtitleOrAudioBody, MediaResolution, MediaSubtitle, MediaTimeSlice, MediaUpdateDescriptionBody, MediaUpdateExtendedDescriptionBody, MediaUpdateExtraBody, MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaUploadResponse, TaskEncodeResolution
     },
     tools::{
         do_get_request, do_multipart_upload_request, do_post_request, ProgressReceiver,
@@ -382,6 +378,22 @@ pub async fn api_call_media_set_subtitle(
     Ok(parsed_body.unwrap())
 }
 
+pub async fn api_call_media_rename_subtitle(
+    url: &VaultURI,
+    media: u64,
+    sub_id: String,
+    req_body: &MediaRenameSubtitleOrAudioBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    let mut url_path = format!("/api/media/{media}/subtitles/rename");
+
+    url_path.push_str(&("?id=".to_owned() + &urlencoding::encode(&sub_id)));
+
+    do_post_request(url, url_path, serde_json::to_string(&req_body).unwrap(), debug).await?;
+
+    Ok(())
+}
+
 pub async fn api_call_media_remove_subtitle(
     url: &VaultURI,
     media: u64,
@@ -431,6 +443,22 @@ pub async fn api_call_media_set_audio(
     }
 
     Ok(parsed_body.unwrap())
+}
+
+pub async fn api_call_media_rename_audio(
+    url: &VaultURI,
+    media: u64,
+    audio_id: String,
+    req_body: &MediaRenameSubtitleOrAudioBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    let mut url_path = format!("/api/media/{media}/audios/rename");
+
+    url_path.push_str(&("?id=".to_owned() + &urlencoding::encode(&audio_id)));
+
+    do_post_request(url, url_path, serde_json::to_string(&req_body).unwrap(), debug).await?;
+
+    Ok(())
 }
 
 pub async fn api_call_media_remove_audio(
