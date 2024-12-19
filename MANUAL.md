@@ -1115,6 +1115,7 @@ pmv-cli album <COMMAND>
 | --- | --- |
 | [list](#command-album-list) | List albums |
 | [get](#command-album-get) | Get album and prints it |
+| [download-thumbnail](#command-album-download-thumbnail) | Downloads the thumbnail of an album |
 | [create](#command-album-create) | Creates a new album |
 | [rename](#command-album-rename) | Renames an album |
 | [change-thumbnail](#command-album-change-thumbnail) | Changes the thumbnail of an album |
@@ -1171,6 +1172,30 @@ pmv-cli album get [OPTIONS] <ALBUM>
 | --- | --- |
 | `-e, --extended` | Extended version of the results table |
 | `-c, --csv` | CSV format |
+| `-h, --help` | Print help |
+
+### Command: album download-thumbnail
+
+Downloads the thumbnail of an album
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album download-thumbnail [OPTIONS] <ALBUM>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-o, --output <OUTPUT>` | Path to the file to download the asset into |
+| `-p, --print-link` | Prints the download link, instead of downloading to a file |
 | `-h, --help` | Print help |
 
 ### Command: album create

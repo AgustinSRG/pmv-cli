@@ -22,7 +22,7 @@ use crate::{
     },
 };
 
-use super::{get_vault_url, print_request_error, run_cmd_upload_album_thumbnail, CommandGlobalOptions};
+use super::{get_vault_url, print_request_error, run_cmd_download_album_thumbnail, run_cmd_upload_album_thumbnail, CommandGlobalOptions};
 
 #[derive(Subcommand)]
 pub enum AlbumCommand {
@@ -58,6 +58,20 @@ pub enum AlbumCommand {
         /// CSV format
         #[arg(short, long)]
         csv: bool,
+    },
+
+    /// Downloads the thumbnail of an album
+    DownloadThumbnail {
+        /// Album ID
+        album: String,
+
+        /// Path to the file to download the asset into
+        #[arg(short, long)]
+        output: Option<String>,
+
+        /// Prints the download link, instead of downloading to a file
+        #[arg(short, long)]
+        print_link: bool,
     },
 
     /// Creates a new album
@@ -162,6 +176,9 @@ pub async fn run_album_cmd(global_opts: CommandGlobalOptions, cmd: AlbumCommand)
         }
         AlbumCommand::ChangeThumbnail { album, path } => {
             run_cmd_upload_album_thumbnail(global_opts, album, path).await;
+        },
+        AlbumCommand::DownloadThumbnail { album, output, print_link } => {
+            run_cmd_download_album_thumbnail(global_opts, album, output, print_link).await;
         },
     }
 }

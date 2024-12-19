@@ -721,7 +721,7 @@ pub async fn run_cmd_download_media(
     }
 }
 
-async fn download_media_asset(
+pub async fn download_media_asset(
     global_opts: CommandGlobalOptions,
     vault_url: VaultURI,
     download_path: String,
