@@ -46,11 +46,11 @@ pub fn tags_names_from_ids(ids: &Vec<u64>, tags_map: &HashMap<u64, String>) -> V
 }
 
 pub fn parse_tag_name(name: &str) -> String {
-    return name
+    name
         .replace('\n', " ")
         .replace('\r', "")
         .trim()
-        .replace(' ', "_");
+        .replace(' ', "_")
 }
 
 #[derive(Debug, Serialize, Deserialize)]

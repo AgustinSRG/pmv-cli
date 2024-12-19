@@ -617,10 +617,10 @@ fn get_extension_from_url(download_path: &str, default_ext: &str) -> String {
             .next()
             .unwrap_or("download")
             .to_string();
-        return file_name
+        file_name
             .split('.')
             .last()
             .unwrap_or(default_ext)
-            .to_string();
+            .to_string()
     }
 }

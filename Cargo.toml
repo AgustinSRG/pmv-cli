@@ -3,21 +3,21 @@ description = "Command line interface client for PersonalMediaVault"
 edition = "2021"
 license = "MIT"
 name = "pmv-cli"
-version = "1.5.0"
+version = "1.6.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4.26"
-clap = {version = "4.3.3", features = ["derive"]}
-reqwest = {version = "0.12.4", features = ["multipart", "stream"]}
-rpassword = "7.2.0"
-serde = {version = "1.0.164", features = ["derive"]}
-serde_json = "1.0.96"
-serde_repr = "0.1.12"
+chrono = "0.4.39"
+clap = {version = "4.5.23", features = ["derive"]}
+reqwest = {version = "0.12.9", features = ["multipart", "stream"]}
+rpassword = "7.3.1"
+serde = {version = "1.0.216", features = ["derive"]}
+serde_json = "1.0.133"
+serde_repr = "0.1.19"
 term_size = "0.3.2"
-tokio = {version = "1.28.2", features = ["full"]}
+tokio = {version = "1.42.0", features = ["full"]}
 tokio-sync-read-stream = "0.1.0"
-unicode-width = "0.1.10"
-url = "2.4.0"
-urlencoding = "2.1.2"
+unicode-width = "0.2.0"
+url = "2.5.4"
+urlencoding = "2.1.3"

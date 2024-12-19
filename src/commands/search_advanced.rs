@@ -261,24 +261,20 @@ pub async fn run_cmd_search_advanced(
             } else {
                 "anyof".to_string()
             }
-        },
-        TagSearchMode::None => {
-            "noneof".to_string()
-        },
+        }
+        TagSearchMode::None => "noneof".to_string(),
         TagSearchMode::Untagged => "allof".to_string(),
     };
 
     match tags_filter_mode {
-        TagSearchMode::All => {},
+        TagSearchMode::All => {}
         TagSearchMode::Any => {
             if tags_filter_count > MAX_API_TAGS_FILTER {
                 tag_param = None
             }
-        },
-        TagSearchMode::None => {},
-        TagSearchMode::Untagged => {
-            tag_param = None
-        },
+        }
+        TagSearchMode::None => {}
+        TagSearchMode::Untagged => tag_param = None,
     }
 
     // Search
@@ -366,7 +362,7 @@ pub async fn run_cmd_search_advanced(
 
                         if search_result.scanned >= search_result.total_count {
                             advanced_search_finished = true;
-                        } 
+                        }
 
                         continue_ref = Some(search_result.continue_ref);
                     }
@@ -490,28 +486,24 @@ pub fn media_matches_filter(
         return false;
     }
 
-    match media_type_filter {
-        Some(t) => {
-            if *t != media.media_type {
-                return false;
-            }
+    if let Some(t) = media_type_filter {
+        if *t != media.media_type {
+            return false;
         }
-        None => {}
     }
 
     match tags_filter_mode {
-        TagSearchMode::All => match tags_filter {
-            Some(tags) => {
+        TagSearchMode::All => {
+            if let Some(tags) = tags_filter {
                 for tag_m in tags {
                     if !media.tags.contains(tag_m) {
                         return false;
                     }
                 }
             }
-            None => {}
-        },
-        TagSearchMode::Any => match tags_filter {
-            Some(tags) => {
+        }
+        TagSearchMode::Any => {
+            if let Some(tags) = tags_filter {
                 let mut has_any = false;
                 for tag_m in tags {
                     if media.tags.contains(tag_m) {
@@ -524,18 +516,16 @@ pub fn media_matches_filter(
                     return false;
                 }
             }
-            None => {}
-        },
-        TagSearchMode::None => match tags_filter {
-            Some(tags) => {
+        }
+        TagSearchMode::None => {
+            if let Some(tags) = tags_filter {
                 for tag_m in &media.tags {
                     if tags.contains(tag_m) {
                         return false;
                     }
                 }
             }
-            None => {}
-        },
+        }
         TagSearchMode::Untagged => {
             if !media.tags.is_empty() {
                 return false;
