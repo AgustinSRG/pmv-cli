@@ -1,10 +1,12 @@
 // Albums API
 
+use std::sync::{Arc, Mutex};
+
 use crate::{
     models::{
-        Album, AlbumIdResponse, AlbumListItem, AlbumMediaBody, AlbumNameBody, AlbumMoveMediaBody,
+        Album, AlbumIdResponse, AlbumListItem, AlbumMediaBody, AlbumMoveMediaBody, AlbumNameBody, MediaUpdateThumbnailResponse
     },
-    tools::{do_get_request, do_post_request, RequestError, VaultURI},
+    tools::{do_get_request, do_multipart_upload_request, do_post_request, ProgressReceiver, RequestError, VaultURI},
 };
 
 pub async fn api_call_get_albums(
@@ -151,4 +153,33 @@ pub async fn api_call_album_move_media(
     .await?;
 
     Ok(())
+}
+
+pub async fn api_call_album_change_thumbnail(
+    url: &VaultURI,
+    album: u64,
+    file_path: String,
+    debug: bool,
+    progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
+) -> Result<MediaUpdateThumbnailResponse, RequestError> {
+    let body_str = do_multipart_upload_request(
+        url,
+        format!("/api/albums/{album}/thumbnail"),
+        "file".to_string(),
+        file_path,
+        debug,
+        progress_receiver,
+    )
+    .await?;
+
+    let parsed_body: Result<MediaUpdateThumbnailResponse, _> = serde_json::from_str(&body_str);
+
+    if parsed_body.is_err() {
+        return Err(RequestError::Json {
+            message: parsed_body.err().unwrap().to_string(),
+            body: body_str,
+        });
+    }
+
+    Ok(parsed_body.unwrap())
 }

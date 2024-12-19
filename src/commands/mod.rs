@@ -6,6 +6,9 @@ use account::*;
 mod album;
 use album::*;
 
+mod album_thumbnail;
+use album_thumbnail::*;
+
 mod batch_operation;
 use batch_operation::*;
 

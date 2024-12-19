@@ -22,7 +22,7 @@ use crate::{
     },
 };
 
-use super::{get_vault_url, print_request_error, CommandGlobalOptions};
+use super::{get_vault_url, print_request_error, run_cmd_upload_album_thumbnail, CommandGlobalOptions};
 
 #[derive(Subcommand)]
 pub enum AlbumCommand {
@@ -73,6 +73,15 @@ pub enum AlbumCommand {
 
         /// Album name
         name: String,
+    },
+
+    /// Changes the thumbnail of an album
+    ChangeThumbnail {
+        /// Album ID
+        album: String,
+
+        /// Path to the thumbnail file
+        path: String,
     },
 
     /// Deletes album
@@ -151,6 +160,9 @@ pub async fn run_album_cmd(global_opts: CommandGlobalOptions, cmd: AlbumCommand)
         } => {
             run_cmd_album_media_change_position(global_opts, album, media, position).await;
         }
+        AlbumCommand::ChangeThumbnail { album, path } => {
+            run_cmd_upload_album_thumbnail(global_opts, album, path).await;
+        },
     }
 }
 
@@ -437,6 +449,12 @@ pub async fn run_cmd_get_album(
             println!("name: {album_name}");
             println!("last modified: {album_lm}");
             println!("size: {album_size}");
+
+            if let Some(thumbnail) = album_data.thumbnail {
+                if !thumbnail.is_empty() {
+                    println!("thumbnail: {thumbnail}");
+                }
+            }
 
             if csv {
                 println!();

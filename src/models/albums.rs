@@ -46,6 +46,9 @@ pub struct Album {
 
     #[serde(rename = "lm")]
     pub lm: i64,
+
+    #[serde(rename = "thumbnail")]
+    pub thumbnail: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

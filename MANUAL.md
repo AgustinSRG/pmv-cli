@@ -1117,6 +1117,7 @@ pmv-cli album <COMMAND>
 | [get](#command-album-get) | Get album and prints it |
 | [create](#command-album-create) | Creates a new album |
 | [rename](#command-album-rename) | Renames an album |
+| [change-thumbnail](#command-album-change-thumbnail) | Changes the thumbnail of an album |
 | [delete](#command-album-delete) | Deletes album |
 | [add](#command-album-add) | Adds a media asset to an album |
 | [remove](#command-album-remove) | Removes a media asset from an album |
@@ -1210,6 +1211,29 @@ pmv-cli album rename <ALBUM> <NAME>
 | --- | --- |
 | `<ALBUM>` | Album ID |
 | `<NAME>` | Album name |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: album change-thumbnail
+
+Changes the thumbnail of an album
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album change-thumbnail <ALBUM> <PATH>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+| `<PATH>` | Path to the thumbnail file |
 
 <ins>**Options:**</ins>
 
