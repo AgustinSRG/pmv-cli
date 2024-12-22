@@ -7,9 +7,7 @@ use reqwest::StatusCode;
 
 use crate::{
     api::{
-        api_call_album_add_media, api_call_album_move_media, api_call_album_remove_media,
-        api_call_create_album, api_call_delete_album, api_call_get_album, api_call_get_albums,
-        api_call_get_media, api_call_get_media_albums, api_call_get_tags, api_call_rename_album,
+        api_call_album_add_media, api_call_album_change_thumbnail_memory, api_call_album_move_media, api_call_album_remove_media, api_call_create_album, api_call_delete_album, api_call_get_album, api_call_get_albums, api_call_get_media, api_call_get_media_albums, api_call_get_tags, api_call_rename_album
     },
     commands::logout::do_logout,
     models::{
@@ -17,12 +15,14 @@ use crate::{
         AlbumNameBody,
     },
     tools::{
-        ask_user, ensure_login, format_date, identifier_to_string, parse_identifier,
-        parse_vault_uri, print_table, render_media_duration, to_csv_string,
+        ask_user, do_get_download_request_memory, ensure_login, format_date, identifier_to_string, parse_identifier, parse_vault_uri, print_table, render_media_duration, to_csv_string
     },
 };
 
-use super::{get_vault_url, print_request_error, run_cmd_download_album_thumbnail, run_cmd_upload_album_thumbnail, CommandGlobalOptions};
+use super::{
+    get_vault_url, print_request_error, run_cmd_download_album_thumbnail,
+    run_cmd_upload_album_thumbnail, CommandGlobalOptions,
+};
 
 #[derive(Subcommand)]
 pub enum AlbumCommand {
@@ -133,6 +133,9 @@ pub enum AlbumCommand {
         /// New position for the media asset, starting at 1
         position: u32,
     },
+
+    /// Optimizes thumbnails of albums, making the loading process faster
+    OptimizeThumbnails,
 }
 
 pub async fn run_album_cmd(global_opts: CommandGlobalOptions, cmd: AlbumCommand) {
@@ -176,10 +179,17 @@ pub async fn run_album_cmd(global_opts: CommandGlobalOptions, cmd: AlbumCommand)
         }
         AlbumCommand::ChangeThumbnail { album, path } => {
             run_cmd_upload_album_thumbnail(global_opts, album, path).await;
-        },
-        AlbumCommand::DownloadThumbnail { album, output, print_link } => {
+        }
+        AlbumCommand::DownloadThumbnail {
+            album,
+            output,
+            print_link,
+        } => {
             run_cmd_download_album_thumbnail(global_opts, album, output, print_link).await;
-        },
+        }
+        AlbumCommand::OptimizeThumbnails => {
+            run_cmd_optimize_albums_thumbnails(global_opts).await;
+        }
     }
 }
 
@@ -1367,9 +1377,7 @@ pub async fn run_cmd_album_media_change_position(
 
     let api_get_res = api_call_get_album(&vault_url, album_id, global_opts.debug).await;
     let album_name = match api_get_res {
-        Ok(album_data) => {
-            album_data.name
-        }
+        Ok(album_data) => album_data.name,
         Err(e) => {
             print_request_error(e);
             if logout_after_operation {
@@ -1413,6 +1421,184 @@ pub async fn run_cmd_album_media_change_position(
             }
 
             eprintln!("Successfully inserted media asset #{media_id_param} into position {position} of album #{album_id}: {album_name}");
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+struct AlbumToOptimize {
+    pub id: u64,
+    pub thumbnail_url: String,
+}
+
+pub async fn run_cmd_optimize_albums_thumbnails(global_opts: CommandGlobalOptions) {
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Get media albums
+
+    let api_res = api_call_get_albums(&vault_url, global_opts.debug).await;
+
+    match api_res {
+        Ok(albums_list) => {
+            let mut albums_to_optimize: Vec<AlbumToOptimize> = Vec::new();
+            let mut already_optimized_count: i32 = 0;
+            let mut no_thumbnail_count: i32 = 0;
+
+            for album in &albums_list {
+                if album.thumbnail.is_empty() {
+                    no_thumbnail_count += 1;
+                    continue;
+                }
+
+                if album.thumbnail.starts_with("/assets/album_thumb/") {
+                    already_optimized_count += 1;
+                    continue;
+                }
+
+                let album_to_optimize = AlbumToOptimize {
+                    id: album.id,
+                    thumbnail_url: album.thumbnail.clone(),
+                };
+
+                albums_to_optimize.push(album_to_optimize);
+            }
+
+            let total_count = albums_list.len();
+            let albums_to_optimize_count = albums_to_optimize.len();
+
+            eprintln!("Total number of albums: {total_count}");
+            eprintln!("Albums with no thumbnail: {no_thumbnail_count}");
+            eprintln!("Albums with optimized thumbnail: {already_optimized_count}");
+            eprintln!("Albums with unoptimized thumbnail: {albums_to_optimize_count}");
+
+            eprintln!();
+
+            if albums_to_optimize_count > 0 {
+                // Ask confirmation
+
+                if !global_opts.auto_confirm {
+                    eprintln!("Do you want to optimize the thumbnails of {albums_to_optimize_count} albums?");
+                    let confirmation = ask_user("Continue? y/n: ").await.unwrap_or("".to_string());
+
+                    if confirmation.to_lowercase() != "y" {
+                        if logout_after_operation {
+                            let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                            match logout_res {
+                                Ok(_) => {}
+                                Err(_) => {
+                                    process::exit(1);
+                                }
+                            }
+                        }
+                        process::exit(1);
+                    }
+                }
+
+                // Optimize
+
+                for album_to_optimize in albums_to_optimize {
+                    let album_id = album_to_optimize.id;
+                    eprintln!("Optimizing thumbnail for album #{album_id}...");
+
+                    // Download thumbnail
+
+                    let thumb_download_response = do_get_download_request_memory(&vault_url, album_to_optimize.thumbnail_url, global_opts.debug).await;
+
+                    match thumb_download_response {
+                        Ok(thumb_data) => {
+                            // Upload
+
+                            let upload_res = api_call_album_change_thumbnail_memory(&vault_url, album_id, thumb_data, global_opts.debug).await;
+
+                            match upload_res {
+                                Ok(_) => {
+                                    eprintln!("Successfully optimized thumbnail for album #{album_id}");
+                                },
+                                Err(e) => {
+                                    print_request_error(e);
+                                    if logout_after_operation {
+                                        let logout_res = do_logout(&global_opts, &vault_url).await;
+                        
+                                        match logout_res {
+                                            Ok(_) => {}
+                                            Err(_) => {
+                                                process::exit(1);
+                                            }
+                                        }
+                                    }
+                                    process::exit(1);
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            print_request_error(e);
+                            if logout_after_operation {
+                                let logout_res = do_logout(&global_opts, &vault_url).await;
+                
+                                match logout_res {
+                                    Ok(_) => {}
+                                    Err(_) => {
+                                        process::exit(1);
+                                    }
+                                }
+                            }
+                            process::exit(1);
+                        }
+                    }
+                }
+            } else {
+                eprintln!("Congratulations! All your albums have an optimized thumbnail.");
+
+                if logout_after_operation {
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                    match logout_res {
+                        Ok(_) => {}
+                        Err(_) => {
+                            process::exit(1);
+                        }
+                    }
+                }
+            }
         }
         Err(e) => {
             print_request_error(e);

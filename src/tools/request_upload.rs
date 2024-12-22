@@ -230,3 +230,81 @@ pub async fn do_multipart_upload_request(
         }
     }
 }
+
+pub async fn do_multipart_upload_request_memory(
+    uri: &VaultURI,
+    path: String,
+    field: String,
+    data: Vec<u8>,
+    file_name: String,
+    debug: bool,
+) -> Result<String, RequestError> {
+    let final_uri = resolve_vault_api_uri(uri.clone(), path);
+
+    if debug {
+        eprintln!("\rDEBUG: POST {final_uri}");
+    }
+
+    let client = reqwest::Client::new();
+
+    // Prepare request
+
+    let file_part = reqwest::multipart::Part::bytes(data).file_name(file_name);
+
+    let form = reqwest::multipart::Form::new().part(field, file_part);
+
+    let mut request_builder = client.post(final_uri).multipart(form);
+
+    let session = get_session_from_uri(uri.clone());
+
+    if let Some(s) = session {
+        request_builder = request_builder.header(SESSION_HEADER_NAME, s);
+    }
+
+    // Send request
+
+    let response_result = request_builder.send().await;
+
+    if let Err(err) = response_result {
+        return Err(RequestError::NetworkError(err.to_string()));
+    }
+
+    // Response received
+
+    let response = response_result.unwrap();
+
+    let res_status = response.status();
+    // Grab body
+
+    let body_result = response.text().await;
+
+    match body_result {
+        Ok(res_body) => {
+            if res_status != reqwest::StatusCode::OK {
+                if !res_body.is_empty() {
+                    let parsed_body: Result<APIErrorResponse, _> = serde_json::from_str(&res_body);
+
+                    match parsed_body {
+                        Ok(r) => {
+                            return Err(RequestError::Api {
+                                status: res_status,
+                                code: r.code,
+                                message: r.message,
+                            });
+                        }
+                        Err(_) => {
+                            return Err(RequestError::StatusCode(res_status));
+                        }
+                    }
+                }
+
+                return Err(RequestError::StatusCode(res_status));
+            }
+
+            Ok(res_body)
+        }
+        Err(err) => {
+            Err(RequestError::NetworkError(err.to_string()))
+        }
+    }
+}

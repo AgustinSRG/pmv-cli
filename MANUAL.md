@@ -1123,6 +1123,7 @@ pmv-cli album <COMMAND>
 | [add](#command-album-add) | Adds a media asset to an album |
 | [remove](#command-album-remove) | Removes a media asset from an album |
 | [set-position](#command-album-set-position) | Changes the position of a media asset inside al album |
+| [optimize-thumbnails](#command-album-optimize-thumbnails) | Optimizes thumbnails of albums, making the loading process faster |
 
 <ins>**Options:**</ins>
 
@@ -1351,6 +1352,22 @@ pmv-cli album set-position <ALBUM> <MEDIA> <POSITION>
 | `<ALBUM>` | Album ID |
 | `<MEDIA>` | Media asset ID |
 | `<POSITION>` | New position for the media asset, starting at 1 |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: album optimize-thumbnails
+
+Optimizes thumbnails of albums, making the loading process faster
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album optimize-thumbnails
+```
 
 <ins>**Options:**</ins>
 

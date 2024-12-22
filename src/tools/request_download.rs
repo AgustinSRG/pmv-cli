@@ -110,9 +110,7 @@ pub async fn do_get_download_request(
                         start = Instant::now();
                     }
                 }
-                None => {
-                    finished = true
-                },
+                None => finished = true,
             },
             Err(err) => {
                 return Err(RequestError::NetworkError(err.to_string()));
@@ -123,4 +121,61 @@ pub async fn do_get_download_request(
     progress_receiver.progress_update(downloaded_bytes, body_length);
     progress_receiver.progress_finish();
     Ok(())
+}
+
+pub async fn do_get_download_request_memory(
+    uri: &VaultURI,
+    path: String,
+    debug: bool,
+) -> Result<Vec<u8>, RequestError> {
+    let final_uri = resolve_vault_api_uri(uri.clone(), path);
+
+    if debug {
+        eprintln!("\rDEBUG: GET {final_uri}");
+    }
+
+    let client = reqwest::Client::new();
+
+    // Build request
+
+    let mut request_builder = client.get(final_uri);
+
+    let session = get_session_from_uri(uri.clone());
+
+    if let Some(s) = session {
+        request_builder = request_builder.header(SESSION_HEADER_NAME, s);
+    }
+
+    // Send request
+
+    let response_result = request_builder.send().await;
+
+    if let Err(err) = response_result {
+        return Err(RequestError::NetworkError(err.to_string()));
+    }
+
+    let response = response_result.unwrap();
+
+    let res_status = response.status();
+
+    if res_status != 200 {
+        return Err(RequestError::StatusCode(res_status));
+    }
+
+    // Get response as bytes
+
+    let bytes_res = response.bytes().await;
+
+    match bytes_res {
+        Ok(bytes) => {
+            let mut res: Vec<u8> = Vec::with_capacity(bytes.len());
+            for b in bytes {
+                res.push(b);
+            }
+            Ok(res)
+        }
+        Err(err) => {
+            Err(RequestError::NetworkError(err.to_string()))
+        }
+    }
 }
