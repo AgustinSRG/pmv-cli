@@ -20,8 +20,7 @@ use crate::{
 };
 
 use super::{
-    get_vault_url, print_request_error, run_cmd_download_album_thumbnail,
-    run_cmd_upload_album_thumbnail, CommandGlobalOptions,
+    get_vault_url, print_request_error, run_cmd_download_album_thumbnail, run_cmd_export_album, run_cmd_upload_album_thumbnail, CommandGlobalOptions
 };
 
 #[derive(Subcommand)]
@@ -134,6 +133,16 @@ pub enum AlbumCommand {
         position: u32,
     },
 
+    /// Exports an album, downloading everything (metadata + assets) into a folder
+    Export {
+        /// Album ID
+        album: String,
+
+        /// Path to the folder to download the files into
+        #[arg(short, long)]
+        output: Option<String>,
+    },
+
     /// Optimizes thumbnails of albums, making the loading process faster
     OptimizeThumbnails,
 }
@@ -190,6 +199,9 @@ pub async fn run_album_cmd(global_opts: CommandGlobalOptions, cmd: AlbumCommand)
         AlbumCommand::OptimizeThumbnails => {
             run_cmd_optimize_albums_thumbnails(global_opts).await;
         }
+        AlbumCommand::Export { album, output } => {
+            run_cmd_export_album(global_opts, album, output).await;
+        },
     }
 }
 

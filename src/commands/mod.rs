@@ -6,6 +6,9 @@ use account::*;
 mod album;
 use album::*;
 
+mod album_export;
+use album_export::*;
+
 mod album_thumbnail;
 use album_thumbnail::*;
 

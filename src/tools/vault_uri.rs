@@ -178,3 +178,23 @@ impl VaultURI {
         }
     }
 }
+
+pub fn get_extension_from_url(download_path: &str, default_ext: &str) -> String {
+    let path_parts: Vec<&str> = download_path.split('/').collect();
+
+    if path_parts.is_empty() {
+        default_ext.to_string()
+    } else {
+        let last_part = path_parts.into_iter().last().unwrap_or("download");
+        let file_name = last_part
+            .split('?')
+            .next()
+            .unwrap_or("download")
+            .to_string();
+        file_name
+            .split('.')
+            .last()
+            .unwrap_or(default_ext)
+            .to_string()
+    }
+}

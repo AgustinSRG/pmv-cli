@@ -449,7 +449,7 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
             run_cmd_set_media_extended_description(global_opts, media, path).await;
         }
         MediaCommand::Export { media, output } => {
-            run_cmd_export_media(global_opts, media, output).await;
+            run_cmd_export_media(global_opts, media, output, false).await;
         }
         MediaCommand::Import { path, album } => {
             run_cmd_import_media(global_opts, path, album).await;

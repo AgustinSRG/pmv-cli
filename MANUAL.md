@@ -1123,6 +1123,7 @@ pmv-cli album <COMMAND>
 | [add](#command-album-add) | Adds a media asset to an album |
 | [remove](#command-album-remove) | Removes a media asset from an album |
 | [set-position](#command-album-set-position) | Changes the position of a media asset inside al album |
+| [export](#command-album-export) | Exports an album, downloading everything (metadata + assets) into a folder |
 | [optimize-thumbnails](#command-album-optimize-thumbnails) | Optimizes thumbnails of albums, making the loading process faster |
 
 <ins>**Options:**</ins>
@@ -1357,6 +1358,29 @@ pmv-cli album set-position <ALBUM> <MEDIA> <POSITION>
 
 | Option | Description |
 | --- | --- |
+| `-h, --help` | Print help |
+
+### Command: album export
+
+Exports an album, downloading everything (metadata + assets) into a folder
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli album export [OPTIONS] <ALBUM>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ALBUM>` | Album ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-o, --output <OUTPUT>` | Path to the folder to download the files into |
 | `-h, --help` | Print help |
 
 ### Command: album optimize-thumbnails

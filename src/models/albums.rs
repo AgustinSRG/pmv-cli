@@ -52,6 +52,18 @@ pub struct Album {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct AlbumMetadataExport {
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(rename = "media_list")]
+    pub media_list: Vec<String>,
+
+    #[serde(rename = "thumbnail")]
+    pub thumbnail: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AlbumMediaBody {
     #[serde(rename = "media_id")]
     pub media_id: u64,

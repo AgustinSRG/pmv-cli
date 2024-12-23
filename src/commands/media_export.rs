@@ -7,10 +7,9 @@ use unicode_width::UnicodeWidthStr;
 use crate::{
     api::{api_call_get_media, api_call_get_tags},
     commands::logout::do_logout,
-    models::{tags_map_from_list, MediaMetadata, MediaMetadataExport, MediaSubtitleOrAudioExport, MediaAttachmentExport},
+    models::{tags_map_from_list, MediaAttachmentExport, MediaMetadata, MediaMetadataExport, MediaSubtitleOrAudioExport},
     tools::{
-        ask_user, do_get_download_request, ensure_login, parse_identifier, parse_vault_uri,
-        ProgressReceiver, VaultURI,
+        ask_user, do_get_download_request, ensure_login, get_extension_from_url, parse_identifier, parse_vault_uri, ProgressReceiver, VaultURI
     },
 };
 
@@ -20,6 +19,7 @@ pub async fn run_cmd_export_media(
     global_opts: CommandGlobalOptions,
     media: String,
     output: Option<String>,
+    is_internal: bool,
 ) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
@@ -101,6 +101,9 @@ pub async fn run_cmd_export_media(
         Ok(meta) => meta,
         Err(e) => {
             print_request_error(e);
+            if is_internal {
+                return;
+            }
             if logout_after_operation {
                 let logout_res = do_logout(&global_opts, &vault_url).await;
 
@@ -126,7 +129,7 @@ pub async fn run_cmd_export_media(
 
     let out_exists = std::path::Path::new(&out_folder).exists();
 
-    if out_exists && !global_opts.auto_confirm {
+    if out_exists && !global_opts.auto_confirm && !is_internal {
         eprintln!("The folder {out_folder} already exists");
         let confirmation = ask_user("Do you want to overwrite it? y/n: ")
             .await
@@ -483,7 +486,7 @@ pub async fn run_cmd_export_media(
 
     match meta_write_res {
         Ok(_) => {
-            if logout_after_operation {
+            if logout_after_operation && !is_internal {
                 let logout_res = do_logout(&global_opts, &vault_url).await;
 
                 match logout_res {
@@ -602,25 +605,5 @@ impl ProgressReceiver for DownloaderProgressPrinter {
 
         eprint!("\r{line}");
         self.last_line_width = line.width();
-    }
-}
-
-fn get_extension_from_url(download_path: &str, default_ext: &str) -> String {
-    let path_parts: Vec<&str> = download_path.split('/').collect();
-
-    if path_parts.is_empty() {
-        default_ext.to_string()
-    } else {
-        let last_part = path_parts.into_iter().last().unwrap_or("download");
-        let file_name = last_part
-            .split('?')
-            .next()
-            .unwrap_or("download")
-            .to_string();
-        file_name
-            .split('.')
-            .last()
-            .unwrap_or(default_ext)
-            .to_string()
     }
 }
