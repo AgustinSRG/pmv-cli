@@ -9,6 +9,9 @@ use album::*;
 mod album_export;
 use album_export::*;
 
+mod album_import;
+use album_import::*;
+
 mod album_thumbnail;
 use album_thumbnail::*;
 

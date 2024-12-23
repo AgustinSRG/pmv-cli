@@ -35,6 +35,7 @@ pub async fn run_cmd_import_media(
     global_opts: CommandGlobalOptions,
     path: String,
     album: Option<String>,
+    is_internal: bool,
 ) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
@@ -117,6 +118,9 @@ pub async fn run_cmd_import_media(
                 Err(e) => {
                     let e_str = e.to_string();
                     eprintln!("Could not read metadata file. Error: {e_str}");
+                    if is_internal {
+                        return;
+                    }
                     if logout_after_operation {
                         let logout_res = do_logout(&global_opts, &vault_url).await;
 
@@ -609,4 +613,19 @@ pub async fn run_cmd_import_media(
             }
         }
     }
+
+    // Done
+
+    if !is_internal && logout_after_operation {
+        let logout_res = do_logout(&global_opts, &vault_url).await;
+
+        match logout_res {
+            Ok(_) => {}
+            Err(_) => {
+                process::exit(1);
+            }
+        }
+    }
+
+    eprintln!("Done. Successfully imported media asset #{media_id}");
 }

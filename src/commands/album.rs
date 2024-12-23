@@ -20,7 +20,7 @@ use crate::{
 };
 
 use super::{
-    get_vault_url, print_request_error, run_cmd_download_album_thumbnail, run_cmd_export_album, run_cmd_upload_album_thumbnail, CommandGlobalOptions
+    get_vault_url, print_request_error, run_cmd_download_album_thumbnail, run_cmd_export_album, run_cmd_import_album, run_cmd_upload_album_thumbnail, CommandGlobalOptions
 };
 
 #[derive(Subcommand)]
@@ -143,6 +143,12 @@ pub enum AlbumCommand {
         output: Option<String>,
     },
 
+    /// Imports an album, expecting a folder with the same format the export command uses.
+    Import {
+        /// Path to the folder to import
+        path: String,
+    },
+
     /// Optimizes thumbnails of albums, making the loading process faster
     OptimizeThumbnails,
 }
@@ -201,6 +207,9 @@ pub async fn run_album_cmd(global_opts: CommandGlobalOptions, cmd: AlbumCommand)
         }
         AlbumCommand::Export { album, output } => {
             run_cmd_export_album(global_opts, album, output).await;
+        },
+        AlbumCommand::Import { path } => {
+            run_cmd_import_album(global_opts, path).await;
         },
     }
 }
