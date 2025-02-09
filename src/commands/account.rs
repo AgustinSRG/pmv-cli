@@ -8,8 +8,12 @@ use crate::{
     api::{
         api_call_change_password, api_call_change_username, api_call_context,
         api_call_create_account, api_call_delete_account, api_call_list_accounts,
+        api_call_update_account,
     },
-    models::{AccountCreateBody, AccountDeleteBody, ChangePasswordBody, ChangeUsernameBody},
+    models::{
+        AccountCreateBody, AccountDeleteBody, AccountUpdateBody, ChangePasswordBody,
+        ChangeUsernameBody,
+    },
     tools::{
         ask_user, ask_user_password, ensure_login, parse_vault_uri, print_table, to_csv_string,
     },
@@ -49,6 +53,20 @@ pub enum AccountCommand {
         allow_write: bool,
     },
 
+    /// Updates an account
+    Update {
+        /// Username of the account
+        username: String,
+
+        /// New username for the account
+        #[arg(short, long)]
+        new_username: Option<String>,
+
+        /// Allows the account to modify the vault
+        #[arg(short, long)]
+        allow_write: Option<bool>,
+    },
+
     /// Deletes an existing account
     Delete {
         /// Username of the account to delete
@@ -75,6 +93,13 @@ pub async fn run_account_cmd(global_opts: CommandGlobalOptions, cmd: AccountComm
             allow_write,
         } => {
             run_cmd_create_account(global_opts, username, allow_write).await;
+        }
+        AccountCommand::Update {
+            username,
+            new_username,
+            allow_write,
+        } => {
+            run_cmd_update_account(global_opts, username, new_username, allow_write).await;
         }
         AccountCommand::Delete { username } => {
             run_cmd_delete_account(global_opts, username).await;
@@ -545,6 +570,84 @@ pub async fn run_cmd_create_account(
         AccountCreateBody {
             username: username.clone(),
             password: new_password,
+            write: allow_write,
+        },
+        global_opts.debug,
+    )
+    .await;
+
+    match api_res {
+        Ok(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            eprintln!("Successfully created account: {username}");
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_update_account(
+    global_opts: CommandGlobalOptions,
+    username: String,
+    new_username: Option<String>,
+    allow_write: Option<bool>,
+) {
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Call API
+
+    let api_res = api_call_update_account(
+        &vault_url,
+        AccountUpdateBody {
+            username: username.clone(),
+            new_username,
             write: allow_write,
         },
         global_opts.debug,

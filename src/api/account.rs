@@ -2,8 +2,7 @@
 
 use crate::{
     models::{
-        AccountContext, AccountCreateBody, AccountDeleteBody, AccountListItem, ChangePasswordBody,
-        ChangeUsernameBody,
+        AccountContext, AccountCreateBody, AccountDeleteBody, AccountListItem, AccountUpdateBody, ChangePasswordBody, ChangeUsernameBody
     },
     tools::{do_get_request, do_post_request, RequestError, VaultURI},
 };
@@ -81,6 +80,22 @@ pub async fn api_call_create_account(
     do_post_request(
         url,
         "/api/admin/accounts".to_string(),
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
+
+    Ok(())
+}
+
+pub async fn api_call_update_account(
+    url: &VaultURI,
+    req_body: AccountUpdateBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    do_post_request(
+        url,
+        "/api/admin/accounts/update".to_string(),
         serde_json::to_string(&req_body).unwrap(),
         debug,
     )

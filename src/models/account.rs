@@ -60,6 +60,18 @@ pub struct AccountCreateBody {
   pub write: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AccountUpdateBody {
+  #[serde(rename = "username")]
+  pub username: String,
+
+  #[serde(rename = "newUsername")]
+  pub new_username: Option<String>,
+
+  #[serde(rename = "write")]
+  pub write: Option<bool>,
+}
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccountDeleteBody {

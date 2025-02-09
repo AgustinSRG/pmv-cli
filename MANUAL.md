@@ -91,6 +91,7 @@ pmv-cli account <COMMAND>
 | [change-password](#command-account-change-password) | Changes account password |
 | [list](#command-account-list) | List accounts |
 | [create](#command-account-create) | Creates new account |
+| [update](#command-account-update) | Updates an account |
 | [delete](#command-account-delete) | Deletes an existing account |
 
 <ins>**Options:**</ins>
@@ -191,6 +192,30 @@ pmv-cli account create [OPTIONS] <USERNAME>
 | Option | Description |
 | --- | --- |
 | `-a, --allow-write` | Allows the new account to modify the vault |
+| `-h, --help` | Print help |
+
+### Command: account update
+
+Updates an account
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account update [OPTIONS] <USERNAME>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<USERNAME>` | Username of the account |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-n, --new-username <NEW_USERNAME>` | New username for the account |
+| `-a, --allow-write <ALLOW_WRITE>` | Allows the account to modify the vault [possible values: true, false] |
 | `-h, --help` | Print help |
 
 ### Command: account delete
