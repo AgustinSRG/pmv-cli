@@ -46,6 +46,18 @@ pub enum ConfigCommand {
         interval_seconds: i32,
     },
 
+    /// Sets the max number of invited sessions by user
+    SetMaxInvites {
+        /// Max number of invited sessions by user
+        invite_limit: i32,
+    },
+
+    /// Sets the option to preserve original files, before encoding, as an attachment
+    SetPreserveOriginals {
+        /// Preserve original media, before encoding, as an attachment?
+        preserve_originals: bool,
+    },
+
     /// Sets custom CSS for the vault
     SetCSS {
         /// Path to the css file to use
@@ -99,6 +111,12 @@ pub async fn run_config_cmd(global_opts: CommandGlobalOptions, cmd: ConfigComman
         }
         ConfigCommand::SetVideoPreviewsInterval { interval_seconds } => {
             run_cmd_config_set_video_previews_interval(global_opts, interval_seconds).await;
+        }
+        ConfigCommand::SetMaxInvites { invite_limit } => {
+            run_cmd_config_set_invite_limit(global_opts, invite_limit).await;
+        }
+        ConfigCommand::SetPreserveOriginals { preserve_originals } => {
+            run_cmd_config_set_preserve_originals(global_opts, preserve_originals).await;
         }
         ConfigCommand::SetCSS { file_path } => {
             run_cmd_config_set_css(global_opts, file_path).await;
@@ -185,9 +203,24 @@ pub async fn run_cmd_config_get(global_opts: CommandGlobalOptions) {
                 res_video_previews_interval = 3;
             }
 
+            let mut invite_limit = config.invite_limit;
+
+            if invite_limit == 0 {
+                invite_limit = 10;
+            }
+
             println!("Max tasks in parallel: {res_max_tasks}");
             println!("Number of encoding threads: {res_encoding_threads}");
             println!("Video previews interval: {res_video_previews_interval} seconds");
+            println!("Max number of invited sessions by user: {invite_limit}");
+            println!(
+                "Preserve original files, before encoding, as an attachment?: {}",
+                if config.preserve_originals {
+                    "Yes"
+                } else {
+                    "No"
+                }
+            );
 
             if !config.resolutions.is_empty() {
                 let list: Vec<String> = config
@@ -354,8 +387,7 @@ pub async fn run_cmd_config_set_title(global_opts: CommandGlobalOptions, title: 
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -436,8 +468,7 @@ pub async fn run_cmd_config_set_max_tasks(global_opts: CommandGlobalOptions, max
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -521,8 +552,7 @@ pub async fn run_cmd_config_set_encoding_threads(
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -606,8 +636,7 @@ pub async fn run_cmd_config_set_video_previews_interval(
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -618,6 +647,175 @@ pub async fn run_cmd_config_set_video_previews_interval(
             };
             eprintln!(
                 "Successfully changed video previews interval: {interval_seconds_fixed} seconds"
+            );
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_config_set_invite_limit(global_opts: CommandGlobalOptions, invite_limit: i32) {
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Get config
+
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
+
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    };
+
+    // Changes
+
+    let mut new_config = current_config.clone();
+
+    new_config.invite_limit = invite_limit;
+
+    // Set config
+
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+
+    match api_res_set_conf {
+        Ok(_) => {
+            eprintln!(
+                "Successfully changed max number of invited sessions by user: {invite_limit}"
+            );
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_config_set_preserve_originals(
+    global_opts: CommandGlobalOptions,
+    preserve_originals: bool,
+) {
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Get config
+
+    let api_res_get_conf = api_call_get_config(&vault_url, global_opts.debug).await;
+
+    let current_config: VaultConfig = match api_res_get_conf {
+        Ok(config) => config,
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    };
+
+    // Changes
+
+    let mut new_config = current_config.clone();
+
+    new_config.preserve_originals = preserve_originals;
+
+    // Set config
+
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+
+    match api_res_set_conf {
+        Ok(_) => {
+            eprintln!(
+                "Successfully changed the option to preserve original files: {preserve_originals}"
             );
         }
         Err(e) => {
@@ -720,8 +918,7 @@ pub async fn run_cmd_config_set_css(global_opts: CommandGlobalOptions, file_path
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -823,8 +1020,7 @@ pub async fn run_cmd_config_clear_css(global_opts: CommandGlobalOptions) {
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -953,8 +1149,7 @@ pub async fn run_cmd_config_add_video_resolution(
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -1084,8 +1279,7 @@ pub async fn run_cmd_config_remove_video_resolution(
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -1215,8 +1409,7 @@ pub async fn run_cmd_config_add_image_resolution(
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
@@ -1348,8 +1541,7 @@ pub async fn run_cmd_config_remove_image_resolution(
 
     // Set config
 
-    let api_res_set_conf =
-        api_call_set_config(&vault_url, new_config, global_opts.debug).await;
+    let api_res_set_conf = api_call_set_config(&vault_url, new_config, global_opts.debug).await;
 
     match api_res_set_conf {
         Ok(_) => {
