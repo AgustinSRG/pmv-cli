@@ -26,6 +26,7 @@ pmv-cli [OPTIONS] <COMMAND>
 | [invites](#command-invites) | Manages invites |
 | [batch](#command-batch) | Applies a batch operation to a list of media assets |
 | [get-server-information](#command-get-server-information) | Gets server information, like the version it is using |
+| [get-disk-usage](#command-get-disk-usage) | Gets server disk usage |
 
 <ins>**Options:**</ins>
 
@@ -1467,6 +1468,8 @@ pmv-cli config <COMMAND>
 | [set-max-tasks](#command-config-set-max-tasks) | Sets max tasks in parallel |
 | [set-encoding-threads](#command-config-set-encoding-threads) | Sets number of encoding threads to use |
 | [set-video-previews-interval](#command-config-set-video-previews-interval) | Sets the video previews interval in seconds |
+| [set-max-invites](#command-config-set-max-invites) | Sets the max number of invited sessions by user |
+| [set-preserve-originals](#command-config-set-preserve-originals) | Sets the option to preserve original files, before encoding, as an attachment |
 | [set-css](#command-config-set-css) | Sets custom CSS for the vault |
 | [clear-css](#command-config-clear-css) | Clears custom CSS for the vault |
 | [add-video-resolution](#command-config-add-video-resolution) | Adds video resolution |
@@ -1593,6 +1596,50 @@ pmv-cli config set-video-previews-interval <INTERVAL_SECONDS>
 | Argument | Description |
 | --- | --- |
 | `<INTERVAL_SECONDS>` | Interval in seconds |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config set-max-invites
+
+Sets the max number of invited sessions by user
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config set-max-invites <INVITE_LIMIT>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<INVITE_LIMIT>` | Max number of invited sessions by user |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config set-preserve-originals
+
+Sets the option to preserve original files, before encoding, as an attachment
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config set-preserve-originals [PRESERVE_ORIGINALS]
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `[PRESERVE_ORIGINALS]` | Preserve original media, before encoding, as an attachment? |
 
 <ins>**Options:**</ins>
 
@@ -2087,6 +2134,22 @@ Gets server information, like the version it is using
 
 ```
 pmv-cli get-server-information
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+## Command: get-disk-usage
+
+Gets server disk usage
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli get-disk-usage
 ```
 
 <ins>**Options:**</ins>
