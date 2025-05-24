@@ -21,6 +21,9 @@ use batch_operation::*;
 mod config;
 use config::*;
 
+mod disk_usage;
+pub use disk_usage::*;
+
 mod invites;
 use invites::*;
 
@@ -40,12 +43,12 @@ mod media_export;
 mod media_extended_description;
 mod media_image_notes;
 mod media_import;
+mod media_replace;
 mod media_resolutions;
 mod media_subtitles;
 mod media_thumbnail;
 mod media_time_slices;
 mod media_upload;
-mod media_replace;
 
 mod random;
 use random::*;
@@ -277,11 +280,19 @@ pub enum Commands {
     /// Gets server information, like the version it is using.
     #[clap(alias("server-info"))]
     GetServerInformation,
+
+    /// Gets server disk usage.
+    #[clap(alias("disk-usage"))]
+    GetDiskUsage,
 }
 
 pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
     match cmd {
-        Commands::Login { username, duration, invite_code } => {
+        Commands::Login {
+            username,
+            duration,
+            invite_code,
+        } => {
             run_cmd_login(global_opts, username, duration, invite_code).await;
         }
         Commands::Logout => {
@@ -378,10 +389,13 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
         }
         Commands::Invites { invites_cmd } => {
             run_invites_cmd(global_opts, invites_cmd).await;
-        },
+        }
         Commands::GetServerInformation => {
             run_cmd_server_info(global_opts).await;
-        },
+        }
+        Commands::GetDiskUsage => {
+            run_cmd_disk_usage(global_opts).await;
+        }
     }
 }
 

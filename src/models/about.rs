@@ -13,3 +13,19 @@ pub struct ServerInformation {
   #[serde(rename = "ffmpeg_version")]
   pub ffmpeg_version: String,
 }
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ServerDiskUsage {
+  #[serde(rename = "usage")]
+  pub usage: f32,
+
+  #[serde(rename = "available")]
+  pub available: u64,
+
+  #[serde(rename = "free")]
+  pub free: u64,
+
+  #[serde(rename = "total")]
+  pub total: u64,
+}
