@@ -7,8 +7,7 @@ use crate::{
         ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata, MediaRenameAttachmentBody, MediaRenameSubtitleOrAudioBody, MediaResolution, MediaSubtitle, MediaTimeSlice, MediaUpdateDescriptionBody, MediaUpdateExtendedDescriptionBody, MediaUpdateExtraBody, MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaUploadResponse, TaskEncodeResolution
     },
     tools::{
-        do_get_request, do_multipart_upload_request, do_post_request, ProgressReceiver,
-        RequestError, VaultURI,
+        do_get_request, do_multipart_upload_request, do_multipart_upload_request_with_confirmation, do_post_request, ProgressReceiver, RequestError, VaultURI
     },
 };
 
@@ -270,7 +269,7 @@ pub async fn api_call_media_replace(
     debug: bool,
     progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
 ) -> Result<(), RequestError> {
-    do_multipart_upload_request(
+    do_multipart_upload_request_with_confirmation(
         url,
         format!("/api/media/{media}/replace"),
         "file".to_string(),

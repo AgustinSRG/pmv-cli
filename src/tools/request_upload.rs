@@ -6,6 +6,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tokio_sync_read_stream::SyncReadStream;
 
+use crate::tools::{request_auth_confirmation_password, request_auth_confirmation_tfa, AUTH_CONFIRMATION_PASSWORD_HEADER_NAME, AUTH_CONFIRMATION_TFA_HEADER_NAME};
+
 use super::{super::models::*, ProgressReceiver};
 use super::{get_session_from_uri, resolve_vault_api_uri, RequestError, SESSION_HEADER_NAME};
 
@@ -110,12 +112,62 @@ impl std::io::Read for UploadProgressReporterSync {
     }
 }
 
+pub async fn do_multipart_upload_request_with_confirmation(
+    uri: &VaultURI,
+    path: String,
+    field: String,
+    file_path: String,
+    debug: bool,
+    progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
+) -> Result<String, RequestError> {
+    let res = do_multipart_upload_request_internal(uri, path.clone(), field.clone(), file_path.clone(), debug, None, None, progress_receiver.clone()).await;
+
+    match res {
+        Ok(r) => Ok(r),
+        Err(err) => {
+            match err.clone() {
+                RequestError::Api { status, code, message: _ } => {
+                    if status == 403 {
+                        if code == "AUTH_CONFIRMATION_REQUIRED_TFA" {
+                        let confirmation_tfa = request_auth_confirmation_tfa().await;
+                        do_multipart_upload_request_internal(uri, path.clone(), field.clone(), file_path.clone(), debug, None, Some(confirmation_tfa), progress_receiver.clone()).await
+                    } else if code == "AUTH_CONFIRMATION_REQUIRED_PW" {
+                        let confirmation_pw = request_auth_confirmation_password().await;
+                        do_multipart_upload_request_internal(uri, path.clone(), field.clone(), file_path.clone(), debug, Some(confirmation_pw), None, progress_receiver.clone()).await
+                    } else {
+                        Err(err)
+                    }
+                    } else {
+                        Err(err)
+                    }
+                },
+                _ => {
+                    Err(err)
+                }
+            }
+        },
+    }
+}
+
 pub async fn do_multipart_upload_request(
     uri: &VaultURI,
     path: String,
     field: String,
     file_path: String,
     debug: bool,
+    progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
+) -> Result<String, RequestError> {
+    do_multipart_upload_request_internal(uri, path, field, file_path, debug, None, None, progress_receiver).await
+}
+
+pub async fn do_multipart_upload_request_internal(
+    uri: &VaultURI,
+    path: String,
+    field: String,
+    file_path: String,
+    debug: bool,
+    confirmation_password: Option<String>,
+    confirmation_tfa: Option<String>,
     progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
 ) -> Result<String, RequestError> {
     let final_uri = resolve_vault_api_uri(uri.clone(), path);
@@ -176,6 +228,14 @@ pub async fn do_multipart_upload_request(
 
     if let Some(s) = session {
         request_builder = request_builder.header(SESSION_HEADER_NAME, s);
+    }
+
+    if let Some(cp) = confirmation_password {
+        request_builder = request_builder.header(AUTH_CONFIRMATION_PASSWORD_HEADER_NAME, cp);
+    }
+
+    if let Some(ct) = confirmation_tfa {
+        request_builder = request_builder.header(AUTH_CONFIRMATION_TFA_HEADER_NAME, ct);
     }
 
     // Send request
