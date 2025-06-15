@@ -6,7 +6,7 @@ use super::vault_uri::VaultURI;
 
 pub const SESSION_HEADER_NAME: &str = "x-session-token";
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RequestError {
     StatusCode(reqwest::StatusCode),
     Api {

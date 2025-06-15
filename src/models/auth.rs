@@ -12,6 +12,9 @@ pub struct Credentials {
 
   #[serde(rename = "duration")]
   pub duration: Option<String>,
+
+  #[serde(rename = "tfaCode")]
+  pub tfa_code: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -94,6 +94,10 @@ pub enum Commands {
         /// Invite code. Setting this option will ignore the credentials and use the code.
         #[arg(short = 'I', long)]
         invite_code: Option<String>,
+
+        /// Two factor authentication code
+        #[arg(short = 'T', long)]
+        tfa_code: Option<String>,
     },
 
     /// Closes the active session, given a session URL
@@ -292,8 +296,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
             username,
             duration,
             invite_code,
+            tfa_code,
         } => {
-            run_cmd_login(global_opts, username, duration, invite_code).await;
+            run_cmd_login(global_opts, username, duration, invite_code, tfa_code).await;
         }
         Commands::Logout => {
             run_cmd_logout(global_opts).await;

@@ -18,6 +18,7 @@ pub async fn run_cmd_login(
     username: Option<String>,
     duration: Option<String>,
     invite_code: Option<String>,
+    tfa_code: Option<String>,
 ) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
@@ -134,7 +135,7 @@ pub async fn run_cmd_login(
         }
         None => {
             let login_result =
-                ensure_login_ext(&vault_url, &username, &duration, global_opts.debug).await;
+                ensure_login_ext(&vault_url, &username, &None, &tfa_code, &duration, global_opts.debug, false).await;
 
             if login_result.is_err() {
                 process::exit(1);
