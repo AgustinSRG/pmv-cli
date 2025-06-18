@@ -121,7 +121,7 @@ pub async fn api_call_delete_account(
 }
 
 
-pub async fn api_call_get_account_settings(
+pub async fn api_call_get_security_settings(
     url: &VaultURI,
     debug: bool,
 ) -> Result<AccountSecuritySettings, RequestError> {
@@ -139,7 +139,7 @@ pub async fn api_call_get_account_settings(
     Ok(parsed_body.unwrap())
 }
 
-pub async fn api_call_set_account_settings(
+pub async fn api_call_set_security_settings(
     url: &VaultURI,
     req_body: AccountSetSecuritySettingsBody,
     debug: bool,
