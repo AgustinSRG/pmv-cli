@@ -55,6 +55,7 @@ pmv-cli login [OPTIONS]
 | `-U, --username <USERNAME>` | Vault username. You can also specify the credentials in the URL |
 | `-D, --duration <DURATION>` | Session duration. Can be: day, week, month or year |
 | `-I, --invite-code <INVITE_CODE>` | Invite code. Setting this option will ignore the credentials and use the code |
+| `-T, --tfa-code <TFA_CODE>` | Two factor authentication code |
 | `-h, --help` | Print help |
 
 ## Command: logout
@@ -90,7 +91,12 @@ pmv-cli account <COMMAND>
 | [context](#command-account-context) | Prints account context to the standard output |
 | [change-username](#command-account-change-username) | Changes username (only for root account) |
 | [change-password](#command-account-change-password) | Changes account password |
-| [list](#command-account-list) | List accounts |
+| [get-security-settings](#command-account-get-security-settings) | Gets account security settings |
+| [set-auth-confirmation](#command-account-set-auth-confirmation) | Sets auth confirmation options |
+| [get-totp-settings](#command-account-get-totp-settings) | Gets TOTP settings in order to enable two factor authentication |
+| [enable-tfa](#command-account-enable-tfa) | Enables two factor authentication |
+| [disable-tfa](#command-account-disable-tfa) | Disables two factor authentication |
+| [list](#command-account-list) | Lists accounts |
 | [create](#command-account-create) | Creates new account |
 | [update](#command-account-update) | Updates an account |
 | [delete](#command-account-delete) | Deletes an existing account |
@@ -155,9 +161,112 @@ pmv-cli account change-password
 | --- | --- |
 | `-h, --help` | Print help |
 
+### Command: account get-security-settings
+
+Gets account security settings
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account get-security-settings
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: account set-auth-confirmation
+
+Sets auth confirmation options
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account set-auth-confirmation [OPTIONS] <AUTH_CONFIRMATION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<AUTH_CONFIRMATION>` | Set to 'true' to enable auth confirmation, Set it to 'false' to disable it |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--prefer-password` |  |
+| `Prefer using the account password instead of two factor authentication` |  |
+| `--period-seconds <PERIOD_SECONDS>` |  |
+| `Period (seconds) to remember the last auth confirmation` |  |
+| `-h, --help` |  |
+| `Print help` |  |
+
+### Command: account get-totp-settings
+
+Gets TOTP settings in order to enable two factor authentication
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account get-totp-settings [OPTIONS]
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--issuer <ISSUER>` | TOTP issuer (to be added th the URL) |
+| `--account <ACCOUNT>` | TOTP account (to be added th the URL) |
+| `--algorithm <ALGORITHM>` | Hashing algorithm (sha-1, sha-256 or sha-512) |
+| `--period <PERIOD>` | TOTP period (30s, 60s or 120s) |
+| `--allow-skew` | Allows clock skew of 1 period |
+| `-h, --help` | Print help |
+
+### Command: account enable-tfa
+
+Enables two factor authentication
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account enable-tfa <METHOD> <SECRET>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<METHOD>` | Two factor authentication method (from the settings command result) |
+| `<SECRET>` | Two factor authentication secret |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: account disable-tfa
+
+Disables two factor authentication
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account disable-tfa
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
 ### Command: account list
 
-List accounts
+Lists accounts
 
 <ins>**Usage:**</ins>
 
