@@ -160,7 +160,7 @@ pub async fn api_call_get_totp_settings(
     options: TimeOtpOptions,
     debug: bool,
 ) -> Result<TimeOtpSettings, RequestError> {
-    let mut url_path = format!("/api/account/security/tfa/totp");
+    let mut url_path = "/api/account/security/tfa/totp".to_string();
 
     url_path.push_str(&("?algorithm=".to_owned() + &urlencoding::encode(&options.algorithm.to_string())));
     url_path.push_str(&("&period=".to_owned() + &urlencoding::encode(&options.period.to_string())));
@@ -174,9 +174,9 @@ pub async fn api_call_get_totp_settings(
     }
 
     if options.skew {
-        url_path.push_str(&"&skew=allow".to_owned());
+        url_path.push_str("&skew=allow");
     } else {
-        url_path.push_str(&"&skew=disallow".to_owned());
+        url_path.push_str("&skew=disallow");
     }
 
     let body_str = do_get_request(url, "/api/account/security".to_string(), debug).await?;

@@ -6,7 +6,10 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tokio_sync_read_stream::SyncReadStream;
 
-use crate::tools::{request_auth_confirmation_password, request_auth_confirmation_tfa, AUTH_CONFIRMATION_PASSWORD_HEADER_NAME, AUTH_CONFIRMATION_TFA_HEADER_NAME};
+use crate::tools::{
+    request_auth_confirmation_password, request_auth_confirmation_tfa,
+    AUTH_CONFIRMATION_PASSWORD_HEADER_NAME, AUTH_CONFIRMATION_TFA_HEADER_NAME,
+};
 
 use super::{super::models::*, ProgressReceiver};
 use super::{get_session_from_uri, resolve_vault_api_uri, RequestError, SESSION_HEADER_NAME};
@@ -120,31 +123,67 @@ pub async fn do_multipart_upload_request_with_confirmation(
     debug: bool,
     progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
 ) -> Result<String, RequestError> {
-    let res = do_multipart_upload_request_internal(uri, path.clone(), field.clone(), file_path.clone(), debug, None, None, progress_receiver.clone()).await;
+    let res = do_multipart_upload_request_internal(
+        uri,
+        MultipartUploadRequestOptions {
+            path: path.clone(),
+            field: field.clone(),
+            file_path: file_path.clone(),
+            debug,
+        },
+        None,
+        None,
+        progress_receiver.clone(),
+    )
+    .await;
 
     match res {
         Ok(r) => Ok(r),
-        Err(err) => {
-            match err.clone() {
-                RequestError::Api { status, code, message: _ } => {
-                    if status == 403 {
-                        if code == "AUTH_CONFIRMATION_REQUIRED_TFA" {
+        Err(err) => match err.clone() {
+            RequestError::Api {
+                status,
+                code,
+                message: _,
+            } => {
+                if status == 403 {
+                    if code == "AUTH_CONFIRMATION_REQUIRED_TFA" {
                         let confirmation_tfa = request_auth_confirmation_tfa().await;
-                        do_multipart_upload_request_internal(uri, path.clone(), field.clone(), file_path.clone(), debug, None, Some(confirmation_tfa), progress_receiver.clone()).await
+                        do_multipart_upload_request_internal(
+                            uri,
+                            MultipartUploadRequestOptions {
+                                path: path.clone(),
+                                field: field.clone(),
+                                file_path: file_path.clone(),
+                                debug,
+                            },
+                            None,
+                            Some(confirmation_tfa),
+                            progress_receiver.clone(),
+                        )
+                        .await
                     } else if code == "AUTH_CONFIRMATION_REQUIRED_PW" {
                         let confirmation_pw = request_auth_confirmation_password().await;
-                        do_multipart_upload_request_internal(uri, path.clone(), field.clone(), file_path.clone(), debug, Some(confirmation_pw), None, progress_receiver.clone()).await
+                        do_multipart_upload_request_internal(
+                            uri,
+                            MultipartUploadRequestOptions {
+                                path: path.clone(),
+                                field: field.clone(),
+                                file_path: file_path.clone(),
+                                debug,
+                            },
+                            Some(confirmation_pw),
+                            None,
+                            progress_receiver.clone(),
+                        )
+                        .await
                     } else {
                         Err(err)
                     }
-                    } else {
-                        Err(err)
-                    }
-                },
-                _ => {
+                } else {
                     Err(err)
                 }
             }
+            _ => Err(err),
         },
     }
 }
@@ -157,36 +196,52 @@ pub async fn do_multipart_upload_request(
     debug: bool,
     progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
 ) -> Result<String, RequestError> {
-    do_multipart_upload_request_internal(uri, path, field, file_path, debug, None, None, progress_receiver).await
+    do_multipart_upload_request_internal(
+        uri,
+        MultipartUploadRequestOptions {
+            path,
+            field,
+            file_path,
+            debug,
+        },
+        None,
+        None,
+        progress_receiver,
+    )
+    .await
+}
+
+pub struct MultipartUploadRequestOptions {
+    pub path: String,
+    pub field: String,
+    pub file_path: String,
+    pub debug: bool,
 }
 
 pub async fn do_multipart_upload_request_internal(
     uri: &VaultURI,
-    path: String,
-    field: String,
-    file_path: String,
-    debug: bool,
+    options: MultipartUploadRequestOptions,
     confirmation_password: Option<String>,
     confirmation_tfa: Option<String>,
     progress_receiver: Arc<Mutex<dyn ProgressReceiver + Send>>,
 ) -> Result<String, RequestError> {
-    let final_uri = resolve_vault_api_uri(uri.clone(), path);
+    let final_uri = resolve_vault_api_uri(uri.clone(), options.path);
 
-    if debug {
-        eprintln!("\rDEBUG: UPLOAD {file_path} -> {final_uri}");
+    if options.debug {
+        eprintln!("\rDEBUG: UPLOAD {} -> {}", options.file_path, final_uri);
     }
 
     let client = reqwest::Client::new();
 
     // Load file
 
-    let file_path_o = Path::new(&file_path);
+    let file_path_o = Path::new(&options.file_path);
     let file_name: String = match file_path_o.file_name() {
         Some(n) => n.to_str().unwrap_or("").to_string(),
         None => "".to_string(),
     };
 
-    let file_res = File::open(&file_path);
+    let file_res = File::open(&options.file_path);
     let file_len: u64;
     let mut reporter: UploadProgressReporterSync;
 
@@ -218,9 +273,10 @@ pub async fn do_multipart_upload_request_internal(
 
     let stream: SyncReadStream<UploadProgressReporterSync> = reporter.clone().into();
 
-    let file_part = reqwest::multipart::Part::stream(reqwest::Body::wrap_stream(stream)).file_name(file_name);
+    let file_part =
+        reqwest::multipart::Part::stream(reqwest::Body::wrap_stream(stream)).file_name(file_name);
 
-    let form = reqwest::multipart::Form::new().part(field, file_part);
+    let form = reqwest::multipart::Form::new().part(options.field, file_part);
 
     let mut request_builder = client.post(final_uri).multipart(form);
 
@@ -285,9 +341,7 @@ pub async fn do_multipart_upload_request_internal(
 
             Ok(res_body)
         }
-        Err(err) => {
-            Err(RequestError::NetworkError(err.to_string()))
-        }
+        Err(err) => Err(RequestError::NetworkError(err.to_string())),
     }
 }
 
@@ -363,8 +417,6 @@ pub async fn do_multipart_upload_request_memory(
 
             Ok(res_body)
         }
-        Err(err) => {
-            Err(RequestError::NetworkError(err.to_string()))
-        }
+        Err(err) => Err(RequestError::NetworkError(err.to_string())),
     }
 }
