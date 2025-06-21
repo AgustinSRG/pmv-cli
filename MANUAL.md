@@ -26,6 +26,7 @@ pmv-cli [OPTIONS] <COMMAND>
 | [invites](#command-invites) | Manages invites |
 | [batch](#command-batch) | Applies a batch operation to a list of media assets |
 | [get-server-information](#command-get-server-information) | Gets server information, like the version it is using |
+| [get-disk-usage](#command-get-disk-usage) | Gets server disk usage |
 
 <ins>**Options:**</ins>
 
@@ -54,6 +55,7 @@ pmv-cli login [OPTIONS]
 | `-U, --username <USERNAME>` | Vault username. You can also specify the credentials in the URL |
 | `-D, --duration <DURATION>` | Session duration. Can be: day, week, month or year |
 | `-I, --invite-code <INVITE_CODE>` | Invite code. Setting this option will ignore the credentials and use the code |
+| `-T, --tfa-code <TFA_CODE>` | Two factor authentication code |
 | `-h, --help` | Print help |
 
 ## Command: logout
@@ -89,7 +91,12 @@ pmv-cli account <COMMAND>
 | [context](#command-account-context) | Prints account context to the standard output |
 | [change-username](#command-account-change-username) | Changes username (only for root account) |
 | [change-password](#command-account-change-password) | Changes account password |
-| [list](#command-account-list) | List accounts |
+| [get-security-settings](#command-account-get-security-settings) | Gets account security settings |
+| [set-auth-confirmation](#command-account-set-auth-confirmation) | Sets auth confirmation options |
+| [get-totp-settings](#command-account-get-totp-settings) | Gets TOTP settings in order to enable two factor authentication |
+| [enable-tfa](#command-account-enable-tfa) | Enables two factor authentication |
+| [disable-tfa](#command-account-disable-tfa) | Disables two factor authentication |
+| [list](#command-account-list) | Lists accounts |
 | [create](#command-account-create) | Creates new account |
 | [update](#command-account-update) | Updates an account |
 | [delete](#command-account-delete) | Deletes an existing account |
@@ -154,9 +161,112 @@ pmv-cli account change-password
 | --- | --- |
 | `-h, --help` | Print help |
 
+### Command: account get-security-settings
+
+Gets account security settings
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account get-security-settings
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: account set-auth-confirmation
+
+Sets auth confirmation options
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account set-auth-confirmation [OPTIONS] <AUTH_CONFIRMATION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<AUTH_CONFIRMATION>` | Set to 'true' to enable auth confirmation, Set it to 'false' to disable it |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--prefer-password` |  |
+| `Prefer using the account password instead of two factor authentication` |  |
+| `--period-seconds <PERIOD_SECONDS>` |  |
+| `Period (seconds) to remember the last auth confirmation` |  |
+| `-h, --help` |  |
+| `Print help` |  |
+
+### Command: account get-totp-settings
+
+Gets TOTP settings in order to enable two factor authentication
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account get-totp-settings [OPTIONS]
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--issuer <ISSUER>` | TOTP issuer (to be added th the URL) |
+| `--account <ACCOUNT>` | TOTP account (to be added th the URL) |
+| `--algorithm <ALGORITHM>` | Hashing algorithm (sha-1, sha-256 or sha-512) |
+| `--period <PERIOD>` | TOTP period (30s, 60s or 120s) |
+| `--allow-skew` | Allows clock skew of 1 period |
+| `-h, --help` | Print help |
+
+### Command: account enable-tfa
+
+Enables two factor authentication
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account enable-tfa <METHOD> <SECRET>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<METHOD>` | Two factor authentication method (from the settings command result) |
+| `<SECRET>` | Two factor authentication secret |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: account disable-tfa
+
+Disables two factor authentication
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli account disable-tfa
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
 ### Command: account list
 
-List accounts
+Lists accounts
 
 <ins>**Usage:**</ins>
 
@@ -1467,6 +1577,8 @@ pmv-cli config <COMMAND>
 | [set-max-tasks](#command-config-set-max-tasks) | Sets max tasks in parallel |
 | [set-encoding-threads](#command-config-set-encoding-threads) | Sets number of encoding threads to use |
 | [set-video-previews-interval](#command-config-set-video-previews-interval) | Sets the video previews interval in seconds |
+| [set-max-invites](#command-config-set-max-invites) | Sets the max number of invited sessions by user |
+| [set-preserve-originals](#command-config-set-preserve-originals) | Sets the option to preserve original files, before encoding, as an attachment |
 | [set-css](#command-config-set-css) | Sets custom CSS for the vault |
 | [clear-css](#command-config-clear-css) | Clears custom CSS for the vault |
 | [add-video-resolution](#command-config-add-video-resolution) | Adds video resolution |
@@ -1593,6 +1705,50 @@ pmv-cli config set-video-previews-interval <INTERVAL_SECONDS>
 | Argument | Description |
 | --- | --- |
 | `<INTERVAL_SECONDS>` | Interval in seconds |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config set-max-invites
+
+Sets the max number of invited sessions by user
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config set-max-invites <INVITE_LIMIT>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<INVITE_LIMIT>` | Max number of invited sessions by user |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: config set-preserve-originals
+
+Sets the option to preserve original files, before encoding, as an attachment
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli config set-preserve-originals [PRESERVE_ORIGINALS]
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `[PRESERVE_ORIGINALS]` | Preserve original media, before encoding, as an attachment? |
 
 <ins>**Options:**</ins>
 
@@ -2087,6 +2243,22 @@ Gets server information, like the version it is using
 
 ```
 pmv-cli get-server-information
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+## Command: get-disk-usage
+
+Gets server disk usage
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli get-disk-usage
 ```
 
 <ins>**Options:**</ins>

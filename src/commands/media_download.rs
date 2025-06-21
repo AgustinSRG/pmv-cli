@@ -740,7 +740,7 @@ pub async fn download_media_asset(
                 if path_parts.is_empty() {
                     out_file = "download".to_string();
                 } else {
-                    let last_part = path_parts.into_iter().last().unwrap_or("download");
+                    let last_part = path_parts.into_iter().next_back().unwrap_or("download");
                     out_file = last_part
                         .split('?')
                         .next()
@@ -757,7 +757,7 @@ pub async fn download_media_asset(
             if path_parts.is_empty() {
                 out_file = "download".to_string();
             } else {
-                let last_part = path_parts.into_iter().last().unwrap_or("download");
+                let last_part = path_parts.into_iter().next_back().unwrap_or("download");
                 out_file = last_part
                     .split('?')
                     .next()

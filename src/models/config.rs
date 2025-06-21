@@ -40,9 +40,15 @@ pub struct VaultConfig {
     #[serde(rename = "video_previews_interval")]
     pub video_previews_interval: Option<i32>,
 
+    #[serde(rename = "invite_limit")]
+    pub invite_limit: i32,
+
+    #[serde(rename = "preserve_originals", default)]
+    pub preserve_originals: bool,
+
     #[serde(rename = "resolutions")]
     pub resolutions: Vec<ConfigVideoResolution>,
-
+    
     #[serde(rename = "image_resolutions")]
     pub image_resolutions: Vec<ConfigImageResolution>,
 }

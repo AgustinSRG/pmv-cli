@@ -2,7 +2,7 @@
 
 use crate::{
     models::{
-        AccountContext, AccountCreateBody, AccountDeleteBody, AccountListItem, AccountUpdateBody, ChangePasswordBody, ChangeUsernameBody
+        AccountContext, AccountCreateBody, AccountDeleteBody, AccountListItem, AccountSecuritySettings, AccountSetSecuritySettingsBody, AccountUpdateBody, ChangePasswordBody, ChangeUsernameBody, TfaDisableBody, TimeOtpEnableBody, TimeOtpOptions, TimeOtpSettings
     },
     tools::{do_get_request, do_post_request, RequestError, VaultURI},
 };
@@ -112,6 +112,112 @@ pub async fn api_call_delete_account(
     do_post_request(
         url,
         "/api/admin/accounts/delete".to_string(),
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
+
+    Ok(())
+}
+
+
+pub async fn api_call_get_security_settings(
+    url: &VaultURI,
+    debug: bool,
+) -> Result<AccountSecuritySettings, RequestError> {
+    let body_str = do_get_request(url, "/api/account/security".to_string(), debug).await?;
+
+    let parsed_body: Result<AccountSecuritySettings, _> = serde_json::from_str(&body_str);
+
+    if parsed_body.is_err() {
+        return Err(RequestError::Json {
+            message: parsed_body.err().unwrap().to_string(),
+            body: body_str,
+        });
+    }
+
+    Ok(parsed_body.unwrap())
+}
+
+pub async fn api_call_set_security_settings(
+    url: &VaultURI,
+    req_body: AccountSetSecuritySettingsBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    do_post_request(
+        url,
+        "/api/account/security".to_string(),
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
+
+    Ok(())
+}
+
+pub async fn api_call_get_totp_settings(
+    url: &VaultURI,
+    options: TimeOtpOptions,
+    debug: bool,
+) -> Result<TimeOtpSettings, RequestError> {
+    let mut url_path = "/api/account/security/tfa/totp".to_string();
+
+    url_path.push_str(&("?algorithm=".to_owned() + &urlencoding::encode(&options.algorithm.to_string())));
+    url_path.push_str(&("&period=".to_owned() + &urlencoding::encode(&options.period.to_string())));
+
+    if let Some(issuer) = options.issuer {
+        url_path.push_str(&("&issuer=".to_owned() + &urlencoding::encode(&issuer)));
+    }
+
+    if let Some(account) = options.account {
+        url_path.push_str(&("&account=".to_owned() + &urlencoding::encode(&account)));
+    }
+
+    if options.skew {
+        url_path.push_str("&skew=allow");
+    } else {
+        url_path.push_str("&skew=disallow");
+    }
+
+    let body_str = do_get_request(url, "/api/account/security".to_string(), debug).await?;
+
+    let parsed_body: Result<TimeOtpSettings, _> = serde_json::from_str(&body_str);
+
+    if parsed_body.is_err() {
+        return Err(RequestError::Json {
+            message: parsed_body.err().unwrap().to_string(),
+            body: body_str,
+        });
+    }
+
+    Ok(parsed_body.unwrap())
+}
+
+
+pub async fn api_call_enable_totp(
+    url: &VaultURI,
+    req_body: TimeOtpEnableBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    do_post_request(
+        url,
+        "/api/account/security/tfa/totp".to_string(),
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
+
+    Ok(())
+}
+
+pub async fn api_call_disable_tfa(
+    url: &VaultURI,
+    req_body: TfaDisableBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    do_post_request(
+        url,
+        "/api/account/security/tfa/disable".to_string(),
         serde_json::to_string(&req_body).unwrap(),
         debug,
     )
