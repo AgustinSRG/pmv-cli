@@ -27,6 +27,9 @@ pub use disk_usage::*;
 mod invites;
 use invites::*;
 
+mod home;
+use home::*;
+
 mod login;
 use login::*;
 
@@ -247,6 +250,12 @@ pub enum Commands {
         invites_cmd: InvitesCommand,
     },
 
+    /// Manges the home page
+    Home {
+        #[command(subcommand)]
+        home_cmd: HomeCommand,
+    },
+
     /// Applies a batch operation to a list of media assets
     Batch {
         /// Filter by title
@@ -400,6 +409,9 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
         }
         Commands::GetDiskUsage => {
             run_cmd_disk_usage(global_opts).await;
+        }
+        Commands::Home { home_cmd } => {
+            run_home_cmd(global_opts, home_cmd).await;
         }
     }
 }
