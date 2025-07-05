@@ -24,6 +24,7 @@ pmv-cli [OPTIONS] <COMMAND>
 | [config](#command-config) | Manages vault configuration |
 | [task](#command-task) | Retrieves tasks information |
 | [invites](#command-invites) | Manages invites |
+| [home](#command-home) | Manges the home page |
 | [batch](#command-batch) | Applies a batch operation to a list of media assets |
 | [get-server-information](#command-get-server-information) | Gets server information, like the version it is using |
 | [get-disk-usage](#command-get-disk-usage) | Gets server disk usage |
@@ -2091,6 +2092,188 @@ pmv-cli invites close-session <INDEX>
 | Argument | Description |
 | --- | --- |
 | `<INDEX>` | Session index |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+## Command: home
+
+Manges the home page
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli home <COMMAND>
+```
+
+<ins>**Commands:**</ins>
+
+| Command | Description |
+| --- | --- |
+| [get-groups](#command-home-get-groups) | Gets the groups in the home page |
+| [add-group](#command-home-add-group) | Adds a home page group |
+| [get-group-elements](#command-home-get-group-elements) | Gets the elements of a group |
+| [set-group-elements](#command-home-set-group-elements) | Sets the elements of a group |
+| [rename-group](#command-home-rename-group) | Renames an existing group |
+| [move-group](#command-home-move-group) | Moves an existing group to another position |
+| [delete-group](#command-home-delete-group) | Deletes an existing group |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: home get-groups
+
+Gets the groups in the home page
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli home get-groups
+```
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: home add-group
+
+Adds a home page group
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli home add-group [OPTIONS] <NAME> <GROUP_TYPE>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<NAME>` | A name for the group |
+| `<GROUP_TYPE>` | The type of group (CUSTOM, RECENT_MEDIA or RECENT_ALBUMS) |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--prepend` | Add this option in order to add the group at the top of the list |
+| `-h, --help` | Print help |
+
+### Command: home get-group-elements
+
+Gets the elements of a group
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli home get-group-elements [OPTIONS] <ID>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ID>` | ID of the group |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `--as-refs` | Add this option to print the elements as references |
+| `-h, --help` | Print help |
+
+### Command: home set-group-elements
+
+Sets the elements of a group
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli home set-group-elements <ID> <ELEMENTS>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ID>` | ID of the group |
+| `<ELEMENTS>` | List of group elements, as references, separated by commas. For media elements use M{ID} and for albums use A{ID}. Example: A12, M6, M8 |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: home rename-group
+
+Renames an existing group
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli home rename-group <ID> <NAME>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ID>` | ID of the group |
+| `<NAME>` | A name for the group |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: home move-group
+
+Moves an existing group to another position
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli home move-group <ID> <POSITION>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ID>` | ID of the group |
+| `<POSITION>` | The position to move the group |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-h, --help` | Print help |
+
+### Command: home delete-group
+
+Deletes an existing group
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli home delete-group <ID>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<ID>` | ID of the group |
 
 <ins>**Options:**</ins>
 
