@@ -7,14 +7,11 @@ use clap::Subcommand;
 use crate::{
     api::{
         api_call_get_media, api_call_get_media_stats, api_call_get_tags,
-        api_call_media_change_description, api_call_media_change_extra,
-        api_call_media_change_title, api_call_media_delete, api_call_media_re_encode,
+        api_call_media_change_extra, api_call_media_change_title, api_call_media_delete,
+        api_call_media_re_encode,
     },
     commands::logout::do_logout,
-    models::{
-        tags_map_from_list, tags_names_from_ids, MediaUpdateDescriptionBody, MediaUpdateExtraBody,
-        MediaUpdateTitleBody,
-    },
+    models::{tags_map_from_list, tags_names_from_ids, MediaUpdateExtraBody, MediaUpdateTitleBody},
     tools::{
         ask_user, duration_to_string, ensure_login, format_date, identifier_to_string,
         parse_identifier, parse_vault_uri, render_size_bytes, to_csv_string,
@@ -33,7 +30,7 @@ use super::{
     },
     media_download::run_cmd_download_media,
     media_export::run_cmd_export_media,
-    media_extended_description::run_cmd_set_media_extended_description,
+    media_description::run_cmd_set_media_extended_description,
     media_image_notes::run_cmd_set_media_image_notes,
     media_import::run_cmd_import_media,
     media_replace::run_cmd_replace_media,
@@ -134,16 +131,7 @@ pub enum MediaCommand {
         /// Media asset ID
         media: String,
 
-        /// Description
-        description: String,
-    },
-
-    /// Changes the extended description of a media asset
-    SetExtendedDescription {
-        /// Media asset ID
-        media: String,
-
-        /// Path to the text file containing the extended description
+        /// Path to the text file containing the description
         path: String,
     },
 
@@ -380,9 +368,6 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         MediaCommand::SetTitle { media, title } => {
             run_cmd_media_set_title(global_opts, media, title).await;
         }
-        MediaCommand::SetDescription { media, description } => {
-            run_cmd_media_set_description(global_opts, media, description).await;
-        }
         MediaCommand::SetForceStartBeginning {
             media,
             force_start_beginning,
@@ -445,7 +430,7 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
         MediaCommand::Delete { media } => {
             run_cmd_media_delete(global_opts, media).await;
         }
-        MediaCommand::SetExtendedDescription { media, path } => {
+        MediaCommand::SetDescription { media, path } => {
             run_cmd_set_media_extended_description(global_opts, media, path).await;
         }
         MediaCommand::Export { media, output } => {
@@ -629,9 +614,6 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
             let out_title = to_csv_string(&media_data.title);
             println!("Title: {out_title}");
 
-            let out_description = to_csv_string(&media_data.description);
-            println!("Description: {out_description}");
-
             if !media_data.thumbnail.is_empty() {
                 let out_thumbnail = media_data.thumbnail;
                 println!("Thumbnail: {out_thumbnail}");
@@ -754,8 +736,8 @@ pub async fn run_cmd_get_media(global_opts: CommandGlobalOptions, media: String)
                 }
             }
 
-            if let Some(ext_desc_url) = media_data.ext_desc_url {
-                println!("Extended description: {ext_desc_url}");
+            if let Some(ext_desc_url) = media_data.description_url {
+                println!("Description: {ext_desc_url}");
             }
 
             if let Some(time_slices) = media_data.time_slices {
@@ -999,133 +981,6 @@ pub async fn run_cmd_media_set_title(
             let title_csv = to_csv_string(&title);
 
             eprintln!("Successfully updated the title of #{media_id_param}: {title_csv}");
-        }
-        Err(e) => {
-            print_request_error(e);
-            if logout_after_operation {
-                let logout_res = do_logout(&global_opts, &vault_url).await;
-
-                match logout_res {
-                    Ok(_) => {}
-                    Err(_) => {
-                        process::exit(1);
-                    }
-                }
-            }
-            process::exit(1);
-        }
-    }
-}
-
-pub async fn run_cmd_media_set_description(
-    global_opts: CommandGlobalOptions,
-    media: String,
-    description: String,
-) {
-    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
-
-    if url_parse_res.is_err() {
-        match url_parse_res.err().unwrap() {
-            crate::tools::VaultURIParseError::InvalidProtocol => {
-                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
-            }
-            crate::tools::VaultURIParseError::URLError(e) => {
-                let err_msg = e.to_string();
-                eprintln!("Invalid vault URL provided: {err_msg}");
-            }
-        }
-
-        process::exit(1);
-    }
-
-    let mut vault_url = url_parse_res.unwrap();
-
-    let logout_after_operation = vault_url.is_login();
-    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
-
-    if login_result.is_err() {
-        process::exit(1);
-    }
-
-    vault_url = login_result.unwrap();
-
-    // Media ID
-
-    let media_id_res = parse_identifier(&media);
-
-    let media_id_param: u64;
-
-    match media_id_res {
-        Ok(media_id) => {
-            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
-
-            match media_api_res {
-                Ok(_) => {
-                    media_id_param = media_id;
-                }
-                Err(e) => {
-                    print_request_error(e);
-
-                    if logout_after_operation {
-                        let logout_res = do_logout(&global_opts, &vault_url).await;
-
-                        match logout_res {
-                            Ok(_) => {}
-                            Err(_) => {
-                                process::exit(1);
-                            }
-                        }
-                    }
-                    process::exit(1);
-                }
-            }
-        }
-        Err(_) => {
-            if logout_after_operation {
-                let logout_res = do_logout(&global_opts, &vault_url).await;
-
-                match logout_res {
-                    Ok(_) => {}
-                    Err(_) => {
-                        process::exit(1);
-                    }
-                }
-            }
-            eprintln!("Invalid media asset identifier specified.");
-            process::exit(1);
-        }
-    }
-
-    // Call API
-
-    let api_res = api_call_media_change_description(
-        &vault_url,
-        media_id_param,
-        MediaUpdateDescriptionBody {
-            description: description.clone(),
-        },
-        global_opts.debug,
-    )
-    .await;
-
-    match api_res {
-        Ok(_) => {
-            if logout_after_operation {
-                let logout_res = do_logout(&global_opts, &vault_url).await;
-
-                match logout_res {
-                    Ok(_) => {}
-                    Err(_) => {
-                        process::exit(1);
-                    }
-                }
-            }
-
-            let description_csv = to_csv_string(&description);
-
-            eprintln!(
-                "Successfully updated the description of #{media_id_param}: {description_csv}"
-            );
         }
         Err(e) => {
             print_request_error(e);

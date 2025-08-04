@@ -518,7 +518,7 @@ pub async fn run_cmd_get_album(
                     }
                 } else {
                     println!(
-                        "\"Pos\",\"Id\",\"Type\",\"Title\",\"Description\",\"Tags\",\"Duration\""
+                        "\"Pos\",\"Id\",\"Type\",\"Title\",\"Tags\",\"Duration\""
                     );
 
                     for (i, item) in album_data.list.iter().enumerate() {
@@ -526,13 +526,12 @@ pub async fn run_cmd_get_album(
                         let row_id = item.id.to_string();
                         let row_type = to_csv_string(&item.media_type.to_type_string());
                         let row_title = to_csv_string(&item.title);
-                        let row_description = to_csv_string(&item.description);
                         let row_tags =
                             to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" "));
                         let row_duration =
                             render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
 
-                        println!("{row_pos},{row_id},{row_type},{row_title},{row_description},{row_tags},{row_duration}");
+                        println!("{row_pos},{row_id},{row_type},{row_title},{row_tags},{row_duration}");
                     }
                 }
             } else if !extended {
@@ -560,7 +559,6 @@ pub async fn run_cmd_get_album(
                     "Id".to_string(),
                     "Type".to_string(),
                     "Title".to_string(),
-                    "Description".to_string(),
                     "Tags".to_string(),
                     "Duration".to_string(),
                 ];
@@ -572,7 +570,6 @@ pub async fn run_cmd_get_album(
                         identifier_to_string(item.id).clone(),
                         item.media_type.to_type_string(),
                         to_csv_string(&item.title),
-                        to_csv_string(&item.description),
                         to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" ")),
                         render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
                     ]);

@@ -25,7 +25,7 @@ pub enum DownloadAssetType {
     Audio(String),
     VideoPreview(u32),
     Notes,
-    ExtendedDescription,
+    Description,
     Attachment(u64),
 }
 
@@ -45,8 +45,8 @@ pub fn parse_asset_type(s: &str) -> Result<DownloadAssetType, ()> {
         Ok(DownloadAssetType::Thumbnail)
     } else if parts_type == "notes" {
         Ok(DownloadAssetType::Notes)
-    } else if parts_type == "ext_desc" {
-        Ok(DownloadAssetType::ExtendedDescription)
+    } else if parts_type == "desc" || parts_type == "description" || parts_type == "ext_desc" {
+        Ok(DownloadAssetType::Description)
     } else if parts_type == "resolution" || parts_type == "res" || parts_type == "r" {
         // Try video resolution
         let video_res = ConfigVideoResolution::from_str(&val);
@@ -582,7 +582,7 @@ pub async fn run_cmd_download_media(
                         process::exit(1);
                     }
                 },
-                DownloadAssetType::ExtendedDescription => match media_data.ext_desc_url {
+                DownloadAssetType::Description => match media_data.description_url {
                     Some(u) => {
                         if u.is_empty() {
                             if logout_after_operation {

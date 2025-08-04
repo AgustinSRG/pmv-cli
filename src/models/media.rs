@@ -55,9 +55,6 @@ pub struct MediaListItem {
     #[serde(rename = "title")]
     pub title: String,
 
-    #[serde(rename = "description")]
-    pub description: String,
-
     #[serde(rename = "thumbnail")]
     pub thumbnail: Option<String>,
 
@@ -81,9 +78,6 @@ pub struct MediaMetadata {
 
     #[serde(rename = "title")]
     pub title: String,
-
-    #[serde(rename = "description")]
-    pub description: String,
 
     #[serde(rename = "thumbnail")]
     pub thumbnail: String,
@@ -151,8 +145,8 @@ pub struct MediaMetadata {
     #[serde(rename = "img_notes_url")]
     pub img_notes_url: Option<String>,
 
-    #[serde(rename = "ext_desc_url")]
-    pub ext_desc_url: Option<String>,
+    #[serde(rename = "description_url")]
+    pub description_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -171,9 +165,6 @@ pub struct MediaMetadataExport {
 
     #[serde(rename = "title")]
     pub title: Option<String>,
-
-    #[serde(rename = "description")]
-    pub description: Option<String>,
 
     #[serde(rename = "tags")]
     pub tags: Option<Vec<String>>,
@@ -399,14 +390,8 @@ pub struct MediaUpdateTitleBody {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MediaUpdateDescriptionBody {
-    #[serde(rename = "description")]
-    pub description: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MediaUpdateExtendedDescriptionBody {
     #[serde(rename = "ext_desc")]
-    pub ext_desc: String,
+    pub description: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

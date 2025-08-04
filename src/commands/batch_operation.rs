@@ -6,7 +6,9 @@ use clap::Subcommand;
 
 use crate::{
     api::{
-        api_call_album_add_media, api_call_album_remove_media, api_call_get_album, api_call_get_tags, api_call_media_delete, api_call_search_advanced, api_call_tag_add, api_call_tag_remove, MAX_API_TAGS_FILTER, MAX_SEARCH_PAGE_LIMIT
+        api_call_album_add_media, api_call_album_remove_media, api_call_get_album,
+        api_call_get_tags, api_call_media_delete, api_call_search_advanced, api_call_tag_add,
+        api_call_tag_remove, MAX_API_TAGS_FILTER, MAX_SEARCH_PAGE_LIMIT,
     },
     models::{
         parse_media_type, parse_tag_name, parse_tag_search_mode, tags_map_from_list,
@@ -58,7 +60,6 @@ pub enum BatchCommand {
 pub async fn run_cmd_batch_operation(
     global_opts: CommandGlobalOptions,
     title: Option<String>,
-    description: Option<String>,
     media_type: Option<String>,
     tags: Option<String>,
     tags_mode: Option<String>,
@@ -126,8 +127,7 @@ pub async fn run_cmd_batch_operation(
         match album_id_res {
             Ok(_) => {
                 let album_get_api_res =
-                    api_call_get_album(&vault_url, album_id_res.unwrap(), global_opts.debug)
-                        .await;
+                    api_call_get_album(&vault_url, album_id_res.unwrap(), global_opts.debug).await;
 
                 match album_get_api_res {
                     Ok(album_data) => {
@@ -159,7 +159,6 @@ pub async fn run_cmd_batch_operation(
     // Params
 
     let title_filter = title.unwrap_or("".to_string());
-    let description_filter = description.unwrap_or("".to_string());
 
     let mut media_type_filter: Option<MediaType> = None;
 
@@ -233,7 +232,7 @@ pub async fn run_cmd_batch_operation(
 
     let mut tags_filter_mode = TagSearchMode::All;
 
-    if let Some(tags_mode_str) = tags_mode{
+    if let Some(tags_mode_str) = tags_mode {
         let tags_mode_res = parse_tag_search_mode(&tags_mode_str);
 
         match tags_mode_res {
@@ -265,31 +264,26 @@ pub async fn run_cmd_batch_operation(
             } else {
                 "anyof".to_string()
             }
-        },
-        TagSearchMode::None => {
-            "noneof".to_string()
-        },
+        }
+        TagSearchMode::None => "noneof".to_string(),
         TagSearchMode::Untagged => "allof".to_string(),
     };
 
     match tags_filter_mode {
-        TagSearchMode::All => {},
+        TagSearchMode::All => {}
         TagSearchMode::Any => {
             if tags_filter_count > MAX_API_TAGS_FILTER {
                 tag_param = None
             }
-        },
-        TagSearchMode::None => {},
-        TagSearchMode::Untagged => {
-            tag_param = None
-        },
+        }
+        TagSearchMode::None => {}
+        TagSearchMode::Untagged => tag_param = None,
     }
 
     if everything {
         if tags_filter_mode != TagSearchMode::All
             || tag_param.is_some()
             || media_type_filter.is_some()
-            || !description_filter.is_empty()
             || !title_filter.is_empty()
             || album_filter.is_some()
         {
@@ -309,7 +303,6 @@ pub async fn run_cmd_batch_operation(
     } else if tags_filter_mode == TagSearchMode::All
         && tag_param.is_none()
         && media_type_filter.is_none()
-        && description_filter.is_empty()
         && title_filter.is_empty()
         && album_filter.is_none()
     {
@@ -337,7 +330,6 @@ pub async fn run_cmd_batch_operation(
                 if media_matches_filter(
                     &item,
                     &title_filter,
-                    &description_filter,
                     &media_type_filter,
                     &tags_filter,
                     &tags_filter_mode,
@@ -368,7 +360,6 @@ pub async fn run_cmd_batch_operation(
                             if media_matches_filter(
                                 &item,
                                 &title_filter,
-                                &description_filter,
                                 &media_type_filter,
                                 &tags_filter,
                                 &tags_filter_mode,
@@ -379,7 +370,7 @@ pub async fn run_cmd_batch_operation(
 
                         if search_result.scanned >= search_result.total_count {
                             advanced_search_finished = true;
-                        } 
+                        }
 
                         continue_ref = Some(search_result.continue_ref);
                     }

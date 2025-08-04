@@ -7,7 +7,7 @@ use std::{
 
 use crate::{
     api::{
-        api_call_get_media, api_call_media_add_attachment, api_call_media_change_description,
+        api_call_get_media, api_call_media_add_attachment,
         api_call_media_change_extended_description, api_call_media_change_extra,
         api_call_media_change_notes, api_call_media_change_thumbnail,
         api_call_media_change_time_slices, api_call_media_rename_attachment,
@@ -17,11 +17,10 @@ use crate::{
     commands::logout::do_logout,
     models::{
         AddTagBody, ImageNote, MediaMetadataExport, MediaRenameAttachmentBody,
-        MediaUpdateDescriptionBody, MediaUpdateExtendedDescriptionBody, MediaUpdateExtraBody,
+        MediaUpdateDescriptionBody, MediaUpdateExtraBody,
     },
     tools::{
-        ensure_login, identifier_to_string, parse_identifier, parse_vault_uri, to_csv_string,
-        ProgressReceiver,
+        ensure_login, identifier_to_string, parse_identifier, parse_vault_uri, ProgressReceiver,
     },
 };
 
@@ -285,35 +284,6 @@ pub async fn run_cmd_import_media(
         }
     }
 
-    // Set description
-
-    if let Some(description) = import_metadata.description {
-        if !description.is_empty() {
-            let api_res = api_call_media_change_description(
-                &vault_url,
-                media_id,
-                MediaUpdateDescriptionBody {
-                    description: description.clone(),
-                },
-                global_opts.debug,
-            )
-            .await;
-
-            match api_res {
-                Ok(_) => {
-                    let description_csv = to_csv_string(&description);
-
-                    eprintln!(
-                        "Successfully updated the description of {media_id_str}: {description_csv}"
-                    );
-                }
-                Err(e) => {
-                    print_request_error(e);
-                }
-            }
-        }
-    }
-
     // Set extra configuration
 
     let api_res = api_call_media_change_extra(
@@ -386,7 +356,9 @@ pub async fn run_cmd_import_media(
                 let api_res = api_call_media_change_extended_description(
                     &vault_url,
                     media_id,
-                    MediaUpdateExtendedDescriptionBody { ext_desc },
+                    MediaUpdateDescriptionBody {
+                        description: ext_desc,
+                    },
                     global_opts.debug,
                 )
                 .await;

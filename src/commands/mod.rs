@@ -43,7 +43,7 @@ mod media_attachments;
 mod media_audio_tracks;
 mod media_download;
 mod media_export;
-mod media_extended_description;
+mod media_description;
 mod media_image_notes;
 mod media_import;
 mod media_replace;
@@ -175,10 +175,6 @@ pub enum Commands {
         #[arg(short = 'q', long)]
         title: Option<String>,
 
-        /// Filter by description.
-        #[arg(short, long)]
-        description: Option<String>,
-
         /// Filter by media type. Can be: video, audio or image
         #[arg(short = 'k', long)]
         media_type: Option<String>,
@@ -262,10 +258,6 @@ pub enum Commands {
         #[arg(short = 'q', long)]
         title: Option<String>,
 
-        /// Filter by description.
-        #[arg(short, long)]
-        description: Option<String>,
-
         /// Filter by media type. Can be: video, audio or image
         #[arg(short = 'k', long)]
         media_type: Option<String>,
@@ -339,7 +331,6 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
         }
         Commands::AdvancedSearch {
             title,
-            description,
             media_type,
             tags,
             tags_mode,
@@ -353,7 +344,6 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
             run_cmd_search_advanced(
                 global_opts,
                 title,
-                description,
                 media_type,
                 tags,
                 tags_mode,
@@ -380,7 +370,6 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
         }
         Commands::Batch {
             title,
-            description,
             media_type,
             tags,
             tags_mode,
@@ -391,7 +380,6 @@ pub async fn run_cmd(global_opts: CommandGlobalOptions, cmd: Commands) {
             run_cmd_batch_operation(
                 global_opts,
                 title,
-                description,
                 media_type,
                 tags,
                 tags_mode,
