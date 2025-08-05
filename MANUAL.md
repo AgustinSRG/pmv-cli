@@ -368,12 +368,13 @@ pmv-cli media <COMMAND>
 | [get](#command-media-get) | Gets media asset metadata and download links |
 | [stats](#command-media-stats) | Gets media asset size stats |
 | [download](#command-media-download) | Downloads a media asset |
+| [get-related](#command-media-get-related) | Gets related media |
 | [export](#command-media-export) | Exports a media asset, downloading everything (metadata + assets) into a folder |
 | [upload](#command-media-upload) | Uploads a new media asset, waits for encryption and adds tags if specified |
 | [import](#command-media-import) | Imports a media asset, expecting a folder with the same format the export command uses |
 | [set-title](#command-media-set-title) | Changes the title of a media asset |
 | [set-description](#command-media-set-description) | Changes the description of a media asset |
-| [set-extended-description](#command-media-set-extended-description) | Changes the extended description of a media asset |
+| [set-related-media](#command-media-set-related-media) | Sets the related media list |
 | [set-force-start-beginning](#command-media-set-force-start-beginning) | Changes the forced start from beginning parameter of a media asset |
 | [set-is-animation](#command-media-set-is-animation) | Changes the is-animation parameter of a media asset |
 | [set-thumbnail](#command-media-set-thumbnail) | Sets the thumbnail of a media asset |
@@ -468,6 +469,30 @@ pmv-cli media download [OPTIONS] <MEDIA> [ASSET]
 | --- | --- |
 | `-o, --output <OUTPUT>` | Path to the file to download the asset into |
 | `-p, --print-link` | Prints the download link, instead of downloading to a file |
+| `-h, --help` | Print help |
+
+### Command: media get-related
+
+Gets related media
+
+<ins>**Usage:**</ins>
+
+```
+pmv-cli media get-related [OPTIONS] <MEDIA>
+```
+
+<ins>**Arguments:**</ins>
+
+| Argument | Description |
+| --- | --- |
+| `<MEDIA>` | Media asset ID |
+
+<ins>**Options:**</ins>
+
+| Option | Description |
+| --- | --- |
+| `-e, --extended` | Extended version of the results table |
+| `-c, --csv` | CSV format |
 | `-h, --help` | Print help |
 
 ### Command: media export
@@ -572,7 +597,7 @@ Changes the description of a media asset
 <ins>**Usage:**</ins>
 
 ```
-pmv-cli media set-description <MEDIA> <DESCRIPTION>
+pmv-cli media set-description <MEDIA> <PATH>
 ```
 
 <ins>**Arguments:**</ins>
@@ -580,7 +605,7 @@ pmv-cli media set-description <MEDIA> <DESCRIPTION>
 | Argument | Description |
 | --- | --- |
 | `<MEDIA>` | Media asset ID |
-| `<DESCRIPTION>` | Description |
+| `<PATH>` | Path to the text file containing the description |
 
 <ins>**Options:**</ins>
 
@@ -588,14 +613,14 @@ pmv-cli media set-description <MEDIA> <DESCRIPTION>
 | --- | --- |
 | `-h, --help` | Print help |
 
-### Command: media set-extended-description
+### Command: media set-related-media
 
-Changes the extended description of a media asset
+Sets the related media list
 
 <ins>**Usage:**</ins>
 
 ```
-pmv-cli media set-extended-description <MEDIA> <PATH>
+pmv-cli media set-related-media <MEDIA> <RELATED>
 ```
 
 <ins>**Arguments:**</ins>
@@ -603,7 +628,7 @@ pmv-cli media set-extended-description <MEDIA> <PATH>
 | Argument | Description |
 | --- | --- |
 | `<MEDIA>` | Media asset ID |
-| `<PATH>` | Path to the text file containing the extended description |
+| `<RELATED>` | List of related media IDs, separated by commas |
 
 <ins>**Options:**</ins>
 
@@ -1135,7 +1160,6 @@ pmv-cli advanced-search [OPTIONS]
 | Option | Description |
 | --- | --- |
 | `-q, --title <TITLE>` | Filter by title |
-| `-d, --description <DESCRIPTION>` | Filter by description |
 | `-k, --media-type <MEDIA_TYPE>` | Filter by media type. Can be: video, audio or image |
 | `-t, --tags <TAGS>` | Filter by tags. Expected a list of tag names, separated by spaces |
 | `-m, --tags-mode <TAGS_MODE>` | Tag filtering mode. Can be: all, any, none or untagged |
@@ -2306,7 +2330,6 @@ pmv-cli batch [OPTIONS] <COMMAND>
 | Option | Description |
 | --- | --- |
 | `-q, --title <TITLE>` | Filter by title |
-| `-d, --description <DESCRIPTION>` | Filter by description |
 | `-k, --media-type <MEDIA_TYPE>` | Filter by media type. Can be: video, audio or image |
 | `-t, --tags <TAGS>` | Filter by tags. Expected a list of tag names, separated by spaces |
 | `-m, --tags-mode <TAGS_MODE>` | Tag filtering mode. Can be: all, any, none or untagged |
