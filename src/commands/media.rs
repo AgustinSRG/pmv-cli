@@ -7,14 +7,18 @@ use clap::Subcommand;
 use crate::{
     api::{
         api_call_get_media, api_call_get_media_stats, api_call_get_tags,
-        api_call_media_change_extra, api_call_media_change_title, api_call_media_delete,
-        api_call_media_re_encode,
+        api_call_media_change_extra, api_call_media_change_related, api_call_media_change_title,
+        api_call_media_delete, api_call_media_re_encode,
     },
     commands::logout::do_logout,
-    models::{tags_map_from_list, tags_names_from_ids, MediaUpdateExtraBody, MediaUpdateTitleBody},
+    models::{
+        tags_map_from_list, tags_names_from_ids, MediaListItem, MediaUpdateExtraBody,
+        MediaUpdateRelatedMediaBody, MediaUpdateTitleBody,
+    },
     tools::{
         ask_user, duration_to_string, ensure_login, format_date, identifier_to_string,
-        parse_identifier, parse_vault_uri, render_size_bytes, to_csv_string,
+        parse_identifier, parse_vault_uri, print_table, render_media_duration, render_size_bytes,
+        to_csv_string,
     },
 };
 
@@ -28,9 +32,9 @@ use super::{
         run_cmd_delete_media_audio_track, run_cmd_rename_media_audio_track,
         run_cmd_upload_media_audio_track,
     },
+    media_description::run_cmd_set_media_extended_description,
     media_download::run_cmd_download_media,
     media_export::run_cmd_export_media,
-    media_description::run_cmd_set_media_extended_description,
     media_image_notes::run_cmd_set_media_image_notes,
     media_import::run_cmd_import_media,
     media_replace::run_cmd_replace_media,
@@ -73,6 +77,20 @@ pub enum MediaCommand {
         /// Prints the download link, instead of downloading to a file
         #[arg(short, long)]
         print_link: bool,
+    },
+
+    /// Gets related media
+    GetRelated {
+        /// Media asset ID
+        media: String,
+
+        /// Extended version of the results table
+        #[arg(short, long)]
+        extended: bool,
+
+        /// CSV format
+        #[arg(short, long)]
+        csv: bool,
     },
 
     /// Exports a media asset, downloading everything (metadata + assets) into a folder
@@ -133,6 +151,15 @@ pub enum MediaCommand {
 
         /// Path to the text file containing the description
         path: String,
+    },
+
+    /// Sets the related media list
+    SetRelatedMedia {
+        /// Media asset ID
+        media: String,
+
+        /// List of related media IDs, separated by commas
+        related: String,
     },
 
     /// Changes the forced start from beginning parameter of a media asset
@@ -470,6 +497,16 @@ pub async fn run_media_cmd(global_opts: CommandGlobalOptions, cmd: MediaCommand)
             new_name,
         } => {
             run_cmd_rename_media_audio_track(global_opts, media, track_id, new_id, new_name).await;
+        }
+        MediaCommand::GetRelated {
+            media,
+            extended,
+            csv,
+        } => {
+            run_cmd_get_media_related(global_opts, media, csv, extended).await;
+        }
+        MediaCommand::SetRelatedMedia { media, related } => {
+            run_cmd_media_set_related(global_opts, media, related).await;
         }
     }
 }
@@ -1549,6 +1586,329 @@ pub async fn run_cmd_media_delete(global_opts: CommandGlobalOptions, media: Stri
             }
 
             eprintln!("Successfully deleted asset #{media_id_param}");
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_get_media_related(
+    global_opts: CommandGlobalOptions,
+    media: String,
+    csv: bool,
+    extended: bool,
+) {
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Params
+
+    let media_id_res = parse_identifier(&media);
+    let media_id: u64 = match media_id_res {
+        Ok(id) => id,
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid media identifier specified.");
+            process::exit(1);
+        }
+    };
+
+    // Get tags
+
+    let tags_res = api_call_get_tags(&vault_url, global_opts.debug).await;
+
+    if tags_res.is_err() {
+        if logout_after_operation {
+            let logout_res = do_logout(&global_opts, &vault_url).await;
+
+            match logout_res {
+                Ok(_) => {}
+                Err(_) => {
+                    process::exit(1);
+                }
+            }
+        }
+        print_request_error(tags_res.err().unwrap());
+        process::exit(1);
+    }
+
+    let tags = tags_map_from_list(&tags_res.unwrap());
+
+    // Call API
+
+    let api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+
+    match api_res {
+        Ok(media_data) => {
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            let related_media: Vec<MediaListItem> = match media_data.related {
+                Some(r) => r.clone(),
+                None => Vec::new(),
+            };
+
+            if csv {
+                println!();
+                if !extended {
+                    println!("\"Id\",\"Type\",\"Title\"");
+
+                    for item in related_media.iter() {
+                        let row_id = item.id.to_string();
+                        let row_type = to_csv_string(&item.media_type.to_type_string());
+                        let row_title = to_csv_string(&item.title);
+                        println!("{row_id},{row_type},{row_title}");
+                    }
+                } else {
+                    println!("\"Id\",\"Type\",\"Title\",\"Tags\",\"Duration\"");
+
+                    for item in related_media.iter() {
+                        let row_id = item.id.to_string();
+                        let row_type = to_csv_string(&item.media_type.to_type_string());
+                        let row_title = to_csv_string(&item.title);
+                        let row_tags =
+                            to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" "));
+                        let row_duration =
+                            render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
+
+                        println!("{row_id},{row_type},{row_title},{row_tags},{row_duration}");
+                    }
+                }
+            } else if !extended {
+                let table_head: Vec<String> =
+                    vec!["Id".to_string(), "Type".to_string(), "Title".to_string()];
+                let mut table_body: Vec<Vec<String>> = Vec::with_capacity(related_media.len());
+
+                for item in related_media.iter() {
+                    table_body.push(vec![
+                        identifier_to_string(item.id).clone(),
+                        item.media_type.to_type_string(),
+                        to_csv_string(&item.title),
+                    ]);
+                }
+
+                print_table(&table_head, &table_body, false);
+            } else {
+                let table_head: Vec<String> = vec![
+                    "Id".to_string(),
+                    "Type".to_string(),
+                    "Title".to_string(),
+                    "Tags".to_string(),
+                    "Duration".to_string(),
+                ];
+                let mut table_body: Vec<Vec<String>> = Vec::with_capacity(related_media.len());
+
+                for item in related_media.iter() {
+                    table_body.push(vec![
+                        identifier_to_string(item.id).clone(),
+                        item.media_type.to_type_string(),
+                        to_csv_string(&item.title),
+                        to_csv_string(&tags_names_from_ids(&item.tags, &tags).join(" ")),
+                        render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
+                    ]);
+                }
+
+                print_table(&table_head, &table_body, false);
+            }
+        }
+        Err(e) => {
+            print_request_error(e);
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            process::exit(1);
+        }
+    }
+}
+
+pub async fn run_cmd_media_set_related(
+    global_opts: CommandGlobalOptions,
+    media: String,
+    related: String,
+) {
+    let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
+
+    if url_parse_res.is_err() {
+        match url_parse_res.err().unwrap() {
+            crate::tools::VaultURIParseError::InvalidProtocol => {
+                eprintln!("Invalid vault URL provided. Must be an HTTP or HTTPS URL.");
+            }
+            crate::tools::VaultURIParseError::URLError(e) => {
+                let err_msg = e.to_string();
+                eprintln!("Invalid vault URL provided: {err_msg}");
+            }
+        }
+
+        process::exit(1);
+    }
+
+    let mut vault_url = url_parse_res.unwrap();
+
+    let logout_after_operation = vault_url.is_login();
+    let login_result = ensure_login(&vault_url, &None, global_opts.debug).await;
+
+    if login_result.is_err() {
+        process::exit(1);
+    }
+
+    vault_url = login_result.unwrap();
+
+    // Media ID
+
+    let media_id_res = parse_identifier(&media);
+
+    let media_id_param: u64;
+
+    match media_id_res {
+        Ok(media_id) => {
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+
+            match media_api_res {
+                Ok(_) => {
+                    media_id_param = media_id;
+                }
+                Err(e) => {
+                    print_request_error(e);
+
+                    if logout_after_operation {
+                        let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                        match logout_res {
+                            Ok(_) => {}
+                            Err(_) => {
+                                process::exit(1);
+                            }
+                        }
+                    }
+                    process::exit(1);
+                }
+            }
+        }
+        Err(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+            eprintln!("Invalid media asset identifier specified.");
+            process::exit(1);
+        }
+    }
+
+    let related_str: Vec<&str> = related.split(",").filter(|s| !s.is_empty()).collect();
+    let mut related: Vec<u64> = Vec::with_capacity(related_str.len());
+
+    for s in related_str {
+        match parse_identifier(s) {
+            Ok(i) => {
+                related.push(i);
+            }
+            Err(_) => {
+                if logout_after_operation {
+                    let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                    match logout_res {
+                        Ok(_) => {}
+                        Err(_) => {
+                            process::exit(1);
+                        }
+                    }
+                }
+                eprintln!("Invalid media asset identifier specified: {}", s);
+                process::exit(1);
+            }
+        }
+    }
+
+    // Call API
+
+    let api_res = api_call_media_change_related(
+        &vault_url,
+        media_id_param,
+        MediaUpdateRelatedMediaBody { related },
+        global_opts.debug,
+    )
+    .await;
+
+    match api_res {
+        Ok(_) => {
+            if logout_after_operation {
+                let logout_res = do_logout(&global_opts, &vault_url).await;
+
+                match logout_res {
+                    Ok(_) => {}
+                    Err(_) => {
+                        process::exit(1);
+                    }
+                }
+            }
+
+            eprintln!("Successfully updated the related media of #{media_id_param}");
         }
         Err(e) => {
             print_request_error(e);

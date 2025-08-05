@@ -147,6 +147,9 @@ pub struct MediaMetadata {
 
     #[serde(rename = "description_url")]
     pub description_url: Option<String>,
+
+    #[serde(rename = "related")]
+    pub related: Option<Vec<MediaListItem>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -443,4 +446,10 @@ pub struct MediaRenameSubtitleOrAudioBody {
 
     #[serde(rename = "name")]
     pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MediaUpdateRelatedMediaBody {
+    #[serde(rename = "related")]
+    pub related: Vec<u64>,
 }

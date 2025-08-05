@@ -4,11 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::{
     models::{
-        ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata,
-        MediaRenameAttachmentBody, MediaRenameSubtitleOrAudioBody, MediaResolution, MediaSubtitle,
-        MediaTimeSlice, MediaUpdateDescriptionBody, MediaUpdateExtraBody,
-        MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaUploadResponse,
-        TaskEncodeResolution,
+        ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata, MediaRenameAttachmentBody, MediaRenameSubtitleOrAudioBody, MediaResolution, MediaSubtitle, MediaTimeSlice, MediaUpdateDescriptionBody, MediaUpdateExtraBody, MediaUpdateRelatedMediaBody, MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaUploadResponse, TaskEncodeResolution
     },
     tools::{
         do_get_request, do_multipart_upload_request, do_multipart_upload_request_with_confirmation,
@@ -530,6 +526,23 @@ pub async fn api_call_media_rename_attachment(
     do_post_request(
         url,
         format!("/api/media/{media}/attachments/rename"),
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
+
+    Ok(())
+}
+
+pub async fn api_call_media_change_related(
+    url: &VaultURI,
+    media: u64,
+    req_body: MediaUpdateRelatedMediaBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    do_post_request(
+        url,
+        format!("/api/media/{media}/edit/related"),
         serde_json::to_string(&req_body).unwrap(),
         debug,
     )
