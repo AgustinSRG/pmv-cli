@@ -165,7 +165,7 @@ fn sub_string(original_str: &str, skip: usize, limit: usize) -> String {
         "".to_string()
     } else if skip == 0 {
         if limit >= original_str.width() {
-            return original_str.to_string();
+            original_str.to_string()
         } else {
             let mut res = "".to_string();
             let mut res_width: usize = 0;
@@ -181,7 +181,7 @@ fn sub_string(original_str: &str, skip: usize, limit: usize) -> String {
                 res_width += c_width;
             }
 
-            return res;
+            res
         }
     } else {
         let mut skipped_str = "".to_string();
@@ -202,7 +202,7 @@ fn sub_string(original_str: &str, skip: usize, limit: usize) -> String {
         skipped_str = original_str.chars().skip(chars_count_skip).collect();
 
         if limit >= skipped_str.width() {
-            return skipped_str;
+            skipped_str
         } else {
             let mut res = "".to_string();
 
@@ -217,7 +217,7 @@ fn sub_string(original_str: &str, skip: usize, limit: usize) -> String {
                 res = new_res;
             }
 
-            return res;
+            res
         }
     }
 }
