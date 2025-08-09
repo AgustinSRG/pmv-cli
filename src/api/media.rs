@@ -4,10 +4,11 @@ use std::sync::{Arc, Mutex};
 
 use crate::{
     models::{
-        ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata, MediaRenameAttachmentBody, MediaRenameSubtitleOrAudioBody, MediaResolution, MediaSubtitle, MediaTimeSlice, MediaUpdateDescriptionBody, MediaUpdateExtendedDescriptionBody, MediaUpdateExtraBody, MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaUploadResponse, TaskEncodeResolution
+        ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata, MediaRenameAttachmentBody, MediaRenameSubtitleOrAudioBody, MediaResolution, MediaSubtitle, MediaTimeSlice, MediaUpdateDescriptionBody, MediaUpdateExtraBody, MediaUpdateRelatedMediaBody, MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaUploadResponse, TaskEncodeResolution
     },
     tools::{
-        do_get_request, do_multipart_upload_request, do_multipart_upload_request_with_confirmation, do_post_request, ProgressReceiver, RequestError, VaultURI
+        do_get_request, do_multipart_upload_request, do_multipart_upload_request_with_confirmation,
+        do_post_request, ProgressReceiver, RequestError, VaultURI,
     },
 };
 
@@ -132,7 +133,7 @@ pub async fn api_call_media_change_title(
     Ok(())
 }
 
-pub async fn api_call_media_change_description(
+pub async fn api_call_media_change_extended_description(
     url: &VaultURI,
     media: u64,
     req_body: MediaUpdateDescriptionBody,
@@ -141,23 +142,6 @@ pub async fn api_call_media_change_description(
     do_post_request(
         url,
         format!("/api/media/{media}/edit/description"),
-        serde_json::to_string(&req_body).unwrap(),
-        debug,
-    )
-    .await?;
-
-    Ok(())
-}
-
-pub async fn api_call_media_change_extended_description(
-    url: &VaultURI,
-    media: u64,
-    req_body: MediaUpdateExtendedDescriptionBody,
-    debug: bool,
-) -> Result<(), RequestError> {
-    do_post_request(
-        url,
-        format!("/api/media/{media}/edit/ext_desc"),
         serde_json::to_string(&req_body).unwrap(),
         debug,
     )
@@ -388,7 +372,13 @@ pub async fn api_call_media_rename_subtitle(
 
     url_path.push_str(&("?id=".to_owned() + &urlencoding::encode(&sub_id)));
 
-    do_post_request(url, url_path, serde_json::to_string(&req_body).unwrap(), debug).await?;
+    do_post_request(
+        url,
+        url_path,
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
 
     Ok(())
 }
@@ -455,7 +445,13 @@ pub async fn api_call_media_rename_audio(
 
     url_path.push_str(&("?id=".to_owned() + &urlencoding::encode(&audio_id)));
 
-    do_post_request(url, url_path, serde_json::to_string(&req_body).unwrap(), debug).await?;
+    do_post_request(
+        url,
+        url_path,
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
 
     Ok(())
 }
@@ -530,6 +526,23 @@ pub async fn api_call_media_rename_attachment(
     do_post_request(
         url,
         format!("/api/media/{media}/attachments/rename"),
+        serde_json::to_string(&req_body).unwrap(),
+        debug,
+    )
+    .await?;
+
+    Ok(())
+}
+
+pub async fn api_call_media_change_related(
+    url: &VaultURI,
+    media: u64,
+    req_body: MediaUpdateRelatedMediaBody,
+    debug: bool,
+) -> Result<(), RequestError> {
+    do_post_request(
+        url,
+        format!("/api/media/{media}/edit/related"),
         serde_json::to_string(&req_body).unwrap(),
         debug,
     )

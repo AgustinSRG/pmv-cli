@@ -22,7 +22,6 @@ const DEFAULT_RESULTS_LIMIT: u32 = 25;
 pub async fn run_cmd_search_advanced(
     global_opts: CommandGlobalOptions,
     title: Option<String>,
-    description: Option<String>,
     media_type: Option<String>,
     tags: Option<String>,
     tags_mode: Option<String>,
@@ -154,7 +153,6 @@ pub async fn run_cmd_search_advanced(
     let limit_param = limit.unwrap_or(DEFAULT_RESULTS_LIMIT);
 
     let title_filter = title.unwrap_or("".to_string());
-    let description_filter = description.unwrap_or("".to_string());
 
     let mut media_type_filter: Option<MediaType> = None;
 
@@ -288,7 +286,6 @@ pub async fn run_cmd_search_advanced(
                     if media_matches_filter(
                         item,
                         &title_filter,
-                        &description_filter,
                         &media_type_filter,
                         &tags_filter,
                         &tags_filter_mode,
@@ -305,7 +302,6 @@ pub async fn run_cmd_search_advanced(
                     if media_matches_filter(
                         &item,
                         &title_filter,
-                        &description_filter,
                         &media_type_filter,
                         &tags_filter,
                         &tags_filter_mode,
@@ -346,7 +342,6 @@ pub async fn run_cmd_search_advanced(
                             if media_matches_filter(
                                 &item,
                                 &title_filter,
-                                &description_filter,
                                 &media_type_filter,
                                 &tags_filter,
                                 &tags_filter_mode,
@@ -414,19 +409,18 @@ pub async fn run_cmd_search_advanced(
                 println!("{row_id},{row_type},{row_title}");
             }
         } else {
-            println!("\"Id\",\"Type\",\"Title\",\"Description\",\"Tags\",\"Duration\"");
+            println!("\"Id\",\"Type\",\"Title\",\"Tags\",\"Duration\"");
 
             for item in advanced_search_results {
                 let row_id = item.id.to_string();
                 let row_type = to_csv_string(&item.media_type.to_type_string());
                 let row_title = to_csv_string(&item.title);
-                let row_description = to_csv_string(&item.description);
                 let row_tags = to_csv_string(&tags_names_from_ids(&item.tags, &tags_map).join(" "));
                 let row_duration =
                     render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
 
                 println!(
-                    "{row_id},{row_type},{row_title},{row_description},{row_tags},{row_duration}"
+                    "{row_id},{row_type},{row_title},{row_tags},{row_duration}"
                 );
             }
         }
@@ -449,7 +443,6 @@ pub async fn run_cmd_search_advanced(
             "Id".to_string(),
             "Type".to_string(),
             "Title".to_string(),
-            "Description".to_string(),
             "Tags".to_string(),
             "Duration".to_string(),
         ];
@@ -460,7 +453,6 @@ pub async fn run_cmd_search_advanced(
                 identifier_to_string(item.id).clone(),
                 item.media_type.to_type_string(),
                 to_csv_string(&item.title),
-                to_csv_string(&item.description),
                 to_csv_string(&tags_names_from_ids(&item.tags, &tags_map).join(" ")),
                 render_media_duration(item.media_type, item.duration.unwrap_or(0.0)),
             ]);
@@ -473,16 +465,11 @@ pub async fn run_cmd_search_advanced(
 pub fn media_matches_filter(
     media: &MediaListItem,
     title: &str,
-    description: &str,
     media_type_filter: &Option<MediaType>,
     tags_filter: &Option<Vec<u64>>,
     tags_filter_mode: &TagSearchMode,
 ) -> bool {
     if !title.is_empty() && !media.title.contains(title) {
-        return false;
-    }
-
-    if !description.is_empty() && !media.description.contains(description) {
         return false;
     }
 

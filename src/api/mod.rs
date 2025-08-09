@@ -29,3 +29,6 @@ pub use tags::*;
 
 mod tasks;
 pub use tasks::*;
+
+mod home;
+pub use home::*;

@@ -5,7 +5,7 @@ use std::process;
 use crate::{
     api::{api_call_get_media, api_call_media_change_extended_description},
     commands::logout::do_logout,
-    models::MediaUpdateExtendedDescriptionBody,
+    models::MediaUpdateDescriptionBody,
     tools::{ensure_login, parse_identifier, parse_vault_uri},
 };
 
@@ -107,7 +107,7 @@ pub async fn run_cmd_set_media_extended_description(
     let api_res = api_call_media_change_extended_description(
         &vault_url,
         media_id_param,
-        MediaUpdateExtendedDescriptionBody { ext_desc },
+        MediaUpdateDescriptionBody { description: ext_desc },
         global_opts.debug,
     )
     .await;

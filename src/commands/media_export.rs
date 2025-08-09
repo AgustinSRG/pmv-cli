@@ -181,7 +181,6 @@ pub async fn run_cmd_export_media(
         notes: None,
         ext_desc: None,
         title: None,
-        description: None,
         tags: None,
         force_start_beginning: None,
         is_anim: None,
@@ -192,7 +191,6 @@ pub async fn run_cmd_export_media(
     };
 
     out_metadata.title = Some(media_metadata.title.clone());
-    out_metadata.description = Some(media_metadata.description.clone());
     out_metadata.force_start_beginning = media_metadata.force_start_beginning;
     out_metadata.is_anim = media_metadata.is_anim;
     out_metadata.time_slices = media_metadata.time_slices.clone();
@@ -306,7 +304,7 @@ pub async fn run_cmd_export_media(
 
     // Extended description
 
-    if let Some(ext_desc_url) = media_metadata.ext_desc_url {
+    if let Some(ext_desc_url) = media_metadata.description_url {
         if !ext_desc_url.is_empty() {
             let ext = get_extension_from_url(&ext_desc_url, "txt");
             let out_file_name = "ext_desc".to_owned() + "." + &ext;
@@ -320,7 +318,7 @@ pub async fn run_cmd_export_media(
             download_media_asset(
                 global_opts.clone(),
                 &vault_url,
-                "extended description",
+                "description",
                 ext_desc_url,
                 ext_desc_out_path,
                 logout_after_operation,
