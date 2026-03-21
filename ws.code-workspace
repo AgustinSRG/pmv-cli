@@ -9,9 +9,6 @@
 			"temp": true,
 			"target": true
 		},
-		"rust-analyzer.linkedProjects": [
-			".\\Cargo.toml"
-		],
 		"rust-analyzer.showUnlinkedFileNotification": false,
 		"cSpell.words": [
 			"totp"

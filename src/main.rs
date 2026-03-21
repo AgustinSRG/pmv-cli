@@ -1,6 +1,6 @@
 // Main
 
-use clap::{Parser, command};
+use clap::{Parser};
 use commands::{run_cmd, Commands, CommandGlobalOptions};
 
 mod api;
