@@ -8,12 +8,12 @@ use std::{
 use crate::{
     api::{api_call_get_media, api_call_media_change_thumbnail},
     commands::logout::do_logout,
-    tools::{
-        ensure_login, parse_identifier, parse_vault_uri,
-    },
+    tools::{ensure_login, parse_identifier, parse_vault_uri},
 };
 
-use super::{get_vault_url, print_request_error, CommandGlobalOptions, media_upload::UploaderProgressPrinter};
+use super::{
+    get_vault_url, media_upload::UploaderProgressPrinter, print_request_error, CommandGlobalOptions,
+};
 
 pub async fn run_cmd_upload_media_thumbnail(
     global_opts: CommandGlobalOptions,
@@ -55,8 +55,7 @@ pub async fn run_cmd_upload_media_thumbnail(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {

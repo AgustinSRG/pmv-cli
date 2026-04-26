@@ -178,10 +178,26 @@ pub async fn do_post_request(
                 if status == 403 {
                     if code == "AUTH_CONFIRMATION_REQUIRED_TFA" {
                         let confirmation_tfa = request_auth_confirmation_tfa().await;
-                        do_post_request_with_confirmation(uri, path, body, debug, None, Some(confirmation_tfa)).await
+                        do_post_request_with_confirmation(
+                            uri,
+                            path,
+                            body,
+                            debug,
+                            None,
+                            Some(confirmation_tfa),
+                        )
+                        .await
                     } else if code == "AUTH_CONFIRMATION_REQUIRED_PW" {
                         let confirmation_pw = request_auth_confirmation_password().await;
-                        do_post_request_with_confirmation(uri, path, body, debug, Some(confirmation_pw), None).await
+                        do_post_request_with_confirmation(
+                            uri,
+                            path,
+                            body,
+                            debug,
+                            Some(confirmation_pw),
+                            None,
+                        )
+                        .await
                     } else {
                         Err(err)
                     }

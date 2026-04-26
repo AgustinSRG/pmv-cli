@@ -51,8 +51,7 @@ pub async fn run_cmd_set_media_image_notes(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -119,13 +118,9 @@ pub async fn run_cmd_set_media_image_notes(
 
     // Call API
 
-    let api_res = api_call_media_change_notes(
-        &vault_url,
-        media_id_param,
-        image_notes,
-        global_opts.debug,
-    )
-    .await;
+    let api_res =
+        api_call_media_change_notes(&vault_url, media_id_param, image_notes, global_opts.debug)
+            .await;
 
     match api_res {
         Ok(_) => {

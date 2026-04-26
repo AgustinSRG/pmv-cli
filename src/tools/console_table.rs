@@ -2,7 +2,7 @@
 
 use std::cmp::max;
 
-use unicode_width::{UnicodeWidthStr, UnicodeWidthChar};
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 const MIN_ALLOWED_COL_LENGTH: usize = 8;
 
@@ -15,8 +15,7 @@ pub fn print_table(head: &[String], body: &Vec<Vec<String>>, std_err: bool) {
 
     // Get term size
 
-    let (term_cols, _) = term_size::dimensions()
-        .unwrap_or((0, 0));
+    let (term_cols, _) = term_size::dimensions().unwrap_or((0, 0));
 
     // Check the max sizes
     let mut head_sizes: Vec<usize> = vec![0; len];
@@ -85,8 +84,7 @@ pub fn print_table(head: &[String], body: &Vec<Vec<String>>, std_err: bool) {
 
         // Evenly share the spare size
 
-        if overflow_count > 0 {
-            let spare_size_split = spare_size / overflow_count;
+        if let Some(spare_size_split) = spare_size.checked_div(overflow_count) {
             let new_allowed_size = col_allowed_size + spare_size_split;
 
             for (i, max_size) in max_sizes.iter().enumerate() {
@@ -101,7 +99,12 @@ pub fn print_table(head: &[String], body: &Vec<Vec<String>>, std_err: bool) {
     }
 }
 
-fn print_table_with_sizes(head: &[String], body: &Vec<Vec<String>>, sizes: &Vec<usize>, std_err: bool) {
+fn print_table_with_sizes(
+    head: &[String],
+    body: &Vec<Vec<String>>,
+    sizes: &Vec<usize>,
+    std_err: bool,
+) {
     print_table_separator(sizes, std_err);
 
     print_table_line(head, sizes, std_err);

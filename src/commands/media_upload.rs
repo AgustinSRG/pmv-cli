@@ -117,12 +117,9 @@ pub async fn run_cmd_upload_media(
                 let mut encryption_done = false;
 
                 while !encryption_done {
-                    let api_get_res = api_call_get_media(
-                        &vault_url,
-                        upload_res.media_id,
-                        global_opts.debug,
-                    )
-                    .await;
+                    let api_get_res =
+                        api_call_get_media(&vault_url, upload_res.media_id, global_opts.debug)
+                            .await;
 
                     match api_get_res {
                         Ok(media_data) => {

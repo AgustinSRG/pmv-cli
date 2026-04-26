@@ -148,8 +148,7 @@ pub async fn run_cmd_set_media_time_slices(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {

@@ -308,15 +308,11 @@ impl MediaTimeSlice {
         let time_res = parse_duration(slice_time_str);
 
         match time_res {
-            Ok(time) => {
-                Ok(MediaTimeSlice {
-                    time,
-                    name: slice_name_str,
-                })
-            }
-            Err(_) => {
-                Err(())
-            }
+            Ok(time) => Ok(MediaTimeSlice {
+                time,
+                name: slice_name_str,
+            }),
+            Err(_) => Err(()),
         }
     }
 

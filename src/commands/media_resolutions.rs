@@ -16,28 +16,22 @@ fn parse_resolution_param(param: &str) -> Result<TaskEncodeResolution, ()> {
     let video_res = ConfigVideoResolution::from_str(param);
 
     match video_res {
-        Ok(r) => {
-            Ok(TaskEncodeResolution {
-                width: r.width,
-                height: r.height,
-                fps: r.fps,
-            })
-        }
+        Ok(r) => Ok(TaskEncodeResolution {
+            width: r.width,
+            height: r.height,
+            fps: r.fps,
+        }),
         Err(_) => {
             // Try image resolution
             let image_res = ConfigImageResolution::from_str(param);
 
             match image_res {
-                Ok(r) => {
-                    Ok(TaskEncodeResolution {
-                        width: r.width,
-                        height: r.height,
-                        fps: 0,
-                    })
-                }
-                Err(_) => {
-                    Err(())
-                }
+                Ok(r) => Ok(TaskEncodeResolution {
+                    width: r.width,
+                    height: r.height,
+                    fps: 0,
+                }),
+                Err(_) => Err(()),
             }
         }
     }
@@ -83,8 +77,7 @@ pub async fn run_cmd_media_add_resolution(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -229,8 +222,7 @@ pub async fn run_cmd_media_remove_resolution(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {

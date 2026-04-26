@@ -8,18 +8,14 @@ use std::{
 use crate::{
     api::{api_call_get_media, api_call_media_replace},
     commands::logout::do_logout,
-    tools::{
-        ensure_login, parse_identifier, parse_vault_uri,
-    },
+    tools::{ensure_login, parse_identifier, parse_vault_uri},
 };
 
-use super::{get_vault_url, print_request_error, CommandGlobalOptions, media_upload::UploaderProgressPrinter};
+use super::{
+    get_vault_url, media_upload::UploaderProgressPrinter, print_request_error, CommandGlobalOptions,
+};
 
-pub async fn run_cmd_replace_media(
-    global_opts: CommandGlobalOptions,
-    media: String,
-    path: String,
-) {
+pub async fn run_cmd_replace_media(global_opts: CommandGlobalOptions, media: String, path: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
@@ -55,8 +51,7 @@ pub async fn run_cmd_replace_media(
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {

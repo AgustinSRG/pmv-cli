@@ -4,9 +4,19 @@ use std::process;
 
 use clap::Subcommand;
 
-use crate::{tools::{parse_vault_uri, ensure_login, duration_to_string, to_csv_string, format_date, print_table}, api::{api_call_check_invite, api_call_generate_invite, api_call_clear_invite, api_call_delete_invited_session, api_call_list_invited_sessions}, commands::logout::do_logout, models::InviteCodeGenerateBody};
+use crate::{
+    api::{
+        api_call_check_invite, api_call_clear_invite, api_call_delete_invited_session,
+        api_call_generate_invite, api_call_list_invited_sessions,
+    },
+    commands::logout::do_logout,
+    models::InviteCodeGenerateBody,
+    tools::{
+        duration_to_string, ensure_login, format_date, parse_vault_uri, print_table, to_csv_string,
+    },
+};
 
-use super::{CommandGlobalOptions, get_vault_url, print_request_error};
+use super::{get_vault_url, print_request_error, CommandGlobalOptions};
 
 #[derive(Subcommand)]
 pub enum InvitesCommand {
@@ -42,19 +52,19 @@ pub async fn run_invites_cmd(global_opts: CommandGlobalOptions, cmd: InvitesComm
     match cmd {
         InvitesCommand::Check => {
             run_cmd_invites_check(global_opts).await;
-        },
+        }
         InvitesCommand::Generate { duration } => {
             run_cmd_invites_generate(global_opts, duration).await;
-        },
+        }
         InvitesCommand::Clear => {
             run_cmd_invites_clear(global_opts).await;
-        },
+        }
         InvitesCommand::ListSessions { csv } => {
             run_cmd_invites_list_sessions(global_opts, csv).await;
         }
         InvitesCommand::CloseSession { index } => {
             run_cmd_invites_close_session(global_opts, index).await;
-        },
+        }
     }
 }
 
@@ -134,10 +144,10 @@ pub async fn run_cmd_invites_check(global_opts: CommandGlobalOptions) {
                     }
 
                     println!("---------------------------");
-                },
+                }
                 false => {
                     println!("Your account does not have any active invite code");
-                },
+                }
             }
         }
         Err(e) => {
@@ -157,10 +167,7 @@ pub async fn run_cmd_invites_check(global_opts: CommandGlobalOptions) {
     }
 }
 
-pub async fn run_cmd_invites_generate(
-    global_opts: CommandGlobalOptions,
-    duration: Option<String>,
-) {
+pub async fn run_cmd_invites_generate(global_opts: CommandGlobalOptions, duration: Option<String>) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
@@ -255,9 +262,7 @@ pub async fn run_cmd_invites_generate(
     }
 }
 
-pub async fn run_cmd_invites_clear(
-    global_opts: CommandGlobalOptions,
-) {
+pub async fn run_cmd_invites_clear(global_opts: CommandGlobalOptions) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
@@ -287,11 +292,7 @@ pub async fn run_cmd_invites_clear(
 
     // Call API
 
-    let api_res = api_call_clear_invite(
-        &vault_url,
-        global_opts.debug,
-    )
-    .await;
+    let api_res = api_call_clear_invite(&vault_url, global_opts.debug).await;
 
     match api_res {
         Ok(_) => {
@@ -382,12 +383,15 @@ pub async fn run_cmd_invites_list_sessions(global_opts: CommandGlobalOptions, cs
                     let row_index = s.index;
                     let row_timestamp = to_csv_string(&format_date(s.timestamp));
                     let row_expiration = to_csv_string(&format_date(s.expiration));
-                   
+
                     println!("{row_index},{row_timestamp},{row_expiration}");
                 }
             } else {
-                let table_head: Vec<String> =
-                    vec!["Index".to_string(), "Timestamp".to_string(), "Expiration".to_string()];
+                let table_head: Vec<String> = vec![
+                    "Index".to_string(),
+                    "Timestamp".to_string(),
+                    "Expiration".to_string(),
+                ];
 
                 let mut table_body: Vec<Vec<String>> = Vec::with_capacity(total);
 
@@ -420,10 +424,7 @@ pub async fn run_cmd_invites_list_sessions(global_opts: CommandGlobalOptions, cs
     }
 }
 
-pub async fn run_cmd_invites_close_session(
-    global_opts: CommandGlobalOptions,
-    index: u64,
-) {
+pub async fn run_cmd_invites_close_session(global_opts: CommandGlobalOptions, index: u64) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
@@ -453,12 +454,7 @@ pub async fn run_cmd_invites_close_session(
 
     // Call API
 
-    let api_res = api_call_delete_invited_session(
-        &vault_url,
-        index,
-        global_opts.debug,
-    )
-    .await;
+    let api_res = api_call_delete_invited_session(&vault_url, index, global_opts.debug).await;
 
     match api_res {
         Ok(_) => {

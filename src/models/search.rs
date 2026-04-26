@@ -34,7 +34,6 @@ pub struct RandomMediaResult {
     pub page_items: Vec<MediaListItem>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AdvancedSearchMediaResult {
     #[serde(rename = "total_count")]

@@ -134,8 +134,16 @@ pub async fn run_cmd_login(
             }
         }
         None => {
-            let login_result =
-                ensure_login_ext(&vault_url, &username, &None, &tfa_code, &duration, global_opts.debug, false).await;
+            let login_result = ensure_login_ext(
+                &vault_url,
+                &username,
+                &None,
+                &tfa_code,
+                &duration,
+                global_opts.debug,
+                false,
+            )
+            .await;
 
             if login_result.is_err() {
                 process::exit(1);

@@ -7,7 +7,10 @@ use reqwest::StatusCode;
 
 use crate::{
     api::{
-        api_call_album_add_media, api_call_album_change_thumbnail_memory, api_call_album_move_media, api_call_album_remove_media, api_call_create_album, api_call_delete_album, api_call_get_album, api_call_get_albums, api_call_get_media, api_call_get_media_albums, api_call_get_tags, api_call_rename_album
+        api_call_album_add_media, api_call_album_change_thumbnail_memory,
+        api_call_album_move_media, api_call_album_remove_media, api_call_create_album,
+        api_call_delete_album, api_call_get_album, api_call_get_albums, api_call_get_media,
+        api_call_get_media_albums, api_call_get_tags, api_call_rename_album,
     },
     commands::logout::do_logout,
     models::{
@@ -15,12 +18,14 @@ use crate::{
         AlbumNameBody,
     },
     tools::{
-        ask_user, do_get_download_request_memory, ensure_login, format_date, identifier_to_string, parse_identifier, parse_vault_uri, print_table, render_media_duration, to_csv_string
+        ask_user, do_get_download_request_memory, ensure_login, format_date, identifier_to_string,
+        parse_identifier, parse_vault_uri, print_table, render_media_duration, to_csv_string,
     },
 };
 
 use super::{
-    get_vault_url, print_request_error, run_cmd_download_album_thumbnail, run_cmd_export_album, run_cmd_import_album, run_cmd_upload_album_thumbnail, CommandGlobalOptions
+    get_vault_url, print_request_error, run_cmd_download_album_thumbnail, run_cmd_export_album,
+    run_cmd_import_album, run_cmd_upload_album_thumbnail, CommandGlobalOptions,
 };
 
 #[derive(Subcommand)]
@@ -207,10 +212,10 @@ pub async fn run_album_cmd(global_opts: CommandGlobalOptions, cmd: AlbumCommand)
         }
         AlbumCommand::Export { album, output } => {
             run_cmd_export_album(global_opts, album, output).await;
-        },
+        }
         AlbumCommand::Import { path } => {
             run_cmd_import_album(global_opts, path).await;
-        },
+        }
     }
 }
 
@@ -339,9 +344,9 @@ pub async fn run_cmd_list_albums(
             if alphabetically {
                 albums.sort_by(|a, b| a.name.cmp(&b.name));
             } else if id_sorted {
-                albums.sort_by(|a, b| a.id.cmp(&b.id));
+                albums.sort_by_key(|a| a.id);
             } else {
-                albums.sort_by(|a, b| b.lm.cmp(&a.lm));
+                albums.sort_by_key(|b| std::cmp::Reverse(b.lm));
             }
 
             let total = albums.len();
@@ -517,9 +522,7 @@ pub async fn run_cmd_get_album(
                         println!("{row_pos},{row_id},{row_type},{row_title}");
                     }
                 } else {
-                    println!(
-                        "\"Pos\",\"Id\",\"Type\",\"Title\",\"Tags\",\"Duration\""
-                    );
+                    println!("\"Pos\",\"Id\",\"Type\",\"Title\",\"Tags\",\"Duration\"");
 
                     for (i, item) in album_data.list.iter().enumerate() {
                         let row_pos = i + 1;
@@ -531,7 +534,9 @@ pub async fn run_cmd_get_album(
                         let row_duration =
                             render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
 
-                        println!("{row_pos},{row_id},{row_type},{row_title},{row_tags},{row_duration}");
+                        println!(
+                            "{row_pos},{row_id},{row_type},{row_title},{row_tags},{row_duration}"
+                        );
                     }
                 }
             } else if !extended {
@@ -1559,23 +1564,36 @@ pub async fn run_cmd_optimize_albums_thumbnails(global_opts: CommandGlobalOption
 
                     // Download thumbnail
 
-                    let thumb_download_response = do_get_download_request_memory(&vault_url, album_to_optimize.thumbnail_url, global_opts.debug).await;
+                    let thumb_download_response = do_get_download_request_memory(
+                        &vault_url,
+                        album_to_optimize.thumbnail_url,
+                        global_opts.debug,
+                    )
+                    .await;
 
                     match thumb_download_response {
                         Ok(thumb_data) => {
                             // Upload
 
-                            let upload_res = api_call_album_change_thumbnail_memory(&vault_url, album_id, thumb_data, global_opts.debug).await;
+                            let upload_res = api_call_album_change_thumbnail_memory(
+                                &vault_url,
+                                album_id,
+                                thumb_data,
+                                global_opts.debug,
+                            )
+                            .await;
 
                             match upload_res {
                                 Ok(_) => {
-                                    eprintln!("Successfully optimized thumbnail for album #{album_id}");
-                                },
+                                    eprintln!(
+                                        "Successfully optimized thumbnail for album #{album_id}"
+                                    );
+                                }
                                 Err(e) => {
                                     print_request_error(e);
                                     if logout_after_operation {
                                         let logout_res = do_logout(&global_opts, &vault_url).await;
-                        
+
                                         match logout_res {
                                             Ok(_) => {}
                                             Err(_) => {
@@ -1586,12 +1604,12 @@ pub async fn run_cmd_optimize_albums_thumbnails(global_opts: CommandGlobalOption
                                     process::exit(1);
                                 }
                             }
-                        },
+                        }
                         Err(e) => {
                             print_request_error(e);
                             if logout_after_operation {
                                 let logout_res = do_logout(&global_opts, &vault_url).await;
-                
+
                                 match logout_res {
                                     Ok(_) => {}
                                     Err(_) => {

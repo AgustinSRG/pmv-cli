@@ -48,7 +48,7 @@ pub struct VaultConfig {
 
     #[serde(rename = "resolutions")]
     pub resolutions: Vec<ConfigVideoResolution>,
-    
+
     #[serde(rename = "image_resolutions")]
     pub image_resolutions: Vec<ConfigImageResolution>,
 }
@@ -92,7 +92,7 @@ impl ConfigVideoResolution {
             return Err(());
         }
 
-        Ok(ConfigVideoResolution{
+        Ok(ConfigVideoResolution {
             width: width.unwrap(),
             height: height.unwrap(),
             fps: fps.unwrap(),
@@ -126,7 +126,7 @@ impl ConfigImageResolution {
             return Err(());
         }
 
-        Ok(ConfigImageResolution{
+        Ok(ConfigImageResolution {
             width: width.unwrap(),
             height: height.unwrap(),
         })

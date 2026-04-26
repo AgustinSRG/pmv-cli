@@ -1,10 +1,14 @@
 // Server info command
 
-use crate::{api::api_call_about, tools::{ensure_login, parse_vault_uri}, commands::logout::do_logout};
+use crate::{
+    api::api_call_about,
+    commands::logout::do_logout,
+    tools::{ensure_login, parse_vault_uri},
+};
 
 use std::process;
 
-use super::{get_vault_url, CommandGlobalOptions, print_request_error};
+use super::{get_vault_url, print_request_error, CommandGlobalOptions};
 
 pub async fn run_cmd_server_info(global_opts: CommandGlobalOptions) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));

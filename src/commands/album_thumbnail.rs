@@ -12,7 +12,8 @@ use crate::{
 };
 
 use super::{
-    get_vault_url, media_download::download_media_asset, media_upload::UploaderProgressPrinter, print_request_error, CommandGlobalOptions
+    get_vault_url, media_download::download_media_asset, media_upload::UploaderProgressPrinter,
+    print_request_error, CommandGlobalOptions,
 };
 
 pub async fn run_cmd_download_album_thumbnail(
@@ -79,7 +80,7 @@ pub async fn run_cmd_download_album_thumbnail(
                 if thumbnail.is_empty() {
                     if logout_after_operation {
                         let logout_res = do_logout(&global_opts, &vault_url).await;
-    
+
                         match logout_res {
                             Ok(_) => {}
                             Err(_) => {
@@ -94,7 +95,7 @@ pub async fn run_cmd_download_album_thumbnail(
                 if print_link {
                     if logout_after_operation {
                         let logout_res = do_logout(&global_opts, &vault_url).await;
-    
+
                         match logout_res {
                             Ok(_) => {}
                             Err(_) => {
@@ -102,7 +103,7 @@ pub async fn run_cmd_download_album_thumbnail(
                             }
                         }
                     }
-    
+
                     let download_link = vault_url.resolve_asset(&thumbnail);
                     println!("{download_link}");
                 } else {

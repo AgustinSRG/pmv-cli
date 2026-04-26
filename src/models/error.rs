@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct APIErrorResponse {
     #[serde(rename = "code")]
     pub code: String,
-  
+
     #[serde(rename = "message")]
     pub message: String,
-  }
+}

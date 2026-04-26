@@ -1,7 +1,7 @@
 // Main
 
-use clap::{Parser};
-use commands::{run_cmd, Commands, CommandGlobalOptions};
+use clap::Parser;
+use commands::{run_cmd, CommandGlobalOptions, Commands};
 
 mod api;
 mod commands;
@@ -32,7 +32,7 @@ struct Cli {
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
-    let global_opts = CommandGlobalOptions{
+    let global_opts = CommandGlobalOptions {
         debug: cli.debug,
         auto_confirm: cli.yes,
         vault_url: cli.vault_url,

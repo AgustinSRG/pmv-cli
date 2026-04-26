@@ -129,11 +129,15 @@ impl TimeOtpAlgorithm {
 
 impl Display for TimeOtpAlgorithm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            TimeOtpAlgorithm::Sha1 => "sha1".to_string(),
-            TimeOtpAlgorithm::Sha256 => "sha256".to_string(),
-            TimeOtpAlgorithm::Sha512 => "sha512".to_string(),
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                TimeOtpAlgorithm::Sha1 => "sha1".to_string(),
+                TimeOtpAlgorithm::Sha256 => "sha256".to_string(),
+                TimeOtpAlgorithm::Sha512 => "sha512".to_string(),
+            }
+        )
     }
 }
 

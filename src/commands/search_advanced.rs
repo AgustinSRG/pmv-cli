@@ -419,9 +419,7 @@ pub async fn run_cmd_search_advanced(
                 let row_duration =
                     render_media_duration(item.media_type, item.duration.unwrap_or(0.0));
 
-                println!(
-                    "{row_id},{row_type},{row_title},{row_tags},{row_duration}"
-                );
+                println!("{row_id},{row_type},{row_title},{row_tags},{row_duration}");
             }
         }
     } else if !extended {

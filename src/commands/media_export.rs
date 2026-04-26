@@ -7,9 +7,13 @@ use unicode_width::UnicodeWidthStr;
 use crate::{
     api::{api_call_get_media, api_call_get_tags},
     commands::logout::do_logout,
-    models::{tags_map_from_list, MediaAttachmentExport, MediaMetadata, MediaMetadataExport, MediaSubtitleOrAudioExport},
+    models::{
+        tags_map_from_list, MediaAttachmentExport, MediaMetadata, MediaMetadataExport,
+        MediaSubtitleOrAudioExport,
+    },
     tools::{
-        ask_user, do_get_download_request, ensure_login, get_extension_from_url, parse_identifier, parse_vault_uri, ProgressReceiver, VaultURI
+        ask_user, do_get_download_request, ensure_login, get_extension_from_url, parse_identifier,
+        parse_vault_uri, ProgressReceiver, VaultURI,
     },
 };
 
@@ -94,8 +98,7 @@ pub async fn run_cmd_export_media(
 
     // Get media metadata
 
-    let api_get_media_res =
-        api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+    let api_get_media_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
     let media_metadata: MediaMetadata = match api_get_media_res {
         Ok(meta) => meta,
@@ -460,7 +463,7 @@ pub async fn run_cmd_export_media(
             )
             .await;
 
-            attachments_export.push(MediaAttachmentExport{
+            attachments_export.push(MediaAttachmentExport {
                 name: att.name.clone(),
                 file: out_file_name,
             });

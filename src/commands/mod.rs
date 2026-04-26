@@ -41,9 +41,9 @@ use media::*;
 
 mod media_attachments;
 mod media_audio_tracks;
+mod media_description;
 mod media_download;
 mod media_export;
-mod media_description;
 mod media_image_notes;
 mod media_import;
 mod media_replace;

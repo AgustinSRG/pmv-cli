@@ -4,7 +4,11 @@ use std::sync::{Arc, Mutex};
 
 use crate::{
     models::{
-        ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata, MediaRenameAttachmentBody, MediaRenameSubtitleOrAudioBody, MediaResolution, MediaSubtitle, MediaTimeSlice, MediaUpdateDescriptionBody, MediaUpdateExtraBody, MediaUpdateRelatedMediaBody, MediaUpdateThumbnailResponse, MediaUpdateTitleBody, MediaUploadResponse, TaskEncodeResolution
+        ImageNote, MediaAssetSizeStats, MediaAttachment, MediaAudioTrack, MediaMetadata,
+        MediaRenameAttachmentBody, MediaRenameSubtitleOrAudioBody, MediaResolution, MediaSubtitle,
+        MediaTimeSlice, MediaUpdateDescriptionBody, MediaUpdateExtraBody,
+        MediaUpdateRelatedMediaBody, MediaUpdateThumbnailResponse, MediaUpdateTitleBody,
+        MediaUploadResponse, TaskEncodeResolution,
     },
     tools::{
         do_get_request, do_multipart_upload_request, do_multipart_upload_request_with_confirmation,

@@ -90,22 +90,17 @@ pub async fn ensure_login_ext(
                         status,
                         code,
                         message: _,
-                    } => {
-                        if status == 403 && code == "TFA_REQUIRED" {
-                            return Box::pin(ensure_login_ext(
-                                url,
-                                &Some(username_m),
-                                &Some(password_m),
-                                &None,
-                                duration,
-                                debug,
-                                true,
-                            ))
-                            .await;
-                        } else {
-                            print_request_error(error);
-                            return Err(());
-                        }
+                    } if status == 403 && code == "TFA_REQUIRED" => {
+                        return Box::pin(ensure_login_ext(
+                            url,
+                            &Some(username_m),
+                            &Some(password_m),
+                            &None,
+                            duration,
+                            debug,
+                            true,
+                        ))
+                        .await;
                     }
                     _ => {
                         print_request_error(error);

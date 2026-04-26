@@ -2,7 +2,10 @@
 
 use crate::{
     models::{
-        AccountContext, AccountCreateBody, AccountDeleteBody, AccountListItem, AccountSecuritySettings, AccountSetSecuritySettingsBody, AccountUpdateBody, ChangePasswordBody, ChangeUsernameBody, TfaDisableBody, TimeOtpEnableBody, TimeOtpOptions, TimeOtpSettings
+        AccountContext, AccountCreateBody, AccountDeleteBody, AccountListItem,
+        AccountSecuritySettings, AccountSetSecuritySettingsBody, AccountUpdateBody,
+        ChangePasswordBody, ChangeUsernameBody, TfaDisableBody, TimeOtpEnableBody, TimeOtpOptions,
+        TimeOtpSettings,
     },
     tools::{do_get_request, do_post_request, RequestError, VaultURI},
 };
@@ -120,7 +123,6 @@ pub async fn api_call_delete_account(
     Ok(())
 }
 
-
 pub async fn api_call_get_security_settings(
     url: &VaultURI,
     debug: bool,
@@ -162,7 +164,9 @@ pub async fn api_call_get_totp_settings(
 ) -> Result<TimeOtpSettings, RequestError> {
     let mut url_path = "/api/account/security/tfa/totp".to_string();
 
-    url_path.push_str(&("?algorithm=".to_owned() + &urlencoding::encode(&options.algorithm.to_string())));
+    url_path.push_str(
+        &("?algorithm=".to_owned() + &urlencoding::encode(&options.algorithm.to_string())),
+    );
     url_path.push_str(&("&period=".to_owned() + &urlencoding::encode(&options.period.to_string())));
 
     if let Some(issuer) = options.issuer {
@@ -192,7 +196,6 @@ pub async fn api_call_get_totp_settings(
 
     Ok(parsed_body.unwrap())
 }
-
 
 pub async fn api_call_enable_totp(
     url: &VaultURI,

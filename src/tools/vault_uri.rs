@@ -126,15 +126,11 @@ impl VaultURI {
                 base_url: _,
                 username: _,
                 password: _,
-            } => {
-                true
-            }
+            } => true,
             VaultURI::SessionURI {
                 base_url: _,
                 session: _,
-            } => {
-                false
-            }
+            } => false,
         }
     }
 

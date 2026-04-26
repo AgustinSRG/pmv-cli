@@ -69,11 +69,7 @@ pub async fn run_tag_cmd(global_opts: CommandGlobalOptions, cmd: TagCommand) {
     }
 }
 
-pub async fn run_cmd_list_tags(
-    global_opts: CommandGlobalOptions,
-    csv: bool,
-    alphabetically: bool,
-) {
+pub async fn run_cmd_list_tags(global_opts: CommandGlobalOptions, csv: bool, alphabetically: bool) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {
@@ -123,7 +119,7 @@ pub async fn run_cmd_list_tags(
             if alphabetically {
                 tags.sort_by(|a, b| a.name.cmp(&b.name));
             } else {
-                tags.sort_by(|a, b| a.id.cmp(&b.id));
+                tags.sort_by_key(|a| a.id);
             }
 
             let total = tags.len();
@@ -204,8 +200,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
 
     match media_id_res {
         Ok(media_id) => {
-            let media_api_res =
-                api_call_get_media(&vault_url, media_id, global_opts.debug).await;
+            let media_api_res = api_call_get_media(&vault_url, media_id, global_opts.debug).await;
 
             match media_api_res {
                 Ok(_) => {
@@ -358,11 +353,7 @@ pub async fn run_cmd_tag_add(global_opts: CommandGlobalOptions, tag: String, med
     }
 }
 
-pub async fn run_cmd_tag_remove(
-    global_opts: CommandGlobalOptions,
-    tag: String,
-    media: String,
-) {
+pub async fn run_cmd_tag_remove(global_opts: CommandGlobalOptions, tag: String, media: String) {
     let url_parse_res = parse_vault_uri(get_vault_url(&global_opts.vault_url));
 
     if url_parse_res.is_err() {

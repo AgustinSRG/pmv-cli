@@ -52,7 +52,10 @@ pub async fn do_logout(global_opts: &CommandGlobalOptions, vault_url: &VaultURI)
         }
         crate::tools::VaultURI::SessionURI { base_url, session } => {
             let logout_res = api_call_logout(
-                &VaultURI::SessionURI { base_url: base_url.clone(), session: session.clone() },
+                &VaultURI::SessionURI {
+                    base_url: base_url.clone(),
+                    session: session.clone(),
+                },
                 global_opts.debug,
             )
             .await;

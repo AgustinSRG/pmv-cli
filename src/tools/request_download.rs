@@ -174,8 +174,6 @@ pub async fn do_get_download_request_memory(
             }
             Ok(res)
         }
-        Err(err) => {
-            Err(RequestError::NetworkError(err.to_string()))
-        }
+        Err(err) => Err(RequestError::NetworkError(err.to_string())),
     }
 }

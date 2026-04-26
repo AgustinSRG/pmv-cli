@@ -1,7 +1,7 @@
 // Search API
 
 use crate::{
-    models::{RandomMediaResult, SearchMediaResult, AdvancedSearchMediaResult},
+    models::{AdvancedSearchMediaResult, RandomMediaResult, SearchMediaResult},
     tools::{do_get_request, RequestError, VaultURI},
 };
 
